@@ -1,0 +1,14 @@
+node_modules/
+dist/
+*.tsbuildinfo
+*.log
+.env
+.env.*
+!.env.example
+*.bak
+*.new
+*.zip
+*.apk
+*.aab
+*.jks
+deploy_batch.txt

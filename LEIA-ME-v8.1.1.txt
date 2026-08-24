@@ -1,0 +1,4 @@
+Multiplica Plus 8.1.1
+- UI realmente imediata: persistência local e montagem da Outbox movidas para o próximo macrotask.
+- Realtime, Supabase e schema permanecem inalterados.
+- Compatível com rollback para 8.1/8.0 usando o mesmo banco.
