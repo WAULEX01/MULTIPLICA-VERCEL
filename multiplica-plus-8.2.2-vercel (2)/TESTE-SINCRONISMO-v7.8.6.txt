@@ -1,0 +1,21 @@
+MULTIPLICA PLUS v7.8.6 — TESTE CAUTELOSO
+
+1) Antes de publicar: faça backup do MySQL.
+2) Substitua TODOS os arquivos do site pelo conteúdo deste pacote.
+3) Não altere, limpe ou restaure o MySQL durante o teste.
+4) Abra o app em um aparelho e confirme v7.8.6.
+5) Cadastre UMA pessoa de teste. Aguarde alguns segundos e confirme que ela permanece.
+6) Abra o segundo aparelho e confirme que a pessoa aparece.
+7) Edite UM campo da pessoa no aparelho A e confirme no aparelho B.
+8) Exclua a pessoa de teste e confirme que ela não reaparece.
+9) Só depois teste chamada simultânea: mesma data + mesmo departamento em dois aparelhos.
+10) No A marque duas pessoas; no B marque outras duas. Os dois devem convergir para quatro.
+11) Desmarque uma no A; ela deve desaparecer no B após o pull.
+
+REGRAS DE SEGURANÇA DA v7.8.6
+- MySQL é a fonte oficial.
+- Operação pendente permanece na Outbox até ACK do servidor.
+- Pull não deve esconder criação/edição/exclusão ainda pendente.
+- Escritas principais usam somente sync_patches.
+- Backend e frontend são ambos v7.8.6.
+- Migração automática de banco permanece desativada.

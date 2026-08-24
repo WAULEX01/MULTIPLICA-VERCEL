@@ -1,0 +1,38 @@
+MULTIPLICA PLUS v7.8.5 — AUDITORIA DE SINCRONISMO / MODO SEGURO
+
+DIAGNÓSTICO PRINCIPAL
+1. O MySQL permaneceu com os dados físicos; o problema observado era majoritariamente de réplica/cache e gravações automáticas do cliente.
+2. initializeDB executava migrações locais de dados de negócio ao abrir o app:
+   - Inativo -> Arquivado;
+   - inferência automática de sexo;
+   - criação automática do array departments;
+   - migração de nome da mãe;
+   - inclusão de departamentos padrão.
+3. A inferência de sexo ainda adicionava pessoas automaticamente à fila de sincronização.
+4. updatePeople também percorria a lista inteira e podia inferir sexo em vários cadastros durante uma edição de uma única pessoa.
+5. O bundle de produção identificado como v7.8.4 ainda continha código compilado v7.8.2, favorecendo divergência de versão/cache.
+6. Snapshot completo era disparado com frequência desnecessária (>2 min), aumentando chance de oscilação visual e conflitos com cache local.
+7. Endpoints antigos de gravação em massa continuavam disponíveis no backend.
+
+CORREÇÕES v7.8.5
+- inicialização não modifica dados de negócio;
+- nenhuma semeadura de dados de demonstração em produção;
+- nenhuma migração automática de pessoas/departamentos na abertura;
+- fila antiga de outras versões fica em quarentena e não é reenviada;
+- edição de pessoa não normaliza todos os outros cadastros;
+- snapshot completo somente quando a réplica local está ausente, revisão é zero ou servidor exige reset;
+- polling normal usa DELTA (somente alterações);
+- endpoints legados de gravação em massa retornam bloqueio;
+- sync_patches é a única rota para gravação das entidades principais;
+- backend bloqueia lote anormal com >10 UPDATE/DELETE de pessoas ou >5 alterações de departamentos em uma mesma chamada;
+- migrações automáticas de schema do MySQL foram desativadas no fluxo normal;
+- frontend/backend alinhados em v7.8.5 e schema 10;
+- cache do Service Worker usa chave exclusiva v7.8.5;
+- correções anteriores de chamada simultânea e datas locais foram preservadas.
+
+REGRA DE PRODUÇÃO
+MYSQL = fonte oficial da verdade.
+CACHE LOCAL = réplica.
+OUTBOX = somente ações explícitas do usuário.
+DELTA = forma normal de sincronização.
+SNAPSHOT = recuperação/primeira carga, nunca rotina frequente.
