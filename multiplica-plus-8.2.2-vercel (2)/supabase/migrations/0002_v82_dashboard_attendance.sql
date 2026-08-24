@@ -1,6 +1,0 @@
--- v8.2.0: Dashboard leve + chamada concorrente
--- Aplicada em produção em 2026-08-22.
--- O snapshot inicial limita activityLogs aos 60 mais recentes; o total completo
--- permanece em mp_entities e pode ser consultado por mp_get_activity_logs.
--- Patches ADD/REMOVE de attendance são mesclados atomicamente mesmo quando a
--- base_version ficou defasada por edição concorrente em outro aparelho.
