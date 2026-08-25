@@ -2,7 +2,6 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import './styles/multiplica-typeui.css'
-import './styles/mobile-visual-tuning.css'
 import App from './App.tsx'
 
 // Aplica o tema salvo (dia/noite) antes do React montar, evitando flash de tema errado
