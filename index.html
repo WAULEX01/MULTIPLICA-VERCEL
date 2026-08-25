@@ -18,14 +18,14 @@
     <script>
       const isLocalPreview = ['localhost', '127.0.0.1'].includes(window.location.hostname);
       if ('serviceWorker' in navigator && !isLocalPreview) {
-        // Mantém o ciclo atual do Service Worker. Esta alteração é somente visual.
+        // v8.2.2: força a atualização somente do cache visual/PWA.
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js?v=800-cloud')
+          navigator.serviceWorker.register('/sw.js?v=822-brand')
             .then(reg => {
-              console.log('[SW v8.0.0] registrado', reg.scope);
+              console.log('[SW v8.2.2] registrado', reg.scope);
               reg.update().catch(() => {});
             })
-            .catch(err => console.error('[SW v8.0.0] falha no registro:', err));
+            .catch(err => console.error('[SW v8.2.2] falha no registro:', err));
         });
       } else if ('serviceWorker' in navigator && isLocalPreview) {
         navigator.serviceWorker.getRegistrations().then(registrations => {
