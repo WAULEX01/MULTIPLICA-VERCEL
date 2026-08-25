@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Preview Layout | Multiplica PLUS</title>
+  <link rel="icon" type="image/png" href="/logo.png?v=preview-layout-1" />
+  <style>
+    :root{
+      --brand:#4338ca;
+      --brand-2:#6d5dfc;
+      --accent:#ff6b21;
+      --bg:#f4f6fb;
+      --card:#ffffff;
+      --line:#e5e7ef;
+      --text:#191b24;
+      --muted:#707586;
+      --good:#20a464;
+      --warn:#f59e0b;
+      --danger:#e5484d;
+      --nav-h:72px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-text-size-adjust:100%}
+    body{overflow-y:auto;overscroll-behavior-y:auto}
+    button,input,select{font:inherit}
+    button{cursor:pointer}
+    .preview-shell{min-height:100dvh;max-width:480px;margin:0 auto;background:var(--bg);position:relative;padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 14px)}
+    .preview-banner{background:#171827;color:#fff;padding:9px 14px;font-size:11px;text-align:center;letter-spacing:.02em}
+    .preview-banner b{color:#b7b2ff}
+    .app-header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.97);border-bottom:1px solid var(--line);padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .brand{display:flex;align-items:center;gap:9px;min-width:0}
+    .brand img{width:39px;height:39px;border-radius:11px;object-fit:contain;background:#fff;flex:none}
+    .brand-copy{min-width:0}.brand-copy strong{display:block;font-size:14px;line-height:1.05;white-space:nowrap}.brand-copy small{display:block;font-size:9px;color:var(--muted);margin-top:3px;white-space:nowrap}
+    .header-actions{display:flex;gap:6px}.icon-btn{width:38px;height:38px;border-radius:11px;border:1px solid var(--line);background:#fff;display:grid;place-items:center;color:#34384a;font-weight:800}
+    .content{padding:14px 12px 18px}
+    .screen{display:none}.screen.active{display:block}
+    .screen-title-row{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-bottom:12px}
+    h1{font-size:22px;line-height:1.1;margin:0}.subtitle{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.4}
+    .pill{border:1px solid #d9d7ff;background:#f1f0ff;color:var(--brand);font-size:10px;font-weight:800;border-radius:999px;padding:6px 9px;white-space:nowrap}
+    .hero{background:linear-gradient(135deg,#27217b 0%,#4435c9 58%,#6657ef 100%);color:#fff;border-radius:20px;padding:16px;box-shadow:0 12px 30px rgba(57,46,180,.18);margin-bottom:12px}
+    .hero .eyebrow{font-size:10px;opacity:.75;text-transform:uppercase;letter-spacing:.08em}.hero h2{font-size:20px;margin:5px 0 4px}.hero p{font-size:11px;line-height:1.45;opacity:.82;margin:0}
+    .quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}.quick{border:1px solid var(--line);background:var(--card);border-radius:14px;min-height:86px;padding:11px 7px;color:var(--text);font-size:11px;font-weight:800;box-shadow:0 3px 10px rgba(23,25,40,.04)}.quick.primary{background:var(--brand);border-color:var(--brand);color:#fff}.qico{display:block;font-size:23px;margin-bottom:7px}
+    .section-label{font-size:10px;font-weight:900;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin:17px 2px 8px}
+    .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}.stat b{font-size:23px;display:block}.stat span{font-size:10px;color:var(--muted)}
+    .search{width:100%;height:46px;border-radius:13px;border:1px solid var(--line);background:#fff;padding:0 13px;font-size:16px;color:var(--text);outline:none;margin-bottom:9px}.search:focus{border-color:#b0aaff;box-shadow:0 0 0 3px rgba(67,56,202,.08)}
+    .chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:3px;margin-bottom:9px;scrollbar-width:none}.chips::-webkit-scrollbar{display:none}.chip{border:1px solid var(--line);background:#fff;color:#4d5263;border-radius:999px;padding:7px 10px;font-size:10px;font-weight:800;white-space:nowrap}.chip.on{background:#eceaff;color:var(--brand);border-color:#d5d1ff}
+    .list{display:flex;flex-direction:column;gap:7px}.row{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px;display:flex;align-items:center;gap:10px;min-height:62px}.avatar{width:38px;height:38px;border-radius:50%;background:#efeff8;color:var(--brand);display:grid;place-items:center;font-size:11px;font-weight:900;flex:none}.row-main{min-width:0;flex:1}.row-name{font-size:13px;font-weight:850;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.row-sub{font-size:10px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.row-action{width:39px;height:39px;border-radius:11px;border:1px solid var(--line);background:#f8f9fc;display:grid;place-items:center;flex:none;font-weight:900}
+    .attendance-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}.mini-stat{background:#fff;border:1px solid var(--line);border-radius:13px;padding:10px;text-align:center}.mini-stat b{display:block;font-size:20px}.mini-stat span{font-size:9px;color:var(--muted)}
+    .attendance-row.present{border-left:5px solid var(--good)}.attendance-row.absent{border-left:5px solid var(--danger)}.toggle{width:43px;height:27px;border-radius:999px;background:#d8dce6;position:relative;flex:none}.toggle:after{content:"";position:absolute;width:21px;height:21px;border-radius:50%;background:#fff;top:3px;left:3px;box-shadow:0 1px 4px rgba(0,0,0,.2)}.present .toggle{background:var(--good)}.present .toggle:after{left:19px}
+    .radar-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}.rad{border-radius:14px;padding:11px 6px;text-align:center}.rad b{display:block;font-size:22px}.rad span{font-size:9px;font-weight:800}.r1{background:#fff0f0;color:var(--danger)}.r2{background:#fff5e7;color:#d56c00}.r3{background:#fffbe5;color:#a67d00}
+    .priority{display:inline-flex;align-items:center;gap:4px;border-radius:999px;font-size:9px;font-weight:900;padding:4px 7px}.priority.red{background:#fff0f0;color:var(--danger)}.priority.orange{background:#fff5e7;color:#d56c00}.priority.yellow{background:#fffbe5;color:#9d7800}
+    .event{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px;display:flex;gap:10px;margin-bottom:8px}.date-box{width:50px;border-radius:12px;background:#f0efff;color:var(--brand);display:grid;place-items:center;text-align:center;padding:7px 4px;flex:none}.date-box b{font-size:20px;line-height:1}.date-box span{font-size:9px;font-weight:900;margin-top:3px}.event-title{font-size:13px;font-weight:850}.event-sub{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.35}
+    .birthday{background:#fff;border:1px solid var(--line);border-radius:14px;padding:11px;display:flex;align-items:center;gap:10px;margin-bottom:7px}.cake{font-size:22px}.day{margin-left:auto;color:var(--brand);font-size:10px;font-weight:900}
+    .dept{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:8px}.dept-top{display:flex;align-items:center;justify-content:space-between;gap:8px}.dept-name{font-size:12px;font-weight:850}.dept-count{font-size:22px;color:var(--brand);font-weight:900}.dept-sub{font-size:9px;color:var(--muted);margin-top:5px}.bar{height:5px;border-radius:999px;background:#eeeff5;margin-top:9px;overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),var(--brand-2));border-radius:999px}
+    .more-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.more-card{border:1px solid var(--line);background:#fff;border-radius:15px;min-height:94px;padding:12px;text-align:left;color:var(--text);font-size:11px;font-weight:850}.more-card span{display:block;font-size:25px;margin-bottom:9px}
+    .safe-note{margin:14px 0 0;border:1px dashed #c8c5ef;background:#f3f2ff;color:#5149a8;border-radius:13px;padding:10px;font-size:10px;line-height:1.45}
+    .bottom-nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width:min(480px,100%);height:calc(var(--nav-h) + env(safe-area-inset-bottom));background:rgba(255,255,255,.98);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:5px 5px env(safe-area-inset-bottom);box-shadow:0 -8px 24px rgba(16,20,38,.07)}
+    .nav-btn{border:0;background:transparent;color:#74798a;border-radius:12px;font-size:9px;font-weight:800;padding:5px 2px;min-width:0}.nav-btn span{display:block;font-size:20px;line-height:1.1;margin-bottom:3px}.nav-btn.active{background:#f0efff;color:var(--brand)}
+    .top-tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -2px 12px;padding:1px 2px 3px}.top-tabs::-webkit-scrollbar{display:none}.tab{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 11px;font-size:10px;font-weight:850;color:#565b6b;white-space:nowrap}.tab.active{background:var(--brand);border-color:var(--brand);color:#fff}
+    @media(max-width:360px){.quick-grid{grid-template-columns:1fr 1fr}.attendance-summary{grid-template-columns:1fr 1fr 1fr}.brand-copy small{display:none}.header-actions .icon-btn:first-child{display:none}}
+  </style>
+</head>
+<body>
+<div class="preview-shell">
+  <div class="preview-banner">PREVIEW SEGURO • <b>nenhum dado real é carregado ou alterado</b></div>
+  <header class="app-header">
+    <div class="brand"><img src="/logo.png?v=preview-layout-1" alt="Multiplica PLUS"><div class="brand-copy"><strong>Multiplica PLUS</strong><small>IEAD - JOTA • proposta mobile</small></div></div>
+    <div class="header-actions"><button class="icon-btn" aria-label="Tema">◐</button><button class="icon-btn" aria-label="Mais opções">⋮</button></div>
+  </header>
+  <main class="content">
+    <div class="top-tabs">
+      <button class="tab active" data-screen="inicio">Início</button><button class="tab" data-screen="chamada">Chamada</button><button class="tab" data-screen="membros">Membros</button><button class="tab" data-screen="radar">Radar</button><button class="tab" data-screen="agenda">Agenda</button><button class="tab" data-screen="aniversarios">Aniversários</button><button class="tab" data-screen="departamentos">Departamentos</button><button class="tab" data-screen="mais">Mais</button>
+    </div>
+
+    <section class="screen active" id="screen-inicio">
+      <div class="hero"><div class="eyebrow">Painel rápido</div><h2>Bom dia 👋</h2><p>As funções mais usadas ficam na frente. Menos informação concorrendo pela sua atenção.</p></div>
+      <div class="quick-grid"><button class="quick primary" data-go="chamada"><span class="qico">✓</span>Fazer chamada</button><button class="quick" data-go="membros"><span class="qico">⌕</span>Buscar membro</button><button class="quick" data-go="radar"><span class="qico">⚠</span>Ver Radar</button></div>
+      <div class="section-label">Resumo</div><div class="stats"><div class="stat"><b>634</b><span>Membros ativos</span></div><div class="stat"><b>28</b><span>No Radar</span></div><div class="stat"><b>6</b><span>Aniversariantes</span></div><div class="stat"><b>1</b><span>Próximo evento</span></div></div>
+      <div class="safe-note">Este preview é propositalmente estático. Os números e nomes são apenas exemplos para avaliar layout, tamanho dos botões, navegação, touch e rolagem.</div>
+    </section>
+
+    <section class="screen" id="screen-chamada">
+      <div class="screen-title-row"><div><h1>Chamada</h1><div class="subtitle">Lista simples para marcar presença com um toque.</div></div><span class="pill">Hoje</span></div>
+      <div class="attendance-summary"><div class="mini-stat"><b>37</b><span>Presentes</span></div><div class="mini-stat"><b>44</b><span>Ausentes</span></div><div class="mini-stat"><b>81</b><span>Total</span></div></div>
+      <input class="search" placeholder="Buscar nome...">
+      <div class="list"><div class="row attendance-row present"><div class="avatar">MA</div><div class="row-main"><div class="row-name">Maria Aparecida</div><div class="row-sub">Membro • Integração</div></div><div class="toggle"></div></div><div class="row attendance-row absent"><div class="avatar">GS</div><div class="row-main"><div class="row-name">Gilmar Souza</div><div class="row-sub">Presbítero</div></div><div class="toggle"></div></div><div class="row attendance-row present"><div class="avatar">JF</div><div class="row-main"><div class="row-name">João Ferreira</div><div class="row-sub">Membro</div></div><div class="toggle"></div></div><div class="row attendance-row absent"><div class="avatar">AC</div><div class="row-main"><div class="row-name">Ana Cristina</div><div class="row-sub">Membro</div></div><div class="toggle"></div></div><div class="row attendance-row present"><div class="avatar">LR</div><div class="row-main"><div class="row-name">Lucas Ribeiro</div><div class="row-sub">Membro</div></div><div class="toggle"></div></div><div class="row attendance-row present"><div class="avatar">MB</div><div class="row-main"><div class="row-name">Marcos Brito</div><div class="row-sub">Cooperador</div></div><div class="toggle"></div></div></div>
+    </section>
+
+    <section class="screen" id="screen-membros">
+      <div class="screen-title-row"><div><h1>Membros</h1><div class="subtitle">Busca e ações rápidas sem poluir a tela.</div></div><span class="pill">634 ativos</span></div>
+      <input class="search" placeholder="Buscar pessoa..."><div class="chips"><button class="chip on">Todos</button><button class="chip">Ativos</button><button class="chip">Visitantes</button><button class="chip">Arquivados</button><button class="chip">Filtros</button></div>
+      <div class="list"><div class="row"><div class="avatar">MA</div><div class="row-main"><div class="row-name">Maria Aparecida</div><div class="row-sub">Integração • Ativo</div></div><button class="row-action">☎</button></div><div class="row"><div class="avatar">JG</div><div class="row-main"><div class="row-name">José Gonçalves</div><div class="row-sub">Gideões • Ativo</div></div><button class="row-action">☎</button></div><div class="row"><div class="avatar">AC</div><div class="row-main"><div class="row-name">Ana Cristina</div><div class="row-sub">Atalaias • Ativo</div></div><button class="row-action">☎</button></div><div class="row"><div class="avatar">LM</div><div class="row-main"><div class="row-name">Luciana Martins</div><div class="row-sub">Integração • Visitante</div></div><button class="row-action">☎</button></div><div class="row"><div class="avatar">RS</div><div class="row-main"><div class="row-name">Roberto Silva</div><div class="row-sub">Gideões • Ativo</div></div><button class="row-action">☎</button></div></div>
+    </section>
+
+    <section class="screen" id="screen-radar">
+      <div class="screen-title-row"><div><h1>Radar pastoral</h1><div class="subtitle">Prioridade primeiro: quem precisa de cuidado aparece no topo.</div></div><span class="pill">28 pessoas</span></div>
+      <div class="radar-grid"><div class="rad r1"><b>5</b><span>VISITAR</span></div><div class="rad r2"><b>6</b><span>LIGAR</span></div><div class="rad r3"><b>17</b><span>MENSAGEM</span></div></div>
+      <div class="list"><div class="row"><div class="avatar">JS</div><div class="row-main"><div class="row-name">João Silva</div><div class="row-sub">4 faltas consecutivas</div><div style="margin-top:5px"><span class="priority red">● Visita</span></div></div><button class="row-action">⌂</button></div><div class="row"><div class="avatar">AM</div><div class="row-main"><div class="row-name">André Martins</div><div class="row-sub">3 faltas consecutivas</div><div style="margin-top:5px"><span class="priority orange">● Ligação</span></div></div><button class="row-action">☎</button></div><div class="row"><div class="avatar">LC</div><div class="row-main"><div class="row-name">Luciana Costa</div><div class="row-sub">2 faltas consecutivas</div><div style="margin-top:5px"><span class="priority yellow">● Mensagem</span></div></div><button class="row-action">✉</button></div></div>
+    </section>
+
+    <section class="screen" id="screen-agenda">
+      <div class="screen-title-row"><div><h1>Agenda</h1><div class="subtitle">Próximos compromissos em ordem cronológica.</div></div><span class="pill">Próximos</span></div>
+      <div class="event"><div class="date-box"><b>28</b><span>AGO</span></div><div><div class="event-title">Festa do Círculo de Oração</div><div class="event-sub">Templo JK • programação da igreja • 19:30</div></div></div><div class="event"><div class="date-box"><b>05</b><span>SET</span></div><div><div class="event-title">Cruzada Evangelística</div><div class="event-sub">Final da T20 • Bairro JK</div></div></div><div class="event"><div class="date-box"><b>12</b><span>SET</span></div><div><div class="event-title">Culto de Missões</div><div class="event-sub">Templo JK • 19:30</div></div></div><div class="event"><div class="date-box"><b>20</b><span>SET</span></div><div><div class="event-title">Reunião de Liderança</div><div class="event-sub">Sala pastoral • exemplo de visualização</div></div></div>
+    </section>
+
+    <section class="screen" id="screen-aniversarios">
+      <div class="screen-title-row"><div><h1>Aniversariantes</h1><div class="subtitle">Contato rápido sem excesso de informação.</div></div><span class="pill">Este mês</span></div>
+      <div class="birthday"><div class="cake">🎂</div><div><div class="row-name">Ana Paula</div><div class="row-sub">Atalaias de Cristo</div></div><div class="day">25 AGO</div></div><div class="birthday"><div class="cake">🎂</div><div><div class="row-name">Carlos Henrique</div><div class="row-sub">Gideões</div></div><div class="day">27 AGO</div></div><div class="birthday"><div class="cake">🎂</div><div><div class="row-name">Juliana Souza</div><div class="row-sub">Integração</div></div><div class="day">30 AGO</div></div><div class="birthday"><div class="cake">🎂</div><div><div class="row-name">Rafael Martins</div><div class="row-sub">Novo Alvorecer</div></div><div class="day">31 AGO</div></div>
+    </section>
+
+    <section class="screen" id="screen-departamentos">
+      <div class="screen-title-row"><div><h1>Departamentos</h1><div class="subtitle">Contagem e acesso direto a cada equipe.</div></div><span class="pill">Visão geral</span></div>
+      <div class="dept"><div class="dept-top"><div class="dept-name">Integração / Discipulado</div><div class="dept-count">96</div></div><div class="dept-sub">Membros ativos vinculados</div><div class="bar"><i style="width:68%"></i></div></div><div class="dept"><div class="dept-top"><div class="dept-name">Atalaias de Cristo</div><div class="dept-count">173</div></div><div class="dept-sub">Irmãs e liderança</div><div class="bar"><i style="width:86%"></i></div></div><div class="dept"><div class="dept-top"><div class="dept-name">Gideões</div><div class="dept-count">84</div></div><div class="dept-sub">Varões IEAD - JOTA</div><div class="bar"><i style="width:58%"></i></div></div><div class="dept"><div class="dept-top"><div class="dept-name">Novo Alvorecer</div><div class="dept-count">72</div></div><div class="dept-sub">Jovens</div><div class="bar"><i style="width:52%"></i></div></div>
+    </section>
+
+    <section class="screen" id="screen-mais">
+      <div class="screen-title-row"><div><h1>Mais</h1><div class="subtitle">O menu inferior mostra só o que é usado o tempo todo.</div></div><span class="pill">Menu</span></div>
+      <div class="more-grid"><button class="more-card" data-go="agenda"><span>📅</span>Agenda</button><button class="more-card" data-go="aniversarios"><span>🎂</span>Aniversários</button><button class="more-card" data-go="departamentos"><span>▦</span>Departamentos</button><button class="more-card"><span>▥</span>Relatórios</button><button class="more-card"><span>✦</span>Missões</button><button class="more-card"><span>⚙</span>Configurações</button></div>
+    </section>
+  </main>
+</div>
+<nav class="bottom-nav" aria-label="Navegação de preview"><button class="nav-btn active" data-screen="inicio"><span>⌂</span>Início</button><button class="nav-btn" data-screen="chamada"><span>✓</span>Chamada</button><button class="nav-btn" data-screen="membros"><span>♟</span>Membros</button><button class="nav-btn" data-screen="radar"><span>⚠</span>Radar</button><button class="nav-btn" data-screen="mais"><span>•••</span>Mais</button></nav>
+<script>
+(function(){
+  'use strict';
+  if('serviceWorker' in navigator){ navigator.serviceWorker.getRegistrations().then(function(rs){ rs.forEach(function(r){ if(r.scope.indexOf('/preview-layout')!==-1) r.unregister(); }); }).catch(function(){}); }
+  var screens=['inicio','chamada','membros','radar','agenda','aniversarios','departamentos','mais'];
+  function show(id){
+    if(screens.indexOf(id)<0) return;
+    document.querySelectorAll('.screen').forEach(function(el){el.classList.toggle('active',el.id==='screen-'+id);});
+    document.querySelectorAll('.tab,.nav-btn').forEach(function(el){el.classList.toggle('active',el.getAttribute('data-screen')===id);});
+    var tab=document.querySelector('.tab[data-screen="'+id+'"]'); if(tab) tab.scrollIntoView({block:'nearest',inline:'center'});
+    window.scrollTo({top:0,behavior:'auto'});
+  }
+  document.addEventListener('click',function(e){var t=e.target.closest('[data-screen],[data-go]');if(!t)return;show(t.getAttribute('data-screen')||t.getAttribute('data-go'));});
+  window.__MP_PREVIEW__={show:show};
+})();
+</script>
+</body>
+</html>
