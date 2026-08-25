@@ -3,6 +3,10 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [
+    { "source": "/simulacao", "destination": "/simulacao.html" },
+    { "source": "/simulacao/", "destination": "/simulacao.html" },
+    { "source": "/simulação", "destination": "/simulacao.html" },
+    { "source": "/simulação/", "destination": "/simulacao.html" },
     { "source": "/preview-layout", "destination": "/preview-layout.html" },
     { "source": "/preview-layout/", "destination": "/preview-layout.html" },
     { "source": "/(.*)", "destination": "/index.html" }
@@ -10,6 +14,24 @@
   "headers": [
     {
       "source": "/index.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/simulacao.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/simulacao",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/simulação",
       "headers": [
         { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
       ]
