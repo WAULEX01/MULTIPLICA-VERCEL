@@ -1,0 +1,2 @@
+Multiplica PLUS — preview mobile de desempenho e interface.
+Branch de teste; produção v8.2.2 permanece inalterada.
