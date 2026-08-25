@@ -1,10 +1,9 @@
-// Service Worker — Multiplica Plus v8.2.1
-const CACHE_NAME = 'multiplica-plus-v8.2.1-shell-v1';
+// Service Worker — Multiplica Plus v8.2.2 (branding/cache visual)
+const CACHE_NAME = 'multiplica-plus-v8.2.2-brand-v1';
 const ASSETS = [
-  '/manifest.json',
-  '/logo.png',
-  '/banner.jpg',
-  '/icon-192.png'
+  '/manifest.json?v=brand-822',
+  '/logo.png?v=brand-822',
+  '/banner.jpg'
 ];
 
 self.addEventListener('install', (event) => {
