@@ -1,17 +1,17 @@
 {
-  "name": "Multiplica PLUS 8.2.1",
-  "short_name": "Multiplica+",
+  "name": "Multiplica PLUS 8.2.2",
+  "short_name": "Multiplica PLUS",
   "description": "Aplicativo oficial de gestão, discipulado e presença da IEAD-JK — Supabase Realtime.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#111019",
-  "theme_color": "#2336d8",
+  "theme_color": "#ff6101",
   "orientation": "portrait-primary",
   "icons": [
-    {"src":"/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},
-    {"src":"/logo.png","sizes":"512x512","type":"image/png","purpose":"any"},
-    {"src":"/logo.png","sizes":"512x512","type":"image/png","purpose":"maskable"}
+    {"src":"/logo.png?v=brand-822","sizes":"192x192","type":"image/png","purpose":"any"},
+    {"src":"/logo.png?v=brand-822","sizes":"512x512","type":"image/png","purpose":"any"},
+    {"src":"/logo.png?v=brand-822","sizes":"512x512","type":"image/png","purpose":"maskable"}
   ],
   "id": "/"
 }
