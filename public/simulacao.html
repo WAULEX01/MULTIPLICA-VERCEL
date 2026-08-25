@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Simulação | Multiplica PLUS</title>
+  <link rel="icon" type="image/png" href="/logo.png?v=simulacao-orange-1" />
+  <style>
+    :root{
+      --orange:#ff6500;--orange2:#ff8a3d;--orange-soft:#fff1e8;--orange-pale:#fff8f3;
+      --bg:#f5f6f8;--card:#fff;--line:#e6e8ed;--text:#20232a;--muted:#737987;
+      --green:#1fa463;--red:#e14949;--blue:#3b78dc;--shadow:0 7px 24px rgba(26,28,34,.07);
+    }
+    *{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#e9ebef;color:var(--text);-webkit-text-size-adjust:100%}
+    button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid rgba(255,101,0,.24);outline-offset:2px}
+    .app{max-width:500px;margin:0 auto;background:var(--bg);min-height:100vh;position:relative;box-shadow:0 0 38px rgba(0,0,0,.08)}
+    .simulation-bar{background:#1f2127;color:#fff;padding:8px 12px;text-align:center;font-size:11px;letter-spacing:.02em}.simulation-bar b{color:#ff9e64}
+    .topbar{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.98);border-bottom:1px solid var(--line);padding:9px 11px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .brand{display:flex;align-items:center;gap:8px;min-width:0}.logo-box{width:40px;height:40px;border-radius:12px;background:#fff;display:grid;place-items:center;overflow:hidden;border:1px solid #ffe1cf}.logo-box img{width:34px;height:34px;object-fit:contain;filter:sepia(1) saturate(8) hue-rotate(345deg) brightness(1.05)}
+    .brand-copy{min-width:0}.brand-copy strong{display:block;font-size:15px;line-height:1}.brand-copy strong span{color:var(--orange)}.brand-copy small{display:block;margin-top:3px;color:var(--muted);font-size:9px;white-space:nowrap}.online{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:9px;white-space:nowrap}.online i{width:8px;height:8px;border-radius:50%;background:#27b36c;display:block}
+    .content{padding:13px 11px 95px}.screen{display:none}.screen.active{display:block}.view-head{display:flex;justify-content:space-between;align-items:flex-end;gap:8px;margin-bottom:11px}.view-head h1{font-size:22px;margin:0}.view-head p{margin:4px 0 0;color:var(--muted);font-size:11px}.btn{border:1px solid var(--line);background:#fff;color:var(--text);border-radius:11px;padding:9px 11px;min-height:42px;font-size:11px;font-weight:800}.btn.primary{background:var(--orange);border-color:var(--orange);color:#fff}.btn.wide{width:100%}.btn.small{min-height:36px;padding:7px 9px;font-size:10px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:12px;margin-bottom:9px;box-shadow:0 1px 0 rgba(0,0,0,.02)}.hero{background:linear-gradient(135deg,#fff8f3,#ffe4d2);border-color:#ffd3b7}.eyebrow{font-size:9px;font-weight:900;color:var(--orange);text-transform:uppercase;letter-spacing:.08em}.hero h2{font-size:17px;margin:7px 0 5px}.hero p{font-size:12px;line-height:1.42;color:#584f49;margin:0}.verse{margin-top:9px;padding-top:9px;border-top:1px solid #ffd0b3;font-size:11px;color:#754529}
+    .section-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:14px 2px 8px}.section-title strong{font-size:13px}.text-link{border:0;background:transparent;color:var(--orange);font-size:10px;font-weight:900;padding:6px}
+    .quick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}.quick button{min-height:70px;border:1px solid #ffd6bd;border-radius:13px;background:#fff7f2;color:#6b3b21;font-size:10px;font-weight:800;padding:7px 4px}.quick .ico{font-size:20px;display:block;margin-bottom:4px}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:9px 3px;text-align:center}.stat strong{display:block;font-size:16px}.stat span{display:block;color:var(--muted);font-size:8.5px;margin-top:2px}.birthday-strip{display:flex;align-items:center;gap:7px;overflow:auto}.avatar{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:#ffe1cf;color:#b64a08;font-weight:900;flex:none;font-size:11px}.avatar.small{width:33px;height:33px}.event{display:flex;align-items:center;gap:9px}.date-box{width:43px;height:47px;flex:none;border-radius:11px;background:#fff0e5;color:var(--orange);display:grid;place-items:center;font-size:15px;font-weight:900;line-height:1}.date-box small{display:block;font-size:8px}.event-copy{flex:1;min-width:0}.event-copy strong{display:block;font-size:12px}.event-copy span{display:block;margin-top:2px;color:var(--muted);font-size:9px}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.field label{display:block;font-size:9px;color:var(--muted);font-weight:900;margin:0 0 4px}.field.full{grid-column:1/-1}.field select,.field input,.search{width:100%;min-height:44px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--text);padding:8px 10px;font-size:16px}.search{margin-bottom:9px}.seg{display:grid;grid-template-columns:1fr 1fr;padding:3px;background:#eceef2;border-radius:12px;margin:10px 0}.seg.three{grid-template-columns:repeat(3,1fr)}.seg button{border:0;background:transparent;border-radius:9px;min-height:37px;color:var(--muted);font-size:10px;font-weight:900}.seg button.active{background:var(--orange);color:#fff}.mini-line{display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:10px;margin:4px 2px 8px}.list{display:grid;gap:6px}.person{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:13px;padding:9px}.person-info{flex:1;min-width:0}.person-info strong{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.person-info span{display:block;color:var(--muted);font-size:9px;margin-top:2px}.check{width:30px;height:30px;border-radius:50%;border:2px solid #d1d5dc;background:#fff;color:#fff;font-weight:900;display:grid;place-items:center}.check.on{background:var(--orange);border-color:var(--orange)}.call-actions{display:grid;grid-template-columns:1fr 1.35fr;gap:7px;margin-top:9px}.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}.summary div{text-align:center;background:var(--orange-soft);border-radius:11px;padding:8px 4px}.summary strong{display:block;color:#a84105;font-size:14px}.summary span{font-size:8px;color:#876451}.hint{background:#fff2e8;border:1px dashed #ffbd90;color:#815036;border-radius:12px;padding:9px;font-size:10px;line-height:1.35;margin-top:8px}
+    .filters{display:flex;gap:6px;overflow:auto;padding-bottom:7px}.pill{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 10px;min-height:36px;white-space:nowrap;font-size:10px;font-weight:800}.pill.active{background:var(--orange);border-color:var(--orange);color:#fff}.wa{width:34px;height:34px;border-radius:50%;border:1px solid #b7e8c9;background:#effff5;color:#168a4a;font-weight:900}.fab{width:46px;height:46px;border-radius:50%;border:0;background:var(--orange);color:#fff;font-size:24px;margin:11px 0 0 auto;display:grid;place-items:center}
+    .radar-top{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.radar-box{text-align:center;border-radius:12px;padding:10px 4px}.radar-box strong{display:block;font-size:18px}.radar-box span{font-size:8.5px}.rmsg{background:#fff0ef;color:#b63d3d}.rcall{background:#fff3e6;color:#b35a14}.rvisit{background:#edf4ff;color:#3267b5}.tag{margin-left:auto;font-size:8px;font-weight:900;padding:5px 7px;border-radius:999px}.tag.msg{background:#fff0ef;color:#c33d3d}.tag.call{background:#fff2df;color:#ba6218}.tag.visit{background:#eaf2ff;color:#3267b5}.note{font-size:9px;color:var(--muted);margin-top:2px}
+    .calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:7px}.day{text-align:center;padding:7px 2px;border-radius:9px;font-size:10px}.day.label{color:#a1a5ad;font-weight:800}.day.active{background:var(--orange);color:#fff;font-weight:900}.event-dot{width:5px;height:5px;border-radius:50%;background:var(--orange);margin:2px auto 0}.birthday-card{display:flex;align-items:center;gap:8px}.birthday-card .btn{margin-left:auto}.dept-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.dept{background:#fff;border:1px solid var(--line);border-radius:13px;padding:11px}.dept .icon{font-size:20px}.dept strong{display:block;font-size:11px;margin-top:5px}.dept span{font-size:9px;color:var(--muted)}.more-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.more-btn{min-height:84px;border:1px solid var(--line);background:#fff;border-radius:13px;padding:8px 4px;font-size:9px;font-weight:900}.more-btn span{display:block;font-size:20px;margin-bottom:4px}
+    .nav{position:sticky;bottom:0;z-index:40;background:rgba(255,255,255,.98);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:6px 4px calc(7px + env(safe-area-inset-bottom))}.nav button{border:0;background:transparent;min-height:54px;color:#767b86;border-radius:11px;font-size:8.5px;font-weight:900}.nav button span{display:block;font-size:19px;margin-bottom:2px}.nav button.active{background:#fff0e6;color:var(--orange)}.toast{position:sticky;bottom:70px;z-index:50;margin:0 12px;pointer-events:none}.toast div{background:#25272d;color:#fff;border-radius:11px;padding:9px 11px;text-align:center;font-size:10px;box-shadow:var(--shadow)}
+    @media(max-width:360px){.quick,.stats{grid-template-columns:repeat(2,1fr)}.more-grid{grid-template-columns:repeat(2,1fr)}}
+  </style>
+</head>
+<body>
+<div class="app" id="simulationApp">
+  <div class="simulation-bar"><b>SIMULAÇÃO DO NOVO LAYOUT</b> — não grava dados reais</div>
+  <header class="topbar">
+    <div class="brand"><div class="logo-box"><img src="/logo.png?v=simulacao-orange-1" alt="Multiplica Plus"></div><div class="brand-copy"><strong>Multiplica <span>PLUS</span></strong><small>IEAD - JOTA • conceito visual laranja</small></div></div>
+    <div class="online"><i></i><span>ONLINE</span></div>
+  </header>
+
+  <main class="content">
+    <section class="screen active" data-screen="inicio">
+      <div class="view-head"><div><h1>Início</h1><p>Visão rápida do cuidado e da igreja</p></div><button class="btn" id="profileBtn" type="button">Pr. Wagner</button></div>
+      <div class="card hero"><div class="eyebrow">Mensagem do dia</div><h2>Alguém espera por você!</h2><p>Cada chamada, abraço ou palavra pode fazer diferença. Continue cuidando de vidas com amor, atenção e propósito.</p><div class="verse"><strong>Hebreus 10:24</strong><br>Consideremos uns aos outros para nos estimularmos ao amor e às boas obras.</div></div>
+      <div class="section-title"><strong>Ações rápidas</strong></div>
+      <div class="quick"><button data-go="chamada" type="button"><span class="ico">✓</span>Chamada</button><button data-go="membros" type="button"><span class="ico">👥</span>Membros</button><button data-go="radar" type="button"><span class="ico">◎</span>Radar</button><button data-go="agenda" type="button"><span class="ico">🗓</span>Agenda</button></div>
+      <div class="section-title"><strong>Resumo da igreja</strong><button class="text-link" data-go="mais" type="button">Ver mais</button></div>
+      <div class="stats"><div class="stat"><strong>612</strong><span>Pessoas ativas</span></div><div class="stat"><strong>27</strong><span>Visitantes</span></div><div class="stat"><strong>18</strong><span>Departamentos</span></div><div class="stat"><strong>11</strong><span>Novos no mês</span></div></div>
+      <div class="section-title"><strong>Aniversariantes</strong><button class="text-link" data-go="aniversariantes" type="button">Hoje e semana</button></div>
+      <div class="card"><div style="font-size:9px;color:var(--muted);margin-bottom:7px">HOJE</div><div class="birthday-strip"><div class="avatar">AL</div><div class="avatar">BS</div><div class="avatar">CM</div><div class="avatar">+3</div><div style="min-width:105px;font-size:10px"><strong>6 pessoas</strong><br><span style="color:var(--muted)">Toque para ver todos</span></div></div></div>
+      <div class="section-title"><strong>Próximo evento</strong></div>
+      <div class="card event"><div class="date-box">30<small>AGO</small></div><div class="event-copy"><strong>Festa do Círculo de Oração</strong><span>19:30 • Templo JK</span></div><button class="btn small" data-go="agenda" type="button">Abrir</button></div>
+    </section>
+
+    <section class="screen" data-screen="chamada">
+      <div class="view-head"><div><h1>Chamada</h1><p>Registro de presença por departamento</p></div><button class="btn" id="historyBtn" type="button">Histórico</button></div>
+      <div class="card">
+        <div class="form-grid"><div class="field"><label>Departamento</label><select id="deptSelect"><option>Geral</option><option>Atalaias de Cristo</option><option>Jovens</option><option>Infantil</option></select></div><div class="field"><label>Data</label><input type="date" value="2026-08-25"></div><div class="field full"><label>Culto / reunião</label><select><option>Terça — Círculo de Oração</option><option>Quarta — Culto de Ensino</option><option>Quinta — Vitória</option><option>Domingo — Celebração</option><option>EBD — Manhã</option><option>Manual</option></select></div></div>
+        <div class="seg" id="roleSeg"><button class="active" data-role="membros" type="button">Membros</button><button data-role="outros" type="button">Outros contatos</button></div>
+        <div id="groupWrap" style="display:none"><div class="seg three" id="groupSeg"><button class="active" type="button">Grupo A</button><button type="button">Grupo B</button><button type="button">Outros</button></div></div>
+        <div class="mini-line"><span id="listLabel">Membros do departamento</span><strong id="callCounter">3 presentes</strong></div>
+        <input class="search" id="callSearch" placeholder="Buscar pessoa..." aria-label="Buscar pessoa na chamada">
+        <div class="list" id="callList"></div>
+        <div class="call-actions"><button class="btn" id="markAll" type="button">Marcar todos</button><button class="btn primary" id="saveCall" type="button">Salvar chamada</button></div>
+        <div class="summary"><div><strong id="totalPeople">6</strong><span>Total exibido</span></div><div><strong id="presentCount">3</strong><span>Presentes</span></div><div><strong id="percentCount">50%</strong><span>Presença</span></div></div>
+        <div class="hint" id="saveHint">Simulação: os cliques funcionam visualmente, mas nada é enviado ao Supabase.</div>
+      </div>
+    </section>
+
+    <section class="screen" data-screen="membros">
+      <div class="view-head"><div><h1>Membros</h1><p>Pessoas, contatos e acompanhamento</p></div><button class="btn primary" id="newPerson" type="button">+ Novo</button></div>
+      <input class="search" id="memberSearch" placeholder="Buscar por nome..." aria-label="Buscar membros">
+      <div class="filters" id="memberFilters"><button class="pill active" data-filter="todos" type="button">Todos</button><button class="pill" data-filter="membro" type="button">Membros</button><button class="pill" data-filter="lider" type="button">Líderes</button><button class="pill" data-filter="visitante" type="button">Visitantes</button></div>
+      <div class="list" id="memberList"></div><button class="fab" id="fabAdd" type="button" aria-label="Adicionar pessoa">+</button>
+    </section>
+
+    <section class="screen" data-screen="radar">
+      <div class="view-head"><div><h1>Radar</h1><p>Pessoas que precisam de atenção</p></div><button class="btn" id="refreshRadar" type="button">↻</button></div>
+      <div class="radar-top"><div class="radar-box rmsg"><strong>12</strong><span>Mensagem</span></div><div class="radar-box rcall"><strong>8</strong><span>Ligação</span></div><div class="radar-box rvisit"><strong>5</strong><span>Visita</span></div></div>
+      <div class="seg three" id="radarSeg"><button class="active" data-radar="todos" type="button">Todos</button><button data-radar="cuidado" type="button">Precisam cuidado</button><button data-radar="acompanhados" type="button">Acompanhados</button></div>
+      <div class="list" id="radarList"></div>
+    </section>
+
+    <section class="screen" data-screen="agenda">
+      <div class="view-head"><div><h1>Agenda</h1><p>Eventos e programação</p></div><button class="btn primary" id="newEvent" type="button">+ Evento</button></div>
+      <div class="card"><div style="display:flex;align-items:center;justify-content:space-between"><button class="btn small" type="button">‹</button><strong>Agosto 2026</strong><button class="btn small" type="button">›</button></div><div class="calendar"><div class="day label">D</div><div class="day label">S</div><div class="day label">T</div><div class="day label">Q</div><div class="day label">Q</div><div class="day label">S</div><div class="day label">S</div><div class="day">23</div><div class="day">24</div><div class="day active">25</div><div class="day">26</div><div class="day">27</div><div class="day">28<div class="event-dot"></div></div><div class="day">29<div class="event-dot"></div></div><div class="day">30<div class="event-dot"></div></div><div class="day">31</div></div></div>
+      <div class="section-title"><strong>Próximos eventos</strong></div>
+      <div class="list"><div class="card event"><div class="date-box">28<small>AGO</small></div><div class="event-copy"><strong>Festa do Círculo de Oração</strong><span>19:30 • Templo JK</span></div></div><div class="card event"><div class="date-box">05<small>SET</small></div><div class="event-copy"><strong>Cruzada Evangelística</strong><span>19:00 • Bairro JK</span></div></div><div class="card event"><div class="date-box">12<small>SET</small></div><div class="event-copy"><strong>Culto de Missões</strong><span>19:30 • Templo JK</span></div></div></div>
+    </section>
+
+    <section class="screen" data-screen="aniversariantes">
+      <div class="view-head"><div><h1>Aniversariantes</h1><p>Hoje, semana e mês</p></div></div>
+      <div class="seg three" id="birthdaySeg"><button class="active" data-bday="hoje" type="button">Hoje</button><button data-bday="semana" type="button">Esta semana</button><button data-bday="mes" type="button">Mês</button></div>
+      <div class="list" id="birthdayList"></div>
+    </section>
+
+    <section class="screen" data-screen="departamentos">
+      <div class="view-head"><div><h1>Departamentos</h1><p>Ministérios e equipes</p></div><button class="btn primary" id="manageDept" type="button">Gerenciar</button></div>
+      <div class="dept-grid"><div class="dept"><div class="icon">🙏</div><strong>Atalaias de Cristo</strong><span>38 pessoas</span></div><div class="dept"><div class="icon">🔥</div><strong>Jovens</strong><span>52 pessoas</span></div><div class="dept"><div class="icon">🧒</div><strong>Infantil</strong><span>41 pessoas</span></div><div class="dept"><div class="icon">🛡</div><strong>Obreiros</strong><span>36 pessoas</span></div><div class="dept"><div class="icon">🎵</div><strong>Louvor</strong><span>28 pessoas</span></div><div class="dept"><div class="icon">📖</div><strong>EBD</strong><span>64 pessoas</span></div></div>
+    </section>
+
+    <section class="screen" data-screen="mais">
+      <div class="view-head"><div><h1>Mais</h1><p>Outros módulos e ferramentas</p></div></div>
+      <div class="more-grid"><button class="more-btn" data-go="agenda" type="button"><span>🗓</span>Agenda</button><button class="more-btn" data-go="aniversariantes" type="button"><span>🎂</span>Aniversariantes</button><button class="more-btn" data-go="departamentos" type="button"><span>👥</span>Departamentos</button><button class="more-btn" id="reportsBtn" type="button"><span>📊</span>Relatórios</button><button class="more-btn" id="missionsBtn" type="button"><span>✨</span>Missões especiais</button><button class="more-btn" id="settingsBtn" type="button"><span>⚙️</span>Configurações</button><button class="more-btn" id="dashboardBtn" type="button"><span>📈</span>Dashboard</button><button class="more-btn" id="backupBtn" type="button"><span>💾</span>Backup</button><button class="more-btn" id="helpBtn" type="button"><span>❓</span>Ajuda</button></div>
+    </section>
+  </main>
+
+  <nav class="nav" aria-label="Navegação principal"><button class="active" data-nav="inicio" type="button"><span>⌂</span>Início</button><button data-nav="chamada" type="button"><span>✓</span>Chamada</button><button data-nav="membros" type="button"><span>👥</span>Membros</button><button data-nav="radar" type="button"><span>◎</span>Radar</button><button data-nav="mais" type="button"><span>☰</span>Mais</button></nav>
+  <div class="toast" id="toast" aria-live="polite"></div>
+</div>
+
+<script>
+(function(){
+  const app=document.getElementById('simulationApp');
+  const screens=[...app.querySelectorAll('.screen')];
+  const navButtons=[...app.querySelectorAll('[data-nav]')];
+  const toastBox=document.getElementById('toast');
+  function toast(msg){toastBox.innerHTML='<div>'+msg+'</div>';setTimeout(()=>toastBox.innerHTML='',1700)}
+  function go(name){screens.forEach(s=>s.classList.toggle('active',s.dataset.screen===name));navButtons.forEach(b=>b.classList.toggle('active',b.dataset.nav===name));window.scrollTo({top:0,behavior:'smooth'})}
+  app.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
+  navButtons.forEach(b=>b.addEventListener('click',()=>go(b.dataset.nav)));
+  document.getElementById('profileBtn').addEventListener('click',()=>toast('Perfil do usuário — demonstração visual'));
+
+  const callMembers=[{n:'Adriano Silva',r:'Membro',d:'Atalaias',p:true},{n:'Ana Paula Lima',r:'Membro',d:'Integração',p:true},{n:'Bruno Santos',r:'Membro',d:'Gideões',p:true},{n:'Carla Mendes',r:'Membro',d:'Infantil',p:false},{n:'Daniel Oliveira',r:'Membro',d:'Jovens',p:false},{n:'Elaine Costa',r:'Membro',d:'Universitários',p:false}];
+  const callOthers=[{n:'Carlos Lima',r:'Visitante',d:'Integração',p:true},{n:'Joana Souza',r:'Professor',d:'EBD',p:false},{n:'Marcos Reis',r:'Cooperador',d:'Obreiros',p:true},{n:'Patrícia Alves',r:'Visitante',d:'Geral',p:false}];
+  let callRole='membros';
+  function initials(name){return name.split(' ').map(x=>x[0]).slice(0,2).join('')}
+  function renderCall(){
+    const q=document.getElementById('callSearch').value.toLowerCase();const base=callRole==='membros'?callMembers:callOthers;const arr=base.filter(x=>x.n.toLowerCase().includes(q));const list=document.getElementById('callList');list.innerHTML='';
+    arr.forEach(x=>{const row=document.createElement('div');row.className='person';row.innerHTML='<div class="avatar small">'+initials(x.n)+'</div><div class="person-info"><strong>'+x.n+'</strong><span>'+x.r+' • '+x.d+'</span></div><button class="check '+(x.p?'on':'')+'" type="button" aria-label="Alternar presença">'+(x.p?'✓':'')+'</button>';row.querySelector('.check').addEventListener('click',()=>{x.p=!x.p;renderCall()});list.appendChild(row)});
+    const present=base.filter(x=>x.p).length;document.getElementById('totalPeople').textContent=base.length;document.getElementById('presentCount').textContent=present;document.getElementById('callCounter').textContent=present+' presentes';document.getElementById('percentCount').textContent=Math.round((present/base.length)*100)+'%';document.getElementById('listLabel').textContent=callRole==='membros'?'Membros do departamento':'Outros contatos do departamento';
+  }
+  document.querySelectorAll('#roleSeg button').forEach(b=>b.addEventListener('click',()=>{callRole=b.dataset.role;document.querySelectorAll('#roleSeg button').forEach(x=>x.classList.toggle('active',x===b));renderCall()}));
+  document.getElementById('callSearch').addEventListener('input',renderCall);document.getElementById('markAll').addEventListener('click',()=>{(callRole==='membros'?callMembers:callOthers).forEach(x=>x.p=true);renderCall()});document.getElementById('saveCall').addEventListener('click',()=>toast('Chamada simulada salva somente nesta visualização'));
+  document.getElementById('historyBtn').addEventListener('click',()=>toast('Histórico de chamadas será preservado no layout real'));
+  document.getElementById('deptSelect').addEventListener('change',e=>{document.getElementById('groupWrap').style.display=e.target.value.includes('Atalaias')?'block':'none'});
+  document.querySelectorAll('#groupSeg button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#groupSeg button').forEach(x=>x.classList.toggle('active',x===b));toast('Filtro de grupo alterado na simulação')}));
+
+  const members=[{n:'Adriano Silva',r:'Membro',d:'Atalaias de Cristo'},{n:'Ana Paula Lima',r:'Líder',d:'Integração'},{n:'Bruno Santos',r:'Membro',d:'Gideões'},{n:'Carla Mendes',r:'Membro',d:'Infantil'},{n:'Daniel Oliveira',r:'Visitante',d:'Jovens'},{n:'Elaine Costa',r:'Membro',d:'EBD'}];
+  let memberFilter='todos';
+  function renderMembers(){const q=document.getElementById('memberSearch').value.toLowerCase();const list=document.getElementById('memberList');list.innerHTML='';members.filter(x=>(memberFilter==='todos'||x.r.toLowerCase().includes(memberFilter))&&x.n.toLowerCase().includes(q)).forEach(x=>{const row=document.createElement('div');row.className='person';row.innerHTML='<div class="avatar small">'+initials(x.n)+'</div><div class="person-info"><strong>'+x.n+'</strong><span>'+x.r+' • '+x.d+'</span></div><button class="wa" type="button">W</button>';row.querySelector('.wa').addEventListener('click',()=>toast('Abriria o WhatsApp de '+x.n));list.appendChild(row)})}
+  document.getElementById('memberSearch').addEventListener('input',renderMembers);document.querySelectorAll('#memberFilters button').forEach(b=>b.addEventListener('click',()=>{memberFilter=b.dataset.filter;document.querySelectorAll('#memberFilters button').forEach(x=>x.classList.toggle('active',x===b));renderMembers()}));['newPerson','fabAdd'].forEach(id=>document.getElementById(id).addEventListener('click',()=>toast('Cadastro de pessoa — somente demonstração')));
+
+  const radarPeople=[{n:'João Batista',note:'Sem conexão há 21 dias',t:'msg',label:'Mensagem',group:'cuidado'},{n:'Maria Aparecida',note:'Precisa de acompanhamento',t:'call',label:'Ligação',group:'cuidado'},{n:'Pedro Henrique',note:'Afastado dos cultos',t:'visit',label:'Visita',group:'cuidado'},{n:'Sandra Lima',note:'Contato realizado ontem',t:'msg',label:'Mensagem',group:'acompanhados'},{n:'Tiago Alves',note:'Pedido de oração',t:'call',label:'Ligação',group:'acompanhados'}];let radarFilter='todos';
+  function renderRadar(){const list=document.getElementById('radarList');list.innerHTML='';radarPeople.filter(x=>radarFilter==='todos'||x.group===radarFilter).forEach(x=>{const row=document.createElement('div');row.className='person';row.innerHTML='<div class="avatar small">'+initials(x.n)+'</div><div class="person-info"><strong>'+x.n+'</strong><div class="note">'+x.note+'</div></div><span class="tag '+x.t+'">'+x.label+'</span>';list.appendChild(row)})}
+  document.querySelectorAll('#radarSeg button').forEach(b=>b.addEventListener('click',()=>{radarFilter=b.dataset.radar;document.querySelectorAll('#radarSeg button').forEach(x=>x.classList.toggle('active',x===b));renderRadar()}));document.getElementById('refreshRadar').addEventListener('click',()=>toast('Radar atualizado na simulação'));
+
+  const birthdays={hoje:[['Ana Paula Lima','Hoje','Integração'],['Bruno Santos','Hoje','Gideões']],semana:[['Carla Mendes','26/08','Infantil'],['Daniel Oliveira','27/08','Jovens'],['Elaine Costa','29/08','EBD']],mes:[['João Batista','30/08','Obreiros'],['Maria Aparecida','31/08','Atalaias']]};
+  function renderBirthdays(type='hoje'){const list=document.getElementById('birthdayList');list.innerHTML='';birthdays[type].forEach(x=>{const row=document.createElement('div');row.className='card birthday-card';row.innerHTML='<div class="avatar small">'+initials(x[0])+'</div><div class="person-info"><strong>'+x[0]+'</strong><span>'+x[1]+' • '+x[2]+'</span></div><button class="btn primary small" type="button">Parabenizar</button>';row.querySelector('button').addEventListener('click',()=>toast('Abriria a mensagem de aniversário para '+x[0]));list.appendChild(row)})}
+  document.querySelectorAll('#birthdaySeg button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#birthdaySeg button').forEach(x=>x.classList.toggle('active',x===b));renderBirthdays(b.dataset.bday)}));
+
+  ['newEvent','manageDept','reportsBtn','missionsBtn','settingsBtn','dashboardBtn','backupBtn','helpBtn'].forEach(id=>document.getElementById(id).addEventListener('click',()=>toast('Módulo representado apenas para visualização')));
+  renderCall();renderMembers();renderRadar();renderBirthdays();
+})();
+</script>
+</body>
+</html>
