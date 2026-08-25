@@ -1,0 +1,96 @@
+/* Multiplica PLUS v8.2.3 — reorganização visual segura
+   Somente apresentação. Não altera estado, banco, Supabase, sync, touch-action ou overflow vertical. */
+
+:root {
+  --v823-orange: #ff6101;
+  --v823-orange-soft: #fff1e8;
+  --v823-orange-border: #ffd2b5;
+}
+
+@media (max-width: 768px) {
+  /* Cabeçalho mais limpo, mantendo todos os controles existentes. */
+  .mobile-header {
+    border-bottom: 1px solid var(--v823-orange-border);
+    box-shadow: 0 3px 14px rgba(30, 41, 59, 0.07);
+  }
+
+  .mobile-header-brand img {
+    width: 42px;
+    height: 42px;
+    object-fit: contain;
+  }
+
+  .mobile-header-title h1 {
+    letter-spacing: -0.02em;
+  }
+
+  .mobile-header-version {
+    color: var(--v823-orange) !important;
+    font-weight: 800;
+  }
+
+  /* Conteúdo com respiro consistente. Não define height/overflow/touch. */
+  .main-content {
+    padding-bottom: 5.8rem !important;
+  }
+
+  /* Barra inferior: mantém TODAS as funções, mas prioriza as de uso diário. */
+  .mobile-nav {
+    background: rgba(255, 255, 255, 0.98) !important;
+    border-top: 1px solid var(--v823-orange-border) !important;
+    box-shadow: 0 -5px 20px rgba(15, 23, 42, 0.09);
+  }
+
+  .mobile-nav-item {
+    border-radius: 12px !important;
+    min-height: 56px;
+    color: #6b7280;
+  }
+
+  .mobile-nav-item.active {
+    color: var(--v823-orange) !important;
+    background: var(--v823-orange-soft) !important;
+  }
+
+  .mobile-nav-item.active svg {
+    color: var(--v823-orange) !important;
+  }
+
+  /* Prioridade visual: Início, Presença/Chamada, Membros e Radar primeiro.
+     Os demais módulos continuam acessíveis na mesma barra, logo depois. */
+  .mobile-nav-item:nth-child(1) { order: 1; }  /* Início */
+  .mobile-nav-item:nth-child(6) { order: 2; }  /* Presença / Chamada */
+  .mobile-nav-item:nth-child(5) { order: 3; }  /* Membros */
+  .mobile-nav-item:nth-child(8) { order: 4; }  /* Radar */
+  .mobile-nav-item:nth-child(4) { order: 5; }  /* Agenda */
+  .mobile-nav-item:nth-child(7) { order: 6; }  /* Aniversariantes */
+  .mobile-nav-item:nth-child(9) { order: 7; }  /* Departamentos */
+  .mobile-nav-item:nth-child(2) { order: 8; }  /* Dashboard */
+  .mobile-nav-item:nth-child(10) { order: 9; } /* Missões */
+  .mobile-nav-item:nth-child(11) { order: 10; }/* Relatórios */
+  .mobile-nav-item:nth-child(3) { order: 11; } /* Tutorial */
+  .mobile-nav-item:nth-child(12) { order: 12; }/* Configurações */
+
+  /* Padronização laranja de ações primárias já existentes. */
+  .btn-primary,
+  button.btn-primary {
+    background: var(--v823-orange) !important;
+    border-color: var(--v823-orange) !important;
+  }
+
+  .badge-active {
+    border-color: var(--v823-orange-border);
+  }
+
+  /* Cartões mais organizados sem mudar sua estrutura ou comportamento. */
+  .card {
+    border-radius: 16px;
+  }
+
+  input,
+  select,
+  textarea,
+  .form-control {
+    border-radius: 12px;
+  }
+}
