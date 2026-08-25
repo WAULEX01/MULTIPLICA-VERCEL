@@ -3,10 +3,10 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [
-    { "source": "/simulacao", "destination": "/simulacao.html" },
-    { "source": "/simulacao/", "destination": "/simulacao.html" },
-    { "source": "/simulação", "destination": "/simulacao.html" },
-    { "source": "/simulação/", "destination": "/simulacao.html" },
+    { "source": "/simulacao", "destination": "/simulacao-v823.html" },
+    { "source": "/simulacao/", "destination": "/simulacao-v823.html" },
+    { "source": "/simulação", "destination": "/simulacao-v823.html" },
+    { "source": "/simulação/", "destination": "/simulacao-v823.html" },
     { "source": "/preview-layout", "destination": "/preview-layout.html" },
     { "source": "/preview-layout/", "destination": "/preview-layout.html" },
     { "source": "/(.*)", "destination": "/index.html" }
@@ -19,7 +19,7 @@
       ]
     },
     {
-      "source": "/simulacao.html",
+      "source": "/simulacao-v823.html",
       "headers": [
         { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
       ]
