@@ -19,6 +19,7 @@ const lazyHeavyViewsBuildTransform = () => ({
     const agendaImport = "import { AgendaView } from './views/AgendaView';"
     const tutorialImport = "import { TutorialView } from './views/TutorialView';"
     const birthdaysImport = "import { BirthdaysView } from './views/BirthdaysView';"
+    const settingsImport = "import { SettingsView } from './views/SettingsView';"
     const missionsImport = "import { SpecialMissionsView } from './views/SpecialMissionsView';"
 
     const inicioRender = "return <InicioView db={db} session={activeSession} onNavigate={setCurrentView} onChangeDepartment={handleSwitchSessionDepartment} />;"
@@ -32,6 +33,7 @@ const lazyHeavyViewsBuildTransform = () => ({
     const departmentsRender = "return <DepartmentsView db={db} session={activeSession} onUpdateDepts={updateDepartments} onHardDeleteDept={handleHardDeleteDept} onNavigate={handleNavigate} />;"
     const reportsRender = "return <ReportsView db={db} session={activeSession} />;"
     const birthdaysRender = "return <BirthdaysView db={db} session={activeSession} />;"
+    const settingsRender = `return (\n          <SettingsView\n            db={db}\n            session={activeSession}\n            onResetData={resetAllData}\n            onUpdateGoals={updateGoals}\n            onUpdateDatabase={updateDatabase}\n            onForcePull={forcePullFromServer}\n            onForcePush={forcePushToServer}\n          />\n        );`
 
     const requiredFragments = [
       reactImport,
@@ -45,6 +47,7 @@ const lazyHeavyViewsBuildTransform = () => ({
       agendaImport,
       tutorialImport,
       birthdaysImport,
+      settingsImport,
       missionsImport,
       inicioRender,
       dashboardRender,
@@ -57,6 +60,7 @@ const lazyHeavyViewsBuildTransform = () => ({
       departmentsRender,
       reportsRender,
       birthdaysRender,
+      settingsRender,
     ]
 
     if (requiredFragments.some(fragment => !code.includes(fragment))) {
@@ -69,7 +73,10 @@ const lazyHeavyViewsBuildTransform = () => ({
     const wrap = (label: string, jsx: string) =>
       `return <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center' }}>Carregando ${label}...</div>}>${jsx}</Suspense>;`
 
-    const transformed = code
+    const wrappedDashboard = wrap('painel', "<DashboardView db={db} session={activeSession} onNavigate={setCurrentView} onOpenQuickAdd={() => setQuickAddModal({ open: true, type: 'membro' })} onUpdateDatabase={updateDatabase} onChangeDepartment={handleSwitchSessionDepartment} />")
+    const wrappedSettings = `return (\n          <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center' }}>Carregando configurações...</div>}>\n            <SettingsView\n              db={db}\n              session={activeSession}\n              onResetData={resetAllData}\n              onUpdateGoals={updateGoals}\n              onUpdateDatabase={updateDatabase}\n              onForcePull={forcePullFromServer}\n              onForcePush={forcePushToServer}\n            />\n          </Suspense>\n        );`
+
+    let transformed = code
       .replace(reactImport, "import { useState, useEffect, useRef, lazy, Suspense } from 'react';")
       .replace(inicioImport, lazyView('./views/InicioView', 'InicioView'))
       .replace(dashboardImport, lazyView('./views/DashboardView', 'DashboardView'))
@@ -81,9 +88,9 @@ const lazyHeavyViewsBuildTransform = () => ({
       .replace(agendaImport, lazyView('./views/AgendaView', 'AgendaView'))
       .replace(tutorialImport, lazyView('./views/TutorialView', 'TutorialView'))
       .replace(birthdaysImport, lazyView('./views/BirthdaysView', 'BirthdaysView'))
+      .replace(settingsImport, lazyView('./views/SettingsView', 'SettingsView'))
       .replace(missionsImport, lazyView('./views/SpecialMissionsView', 'SpecialMissionsView'))
       .replace(inicioRender, wrap('início', '<InicioView db={db} session={activeSession} onNavigate={setCurrentView} onChangeDepartment={handleSwitchSessionDepartment} />'))
-      .replace(dashboardRender, wrap('painel', "<DashboardView db={db} session={activeSession} onNavigate={setCurrentView} onOpenQuickAdd={() => setQuickAddModal({ open: true, type: 'membro' })} onUpdateDatabase={updateDatabase} onChangeDepartment={handleSwitchSessionDepartment} />"))
       .replace(tutorialRender, wrap('tutorial', '<TutorialView session={activeSession} />'))
       .replace(agendaRender, wrap('agenda', '<AgendaView db={db} session={activeSession} onUpdateDatabase={updateDatabase} />'))
       .replace(peopleRender, wrap('membros', '<PeopleListView db={db} session={activeSession} onUpdatePeople={updatePeople} onResetPassword={resetPersonPassword} initialDepartmentFilter={targetDepartmentFilter} onChangeDepartment={handleSwitchSessionDepartment} />'))
@@ -93,6 +100,9 @@ const lazyHeavyViewsBuildTransform = () => ({
       .replace(departmentsRender, wrap('departamentos', '<DepartmentsView db={db} session={activeSession} onUpdateDepts={updateDepartments} onHardDeleteDept={handleHardDeleteDept} onNavigate={handleNavigate} />'))
       .replace(reportsRender, wrap('relatórios', '<ReportsView db={db} session={activeSession} />'))
       .replace(birthdaysRender, wrap('aniversariantes', '<BirthdaysView db={db} session={activeSession} />'))
+      .replace(settingsRender, wrappedSettings)
+
+    transformed = transformed.split(dashboardRender).join(wrappedDashboard)
 
     return { code: transformed, map: null }
   },
