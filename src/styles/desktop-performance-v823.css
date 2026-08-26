@@ -1,0 +1,67 @@
+/* Multiplica PLUS v8.2.3 — desempenho desktop/tablet seguro
+   Somente custo gráfico. Não altera layout, scroll, touch, dados ou sincronização. */
+
+@media (min-width: 769px) {
+  /* Backdrop blur em cabeçalhos fixos pode gerar repaints caros durante navegação. */
+  .desktop-topbar,
+  .modal-overlay,
+  .glass-card {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Mantém profundidade visual com sombras menores e mais baratas. */
+  .card,
+  .glass-card,
+  .modal-content,
+  .test-mode-bar,
+  .desktop-topbar,
+  .sidebar-user {
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06) !important;
+  }
+
+  /* Controles respondem mais rápido sem alterar geometria ou cores. */
+  .btn,
+  button,
+  .card,
+  .glass-card,
+  .sidebar-link,
+  input,
+  select,
+  textarea,
+  .form-control {
+    transition-duration: 110ms !important;
+  }
+
+  /* Animações decorativas curtas; indicadores operacionais como `spin` continuam. */
+  .animate-fade,
+  .animate-slide,
+  .animate-slide-up,
+  .fade-in,
+  .slide-up {
+    animation-duration: 140ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  button,
+  .card,
+  .glass-card,
+  .sidebar-link,
+  input,
+  select,
+  textarea,
+  .form-control {
+    transition: none !important;
+  }
+
+  .animate-fade,
+  .animate-slide,
+  .animate-slide-up,
+  .fade-in,
+  .slide-up {
+    animation: none !important;
+  }
+}
