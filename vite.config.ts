@@ -12,10 +12,12 @@ const lazyHeavyViewsBuildTransform = () => ({
     const dashboardImport = "import { DashboardView } from './views/DashboardView';"
     const peopleImport = "import { PeopleListView } from './views/PeopleListView';"
     const attendanceImport = "import { AttendanceView } from './views/AttendanceView';"
+    const radarImport = "import { RadarView } from './views/RadarView';"
     const missionsImport = "import { SpecialMissionsView } from './views/SpecialMissionsView';"
     const dashboardRender = "return <DashboardView db={db} session={activeSession} onNavigate={setCurrentView} onOpenQuickAdd={() => setQuickAddModal({ open: true, type: 'membro' })} onUpdateDatabase={updateDatabase} onChangeDepartment={handleSwitchSessionDepartment} />;"
     const peopleRender = "return <PeopleListView db={db} session={activeSession} onUpdatePeople={updatePeople} onResetPassword={resetPersonPassword} initialDepartmentFilter={targetDepartmentFilter} onChangeDepartment={handleSwitchSessionDepartment} />;"
     const attendanceRender = "return <AttendanceView db={db} session={activeSession} onUpdateAttendances={updateAttendances} initialDepartmentFilter={targetDepartmentFilter} />;"
+    const radarRender = "return <RadarView db={db} session={activeSession} onUpdatePastoralLogs={updatePastoralLogs} />;"
     const missionsRender = "return <SpecialMissionsView db={db} session={activeSession} onUpdateDatabase={updateDatabase} />;"
 
     if (
@@ -23,10 +25,12 @@ const lazyHeavyViewsBuildTransform = () => ({
       !code.includes(dashboardImport) ||
       !code.includes(peopleImport) ||
       !code.includes(attendanceImport) ||
+      !code.includes(radarImport) ||
       !code.includes(missionsImport) ||
       !code.includes(dashboardRender) ||
       !code.includes(peopleRender) ||
       !code.includes(attendanceRender) ||
+      !code.includes(radarRender) ||
       !code.includes(missionsRender)
     ) {
       throw new Error('Lazy Views v8.2.3: estrutura esperada do App.tsx não encontrada; build interrompido por segurança.')
@@ -47,6 +51,10 @@ const lazyHeavyViewsBuildTransform = () => ({
         "const AttendanceView = lazy(() => import('./views/AttendanceView').then(module => ({ default: module.AttendanceView })));"
       )
       .replace(
+        radarImport,
+        "const RadarView = lazy(() => import('./views/RadarView').then(module => ({ default: module.RadarView })));"
+      )
+      .replace(
         missionsImport,
         "const SpecialMissionsView = lazy(() => import('./views/SpecialMissionsView').then(module => ({ default: module.SpecialMissionsView })));"
       )
@@ -61,6 +69,10 @@ const lazyHeavyViewsBuildTransform = () => ({
       .replace(
         attendanceRender,
         "return <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center' }}>Carregando presença...</div>}><AttendanceView db={db} session={activeSession} onUpdateAttendances={updateAttendances} initialDepartmentFilter={targetDepartmentFilter} /></Suspense>;"
+      )
+      .replace(
+        radarRender,
+        "return <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center' }}>Carregando radar...</div>}><RadarView db={db} session={activeSession} onUpdatePastoralLogs={updatePastoralLogs} /></Suspense>;"
       )
       .replace(
         missionsRender,
