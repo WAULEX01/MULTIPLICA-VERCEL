@@ -9,15 +9,19 @@ const lazyHeavyViewsBuildTransform = () => ({
     if (!normalizedId.endsWith('/src/App.tsx')) return null
 
     const reactImport = "import { useState, useEffect, useRef } from 'react';"
+    const dashboardImport = "import { DashboardView } from './views/DashboardView';"
     const peopleImport = "import { PeopleListView } from './views/PeopleListView';"
     const missionsImport = "import { SpecialMissionsView } from './views/SpecialMissionsView';"
+    const dashboardRender = "return <DashboardView db={db} session={activeSession} onNavigate={setCurrentView} onOpenQuickAdd={() => setQuickAddModal({ open: true, type: 'membro' })} onUpdateDatabase={updateDatabase} onChangeDepartment={handleSwitchSessionDepartment} />;"
     const peopleRender = "return <PeopleListView db={db} session={activeSession} onUpdatePeople={updatePeople} onResetPassword={resetPersonPassword} initialDepartmentFilter={targetDepartmentFilter} onChangeDepartment={handleSwitchSessionDepartment} />;"
     const missionsRender = "return <SpecialMissionsView db={db} session={activeSession} onUpdateDatabase={updateDatabase} />;"
 
     if (
       !code.includes(reactImport) ||
+      !code.includes(dashboardImport) ||
       !code.includes(peopleImport) ||
       !code.includes(missionsImport) ||
+      !code.includes(dashboardRender) ||
       !code.includes(peopleRender) ||
       !code.includes(missionsRender)
     ) {
@@ -27,12 +31,20 @@ const lazyHeavyViewsBuildTransform = () => ({
     const transformed = code
       .replace(reactImport, "import { useState, useEffect, useRef, lazy, Suspense } from 'react';")
       .replace(
+        dashboardImport,
+        "const DashboardView = lazy(() => import('./views/DashboardView').then(module => ({ default: module.DashboardView })));"
+      )
+      .replace(
         peopleImport,
         "const PeopleListView = lazy(() => import('./views/PeopleListView').then(module => ({ default: module.PeopleListView })));"
       )
       .replace(
         missionsImport,
         "const SpecialMissionsView = lazy(() => import('./views/SpecialMissionsView').then(module => ({ default: module.SpecialMissionsView })));"
+      )
+      .replace(
+        dashboardRender,
+        "return <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center' }}>Carregando painel...</div>}><DashboardView db={db} session={activeSession} onNavigate={setCurrentView} onOpenQuickAdd={() => setQuickAddModal({ open: true, type: 'membro' })} onUpdateDatabase={updateDatabase} onChangeDepartment={handleSwitchSessionDepartment} /></Suspense>;"
       )
       .replace(
         peopleRender,
