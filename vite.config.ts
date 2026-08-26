@@ -11,18 +11,22 @@ const lazyHeavyViewsBuildTransform = () => ({
     const reactImport = "import { useState, useEffect, useRef } from 'react';"
     const dashboardImport = "import { DashboardView } from './views/DashboardView';"
     const peopleImport = "import { PeopleListView } from './views/PeopleListView';"
+    const attendanceImport = "import { AttendanceView } from './views/AttendanceView';"
     const missionsImport = "import { SpecialMissionsView } from './views/SpecialMissionsView';"
     const dashboardRender = "return <DashboardView db={db} session={activeSession} onNavigate={setCurrentView} onOpenQuickAdd={() => setQuickAddModal({ open: true, type: 'membro' })} onUpdateDatabase={updateDatabase} onChangeDepartment={handleSwitchSessionDepartment} />;"
     const peopleRender = "return <PeopleListView db={db} session={activeSession} onUpdatePeople={updatePeople} onResetPassword={resetPersonPassword} initialDepartmentFilter={targetDepartmentFilter} onChangeDepartment={handleSwitchSessionDepartment} />;"
+    const attendanceRender = "return <AttendanceView db={db} session={activeSession} onUpdateAttendances={updateAttendances} initialDepartmentFilter={targetDepartmentFilter} />;"
     const missionsRender = "return <SpecialMissionsView db={db} session={activeSession} onUpdateDatabase={updateDatabase} />;"
 
     if (
       !code.includes(reactImport) ||
       !code.includes(dashboardImport) ||
       !code.includes(peopleImport) ||
+      !code.includes(attendanceImport) ||
       !code.includes(missionsImport) ||
       !code.includes(dashboardRender) ||
       !code.includes(peopleRender) ||
+      !code.includes(attendanceRender) ||
       !code.includes(missionsRender)
     ) {
       throw new Error('Lazy Views v8.2.3: estrutura esperada do App.tsx não encontrada; build interrompido por segurança.')
@@ -39,6 +43,10 @@ const lazyHeavyViewsBuildTransform = () => ({
         "const PeopleListView = lazy(() => import('./views/PeopleListView').then(module => ({ default: module.PeopleListView })));"
       )
       .replace(
+        attendanceImport,
+        "const AttendanceView = lazy(() => import('./views/AttendanceView').then(module => ({ default: module.AttendanceView })));"
+      )
+      .replace(
         missionsImport,
         "const SpecialMissionsView = lazy(() => import('./views/SpecialMissionsView').then(module => ({ default: module.SpecialMissionsView })));"
       )
@@ -49,6 +57,10 @@ const lazyHeavyViewsBuildTransform = () => ({
       .replace(
         peopleRender,
         "return <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center' }}>Carregando membros...</div>}><PeopleListView db={db} session={activeSession} onUpdatePeople={updatePeople} onResetPassword={resetPersonPassword} initialDepartmentFilter={targetDepartmentFilter} onChangeDepartment={handleSwitchSessionDepartment} /></Suspense>;"
+      )
+      .replace(
+        attendanceRender,
+        "return <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center' }}>Carregando presença...</div>}><AttendanceView db={db} session={activeSession} onUpdateAttendances={updateAttendances} initialDepartmentFilter={targetDepartmentFilter} /></Suspense>;"
       )
       .replace(
         missionsRender,
