@@ -13,8 +13,10 @@ const lazyHeavyViewsBuildTransform = () => ({
     const peopleImport = "import { PeopleListView } from './views/PeopleListView';"
     const attendanceImport = "import { AttendanceView } from './views/AttendanceView';"
     const radarImport = "import { RadarView } from './views/RadarView';"
+    const agendaImport = "import { AgendaView } from './views/AgendaView';"
     const missionsImport = "import { SpecialMissionsView } from './views/SpecialMissionsView';"
     const dashboardRender = "return <DashboardView db={db} session={activeSession} onNavigate={setCurrentView} onOpenQuickAdd={() => setQuickAddModal({ open: true, type: 'membro' })} onUpdateDatabase={updateDatabase} onChangeDepartment={handleSwitchSessionDepartment} />;"
+    const agendaRender = "return <AgendaView db={db} session={activeSession} onUpdateDatabase={updateDatabase} />;"
     const peopleRender = "return <PeopleListView db={db} session={activeSession} onUpdatePeople={updatePeople} onResetPassword={resetPersonPassword} initialDepartmentFilter={targetDepartmentFilter} onChangeDepartment={handleSwitchSessionDepartment} />;"
     const attendanceRender = "return <AttendanceView db={db} session={activeSession} onUpdateAttendances={updateAttendances} initialDepartmentFilter={targetDepartmentFilter} />;"
     const radarRender = "return <RadarView db={db} session={activeSession} onUpdatePastoralLogs={updatePastoralLogs} />;"
@@ -26,8 +28,10 @@ const lazyHeavyViewsBuildTransform = () => ({
       !code.includes(peopleImport) ||
       !code.includes(attendanceImport) ||
       !code.includes(radarImport) ||
+      !code.includes(agendaImport) ||
       !code.includes(missionsImport) ||
       !code.includes(dashboardRender) ||
+      !code.includes(agendaRender) ||
       !code.includes(peopleRender) ||
       !code.includes(attendanceRender) ||
       !code.includes(radarRender) ||
@@ -55,12 +59,20 @@ const lazyHeavyViewsBuildTransform = () => ({
         "const RadarView = lazy(() => import('./views/RadarView').then(module => ({ default: module.RadarView })));"
       )
       .replace(
+        agendaImport,
+        "const AgendaView = lazy(() => import('./views/AgendaView').then(module => ({ default: module.AgendaView })));"
+      )
+      .replace(
         missionsImport,
         "const SpecialMissionsView = lazy(() => import('./views/SpecialMissionsView').then(module => ({ default: module.SpecialMissionsView })));"
       )
       .replace(
         dashboardRender,
         "return <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center' }}>Carregando painel...</div>}><DashboardView db={db} session={activeSession} onNavigate={setCurrentView} onOpenQuickAdd={() => setQuickAddModal({ open: true, type: 'membro' })} onUpdateDatabase={updateDatabase} onChangeDepartment={handleSwitchSessionDepartment} /></Suspense>;"
+      )
+      .replace(
+        agendaRender,
+        "return <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center' }}>Carregando agenda...</div>}><AgendaView db={db} session={activeSession} onUpdateDatabase={updateDatabase} /></Suspense>;"
       )
       .replace(
         peopleRender,
