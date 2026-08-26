@@ -21,6 +21,7 @@ const lazyHeavyViewsBuildTransform = () => ({
     const birthdaysImport = "import { BirthdaysView } from './views/BirthdaysView';"
     const settingsImport = "import { SettingsView } from './views/SettingsView';"
     const missionsImport = "import { SpecialMissionsView } from './views/SpecialMissionsView';"
+    const chatImport = "import { ChatWidget } from './components/ChatWidget';"
 
     const inicioRender = "return <InicioView db={db} session={activeSession} onNavigate={setCurrentView} onChangeDepartment={handleSwitchSessionDepartment} />;"
     const dashboardRender = "return <DashboardView db={db} session={activeSession} onNavigate={setCurrentView} onOpenQuickAdd={() => setQuickAddModal({ open: true, type: 'membro' })} onUpdateDatabase={updateDatabase} onChangeDepartment={handleSwitchSessionDepartment} />;"
@@ -49,6 +50,7 @@ const lazyHeavyViewsBuildTransform = () => ({
       birthdaysImport,
       settingsImport,
       missionsImport,
+      chatImport,
       inicioRender,
       dashboardRender,
       tutorialRender,
@@ -75,6 +77,7 @@ const lazyHeavyViewsBuildTransform = () => ({
 
     const wrappedDashboard = wrap('painel', "<DashboardView db={db} session={activeSession} onNavigate={setCurrentView} onOpenQuickAdd={() => setQuickAddModal({ open: true, type: 'membro' })} onUpdateDatabase={updateDatabase} onChangeDepartment={handleSwitchSessionDepartment} />")
     const wrappedSettings = `return (\n          <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center' }}>Carregando configurações...</div>}>\n            <SettingsView\n              db={db}\n              session={activeSession}\n              onResetData={resetAllData}\n              onUpdateGoals={updateGoals}\n              onUpdateDatabase={updateDatabase}\n              onForcePull={forcePullFromServer}\n              onForcePush={forcePushToServer}\n            />\n          </Suspense>\n        );`
+    const lazyChatWrapper = `const LazyChatWidget = lazy(() => import('./components/ChatWidget').then(module => ({ default: module.ChatWidget })));\nconst ChatWidget = (props: any) => props.isOpen ? <Suspense fallback={null}><LazyChatWidget {...props} /></Suspense> : null;`
 
     let transformed = code
       .replace(reactImport, "import { useState, useEffect, useRef, lazy, Suspense } from 'react';")
@@ -90,6 +93,7 @@ const lazyHeavyViewsBuildTransform = () => ({
       .replace(birthdaysImport, lazyView('./views/BirthdaysView', 'BirthdaysView'))
       .replace(settingsImport, lazyView('./views/SettingsView', 'SettingsView'))
       .replace(missionsImport, lazyView('./views/SpecialMissionsView', 'SpecialMissionsView'))
+      .replace(chatImport, lazyChatWrapper)
       .replace(inicioRender, wrap('início', '<InicioView db={db} session={activeSession} onNavigate={setCurrentView} onChangeDepartment={handleSwitchSessionDepartment} />'))
       .replace(tutorialRender, wrap('tutorial', '<TutorialView session={activeSession} />'))
       .replace(agendaRender, wrap('agenda', '<AgendaView db={db} session={activeSession} onUpdateDatabase={updateDatabase} />'))
