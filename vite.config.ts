@@ -107,19 +107,25 @@ const peopleListPerformanceTransform = () => ({
     const censusModalStart = `\n      {/* Modal Census Simulator */}`
     const baptismModalStart = `\n      {/* Modal Relatório de Batismo */}`
     const countsBlock = `const scopedPeople = db.people.filter(p => !p.deleted && (!session.department || personInDepartment(p, session.department)));\n  const activeCount = scopedPeople.filter(p => p.status === 'Ativo' || !p.status).length;\n  const visitorCount = scopedPeople.filter(p => p.status === 'Visitante').length;\n  const archivedCount = scopedPeople.filter(p => p.status === 'Arquivado').length;\n  const deletedCount = canViewDeletedRecords\n    ? db.people.filter(p => p.deleted).length\n    : db.people.filter(p => p.deleted && (!session.department || personInDepartment(p, session.department))).length;`
+    const peopleMap = `{filteredPeople.map(p => {`
+    const emptyMarker = `          {filteredPeople.length === 0 && (`
 
-    const required = [censusImport, censusStateBlock, censusButtonBlock, censusHandlersStart, censusModalStart, baptismModalStart, countsBlock]
+    const required = [censusImport, censusStateBlock, censusButtonBlock, censusHandlersStart, censusModalStart, baptismModalStart, countsBlock, peopleMap, emptyMarker]
     if (required.some(fragment => !code.includes(fragment))) {
       throw new Error('PeopleList perf v8.2.3: estrutura esperada não encontrada; build interrompido por segurança.')
     }
 
     const memoCounts = `const { activeCount, visitorCount, archivedCount, deletedCount } = useMemo(() => {\n    let activeCount = 0;\n    let visitorCount = 0;\n    let archivedCount = 0;\n    let deletedCount = 0;\n    for (const p of db.people) {\n      if (p.deleted) {\n        if (canViewDeletedRecords || !session.department || personInDepartment(p, session.department)) deletedCount++;\n        continue;\n      }\n      if (session.department && !personInDepartment(p, session.department)) continue;\n      if (p.status === 'Visitante') visitorCount++;\n      else if (p.status === 'Arquivado') archivedCount++;\n      else if (p.status === 'Ativo' || !p.status) activeCount++;\n    }\n    return { activeCount, visitorCount, archivedCount, deletedCount };\n  }, [db.people, session.department, canViewDeletedRecords]);`
 
+    const loadMoreBlock = `          {filteredPeople.length > visibleCount && (\n            <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'center', padding: '1rem 0 0.5rem' }}>\n              <button type="button" className="btn btn-secondary" onClick={() => setVisibleCount(count => count + 50)}>\n                Carregar mais ({Math.min(50, filteredPeople.length - visibleCount)} de {filteredPeople.length - visibleCount} restantes)\n              </button>\n            </div>\n          )}\n\n`
+
     let transformed = code
       .replace(censusImport, '')
-      .replace(censusStateBlock, `  const [activeChangeDeptId, setActiveChangeDeptId] = useState<string | null>(null);\n  const [expandedPersonId, setExpandedPersonId] = useState<string | null>(null);`)
+      .replace(censusStateBlock, `  const [activeChangeDeptId, setActiveChangeDeptId] = useState<string | null>(null);\n  const [expandedPersonId, setExpandedPersonId] = useState<string | null>(null);\n  const [visibleCount, setVisibleCount] = useState(50);`)
       .replace(censusButtonBlock, '')
       .replace(countsBlock, memoCounts)
+      .replace(peopleMap, `{filteredPeople.slice(0, visibleCount).map(p => {`)
+      .replace(emptyMarker, loadMoreBlock + emptyMarker)
 
     const handlersStartIndex = transformed.indexOf(censusHandlersStart)
     const returnIndex = transformed.indexOf(componentReturnMarker, handlersStartIndex)
