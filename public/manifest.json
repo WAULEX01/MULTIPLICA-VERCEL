@@ -1,17 +1,22 @@
 {
-  "name": "Multiplica PLUS 8.2.2",
+  "name": "Multiplica PLUS | IEAD - JOTA",
   "short_name": "Multiplica PLUS",
-  "description": "Aplicativo oficial de gestão, discipulado e presença da IEAD-JK — Supabase Realtime.",
+  "description": "Aplicativo moderno e inteligente para acompanhamento de membros, controle de presença e relatórios pastorais da igreja.",
   "start_url": "/",
-  "scope": "/",
   "display": "standalone",
-  "background_color": "#111019",
+  "background_color": "#ffffff",
   "theme_color": "#ff6101",
-  "orientation": "portrait-primary",
   "icons": [
-    {"src":"/logo.png?v=brand-822","sizes":"192x192","type":"image/png","purpose":"any"},
-    {"src":"/logo.png?v=brand-822","sizes":"512x512","type":"image/png","purpose":"any"},
-    {"src":"/logo.png?v=brand-822","sizes":"512x512","type":"image/png","purpose":"maskable"}
-  ],
-  "id": "/"
+    {
+      "src": "/icon-192.png?v=brand-823",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo.png?v=brand-823",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
 }
