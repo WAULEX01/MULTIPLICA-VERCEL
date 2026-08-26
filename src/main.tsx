@@ -4,6 +4,7 @@ import './index.css'
 import './styles/multiplica-typeui.css'
 import './styles/v823-production-layout.css'
 import './styles/mobile-performance-v823.css'
+import './styles/v823-integrated-visual.css'
 import App from './App.tsx'
 
 // Aplica o tema salvo (dia/noite) antes do React montar, evitando flash de tema errado
