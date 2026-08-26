@@ -1,0 +1,311 @@
+/* Multiplica PLUS v8.2.3 — integração visual da simulação no app real
+   Camada estritamente visual. Não altera banco, Supabase, sync, touch-action, overflow ou height. */
+
+:root {
+  --v823-orange: #ff6101;
+  --v823-orange-dark: #d94f00;
+  --v823-orange-soft: #fff1e8;
+  --v823-orange-soft-2: #fff7f2;
+  --v823-orange-border: #ffd2b5;
+  --v823-text: #202229;
+  --v823-muted: #747985;
+  --v823-line: #e8e9ed;
+  --v823-canvas: #f6f7f9;
+}
+
+/* ===== Desktop: mesma identidade da simulação, preservando a estrutura real ===== */
+@media (min-width: 769px) {
+  .desktop-topbar {
+    background: rgba(255,255,255,.98) !important;
+    border-bottom: 1px solid var(--v823-orange-border) !important;
+    box-shadow: 0 3px 14px rgba(30,41,59,.06) !important;
+    color: var(--v823-text) !important;
+  }
+
+  .topbar-title h1,
+  .topbar-title h1 span,
+  .topbar-subtitle,
+  .topbar-label {
+    color: var(--v823-text) !important;
+  }
+
+  .topbar-title-accent,
+  .topbar-version {
+    color: var(--v823-orange) !important;
+  }
+
+  .topbar-logo {
+    border: 1px solid var(--v823-orange-border) !important;
+    background: #fff !important;
+    box-shadow: 0 0 0 4px rgba(255,97,1,.07) !important;
+  }
+
+  .sidebar {
+    background: #fff !important;
+    border-right: 1px solid var(--v823-line) !important;
+    padding-top: 16px !important;
+  }
+
+  .sidebar-link {
+    color: #656b78 !important;
+    border-radius: 12px !important;
+    min-height: 48px !important;
+    font-weight: 700 !important;
+  }
+
+  .sidebar-link:hover {
+    background: var(--v823-orange-soft-2) !important;
+    color: var(--v823-orange-dark) !important;
+    transform: none !important;
+  }
+
+  .sidebar-link.active {
+    background: var(--v823-orange-soft) !important;
+    color: var(--v823-orange-dark) !important;
+    border-color: var(--v823-orange-border) !important;
+    box-shadow: inset 3px 0 0 var(--v823-orange) !important;
+  }
+
+  .sidebar-link.active svg { color: var(--v823-orange) !important; }
+
+  .sidebar-user {
+    background: #fff8f3 !important;
+    border-color: var(--v823-orange-border) !important;
+  }
+
+  .sidebar-user-name { color: var(--v823-text) !important; }
+  .sidebar-user-role { color: var(--v823-orange-dark) !important; }
+
+  .main-content {
+    background: var(--v823-canvas) !important;
+    padding-top: 28px !important;
+  }
+
+  .test-mode-bar {
+    background: #fff !important;
+    color: var(--v823-text) !important;
+    border: 1px solid var(--v823-orange-border) !important;
+    border-left: 3px solid var(--v823-orange) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 8px 24px rgba(15,23,42,.06) !important;
+  }
+}
+
+/* ===== Superfícies compartilhadas ===== */
+.card,
+.panel,
+.stat-card,
+.summary-card,
+.metric-card,
+.dashboard-card,
+.report-card,
+.department-card,
+.event-card,
+.person-card,
+.radar-card {
+  border-color: var(--v823-line) !important;
+  border-radius: 16px !important;
+}
+
+.btn-primary,
+button.btn-primary {
+  background: var(--v823-orange) !important;
+  border-color: var(--v823-orange) !important;
+  color: #fff !important;
+  border-radius: 12px !important;
+}
+
+.btn-primary:hover,
+button.btn-primary:hover {
+  background: var(--v823-orange-dark) !important;
+  border-color: var(--v823-orange-dark) !important;
+}
+
+.btn-secondary,
+.btn-outline,
+.btn-ghost {
+  border-radius: 12px !important;
+}
+
+input,
+select,
+textarea,
+.form-control {
+  border-radius: 12px !important;
+}
+
+.badge-active,
+.topbar-version,
+.mobile-header-version {
+  border-color: var(--v823-orange-border) !important;
+  background: var(--v823-orange-soft) !important;
+  color: var(--v823-orange-dark) !important;
+}
+
+.view-header h1,
+.view-header h2,
+.page-header h1,
+.page-header h2 {
+  letter-spacing: -.03em;
+}
+
+/* ===== Mobile: aproxima o app real da simulação aprovada ===== */
+@media (max-width: 768px) {
+  .mobile-header {
+    background: rgba(255,255,255,.99) !important;
+    border-bottom: 1px solid var(--v823-orange-border) !important;
+    box-shadow: 0 3px 12px rgba(15,23,42,.05) !important;
+    padding: 8px 10px !important;
+  }
+
+  .mobile-header-brand {
+    gap: 8px !important;
+  }
+
+  .mobile-header-brand img {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 12px !important;
+    object-fit: contain !important;
+  }
+
+  .mobile-header-title h1 {
+    font-size: .96rem !important;
+    letter-spacing: .02em !important;
+    text-transform: none !important;
+    color: var(--v823-text) !important;
+  }
+
+  .mobile-header-title > span {
+    color: var(--v823-muted) !important;
+    font-size: .66rem !important;
+  }
+
+  .mobile-header-actions {
+    gap: 6px !important;
+  }
+
+  .main-content {
+    background: var(--v823-canvas) !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    padding-top: 12px !important;
+    padding-bottom: 5.8rem !important;
+  }
+
+  .test-mode-bar {
+    background: #fff !important;
+    color: var(--v823-text) !important;
+    border: 1px solid var(--v823-orange-border) !important;
+    border-left: 3px solid var(--v823-orange) !important;
+    border-radius: 14px !important;
+    padding: 10px 12px !important;
+    margin-bottom: 12px !important;
+    box-shadow: none !important;
+  }
+
+  .test-mode-badge {
+    background: var(--v823-orange) !important;
+    color: #fff !important;
+  }
+
+  .test-mode-select {
+    background: #fff !important;
+    color: var(--v823-text) !important;
+    border-color: var(--v823-line) !important;
+  }
+
+  .view-container,
+  .page-container {
+    background: transparent !important;
+  }
+
+  .view-header,
+  .page-header {
+    margin-bottom: 12px !important;
+    gap: 10px !important;
+  }
+
+  .view-header h1,
+  .page-header h1 {
+    font-size: 1.45rem !important;
+    line-height: 1.1 !important;
+  }
+
+  .view-header p,
+  .page-header p {
+    color: var(--v823-muted) !important;
+    font-size: .76rem !important;
+  }
+
+  .card,
+  .panel,
+  .stat-card,
+  .summary-card,
+  .metric-card,
+  .dashboard-card,
+  .report-card,
+  .department-card,
+  .event-card,
+  .person-card,
+  .radar-card {
+    background: #fff !important;
+    border: 1px solid var(--v823-line) !important;
+    border-radius: 16px !important;
+    box-shadow: none !important;
+  }
+
+  .mobile-nav {
+    background: rgba(255,255,255,.99) !important;
+    border-top: 1px solid var(--v823-orange-border) !important;
+    box-shadow: 0 -4px 16px rgba(15,23,42,.06) !important;
+    padding-top: 5px !important;
+    padding-bottom: calc(6px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .mobile-nav-item {
+    min-height: 54px !important;
+    border-radius: 12px !important;
+    color: #777d87 !important;
+    font-weight: 800 !important;
+  }
+
+  .mobile-nav-item.active {
+    background: var(--v823-orange-soft) !important;
+    color: var(--v823-orange) !important;
+  }
+
+  .mobile-nav-item.active svg { color: var(--v823-orange) !important; }
+
+  /* Mesma prioridade da simulação: Início, Chamada, Membros, Radar e Agenda primeiro.
+     Os demais continuam disponíveis na barra horizontal, sem remoção funcional. */
+  .mobile-nav-item:nth-child(1) { order: 1; }
+  .mobile-nav-item:nth-child(6) { order: 2; }
+  .mobile-nav-item:nth-child(5) { order: 3; }
+  .mobile-nav-item:nth-child(8) { order: 4; }
+  .mobile-nav-item:nth-child(4) { order: 5; }
+  .mobile-nav-item:nth-child(7) { order: 6; }
+  .mobile-nav-item:nth-child(9) { order: 7; }
+  .mobile-nav-item:nth-child(2) { order: 8; }
+  .mobile-nav-item:nth-child(10) { order: 9; }
+  .mobile-nav-item:nth-child(11) { order: 10; }
+  .mobile-nav-item:nth-child(3) { order: 11; }
+  .mobile-nav-item:nth-child(12) { order: 12; }
+
+  .form-control,
+  input,
+  select,
+  textarea {
+    background: #fff !important;
+    border-color: var(--v823-line) !important;
+  }
+
+  .btn,
+  button.btn {
+    min-height: 42px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
