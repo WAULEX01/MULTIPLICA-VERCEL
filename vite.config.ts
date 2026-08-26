@@ -13,10 +13,10 @@ const lazyMembersBuildTransform = () => ({
     const peopleRender = "return <PeopleListView db={db} session={activeSession} onUpdatePeople={updatePeople} onResetPassword={resetPersonPassword} initialDepartmentFilter={targetDepartmentFilter} onChangeDepartment={handleSwitchSessionDepartment} />;"
 
     if (!code.includes(reactImport) || !code.includes(peopleImport) || !code.includes(peopleRender)) {
-      this.error('Lazy Members v8.2.3: estrutura esperada do App.tsx não encontrada; build interrompido por segurança.')
+      throw new Error('Lazy Members v8.2.3: estrutura esperada do App.tsx não encontrada; build interrompido por segurança.')
     }
 
-    let transformed = code
+    const transformed = code
       .replace(reactImport, "import { useState, useEffect, useRef, lazy, Suspense } from 'react';")
       .replace(
         peopleImport,
