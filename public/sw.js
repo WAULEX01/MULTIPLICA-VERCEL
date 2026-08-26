@@ -1,8 +1,8 @@
-// Service Worker — Multiplica Plus v8.2.2 (branding/cache visual)
-const CACHE_NAME = 'multiplica-plus-v8.2.2-brand-v1';
+// Service Worker — Multiplica Plus v8.2.3
+const CACHE_NAME = 'multiplica-plus-v8.2.3-brand-v1';
 const ASSETS = [
-  '/manifest.json?v=brand-822',
-  '/logo.png?v=brand-822',
+  '/manifest.json?v=brand-823',
+  '/logo.png?v=brand-823',
   '/banner.jpg'
 ];
 
