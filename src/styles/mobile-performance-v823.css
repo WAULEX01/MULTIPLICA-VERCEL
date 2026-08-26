@@ -1,0 +1,85 @@
+/* Multiplica PLUS v8.2.3 — otimização mobile segura
+   Objetivo: reduzir custo gráfico em celulares sem interferir em rolagem, toque,
+   banco, Supabase, Realtime, Outbox ou regras de negócio. */
+
+@media (max-width: 768px) and (pointer: coarse) {
+  /* Blur/backdrop-filter é caro em muitos celulares Android. */
+  .mobile-header,
+  .mobile-nav,
+  .modal-overlay,
+  .glass-card,
+  .desktop-topbar {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Sombras muito grandes forçam mais composição da GPU durante a rolagem. */
+  .card,
+  .glass-card,
+  .modal-content,
+  .test-mode-bar,
+  .mobile-header,
+  .mobile-nav,
+  .btn,
+  .badge,
+  .sidebar-user {
+    box-shadow: none !important;
+  }
+
+  /* Mantém feedback visual, mas encurta transições para reduzir sensação de atraso. */
+  .btn,
+  button,
+  .card,
+  .glass-card,
+  .mobile-nav-item,
+  .sidebar-link,
+  input,
+  select,
+  textarea,
+  .form-control {
+    transition-duration: 90ms !important;
+  }
+
+  /* Evita animações decorativas longas em listas grandes. Não altera o spinner
+     de sincronização porque ele usa a animação `spin`, preservada abaixo. */
+  .animate-fade,
+  .animate-slide,
+  .animate-slide-up,
+  .fade-in,
+  .slide-up {
+    animation-duration: 120ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  /* Gradientes radiais de fundo podem pesar durante scroll em aparelhos modestos. */
+  body,
+  :root:not([data-theme="dark"]) body,
+  [data-theme="dark"] body {
+    background-image: none !important;
+    background-color: var(--bg-app) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  button,
+  .card,
+  .glass-card,
+  .mobile-nav-item,
+  .sidebar-link,
+  input,
+  select,
+  textarea,
+  .form-control {
+    transition: none !important;
+  }
+
+  /* Preserva `spin` para indicadores operacionais; reduz somente efeitos decorativos. */
+  .animate-fade,
+  .animate-slide,
+  .animate-slide-up,
+  .fade-in,
+  .slide-up {
+    animation: none !important;
+  }
+}
