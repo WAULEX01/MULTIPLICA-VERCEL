@@ -109,13 +109,16 @@ const peopleListPerformanceTransform = () => ({
     const countsBlock = `const scopedPeople = db.people.filter(p => !p.deleted && (!session.department || personInDepartment(p, session.department)));\n  const activeCount = scopedPeople.filter(p => p.status === 'Ativo' || !p.status).length;\n  const visitorCount = scopedPeople.filter(p => p.status === 'Visitante').length;\n  const archivedCount = scopedPeople.filter(p => p.status === 'Arquivado').length;\n  const deletedCount = canViewDeletedRecords\n    ? db.people.filter(p => p.deleted).length\n    : db.people.filter(p => p.deleted && (!session.department || personInDepartment(p, session.department))).length;`
     const peopleMap = `{filteredPeople.map(p => {`
     const emptyMarker = `          {filteredPeople.length === 0 && (`
+    const countsMarker = `  // Category counts (scoped to chosen department when defined)`
 
-    const required = [censusImport, censusStateBlock, censusButtonBlock, censusHandlersStart, censusModalStart, baptismModalStart, countsBlock, peopleMap, emptyMarker]
+    const required = [censusImport, censusStateBlock, censusButtonBlock, censusHandlersStart, censusModalStart, baptismModalStart, countsBlock, peopleMap, emptyMarker, countsMarker]
     if (required.some(fragment => !code.includes(fragment))) {
       throw new Error('PeopleList perf v8.2.3: estrutura esperada não encontrada; build interrompido por segurança.')
     }
 
     const memoCounts = `const { activeCount, visitorCount, archivedCount, deletedCount } = useMemo(() => {\n    let activeCount = 0;\n    let visitorCount = 0;\n    let archivedCount = 0;\n    let deletedCount = 0;\n    for (const p of db.people) {\n      if (p.deleted) {\n        if (canViewDeletedRecords || !session.department || personInDepartment(p, session.department)) deletedCount++;\n        continue;\n      }\n      if (session.department && !personInDepartment(p, session.department)) continue;\n      if (p.status === 'Visitante') visitorCount++;\n      else if (p.status === 'Arquivado') archivedCount++;\n      else if (p.status === 'Ativo' || !p.status) activeCount++;\n    }\n    return { activeCount, visitorCount, archivedCount, deletedCount };\n  }, [db.people, session.department, canViewDeletedRecords]);`
+
+    const resetVisible = `  useEffect(() => {\n    setVisibleCount(50);\n  }, [searchTerm, categoryTab, roleFilter, profileTab, deptFilter, missingContactFilter, showTrash, baptismFilter, session.department]);\n\n`
 
     const loadMoreBlock = `          {filteredPeople.length > visibleCount && (\n            <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'center', padding: '1rem 0 0.5rem' }}>\n              <button type="button" className="btn btn-secondary" onClick={() => setVisibleCount(count => count + 50)}>\n                Carregar mais ({Math.min(50, filteredPeople.length - visibleCount)} de {filteredPeople.length - visibleCount} restantes)\n              </button>\n            </div>\n          )}\n\n`
 
@@ -126,6 +129,7 @@ const peopleListPerformanceTransform = () => ({
       .replace(countsBlock, memoCounts)
       .replace(peopleMap, `{filteredPeople.slice(0, visibleCount).map(p => {`)
       .replace(emptyMarker, loadMoreBlock + emptyMarker)
+      .replace(countsMarker, resetVisible + countsMarker)
 
     const handlersStartIndex = transformed.indexOf(censusHandlersStart)
     const returnIndex = transformed.indexOf(componentReturnMarker, handlersStartIndex)
@@ -145,8 +149,33 @@ const peopleListPerformanceTransform = () => ({
   },
 })
 
+const attendancePerformanceTransform = () => ({
+  name: 'multiplica-attendance-perf-v823',
+  enforce: 'pre' as const,
+  transform(code: string, id: string) {
+    const normalizedId = id.replace(/\\/g, '/')
+    if (!normalizedId.endsWith('/src/views/AttendanceView.tsx')) return null
+
+    const reactImport = "import { useState, useEffect, useRef } from 'react';"
+    const activeBlock = `  const activeDeptPeople = db.people.filter(\n    p => p.status === 'Ativo' && !p.deleted && personInDepartment(p, selectedDept)\n  );\n\n  // Subgrupos disponíveis no departamento selecionado (ex.: 'Huperetes' após fusão)\n  const availableSubGroups = Array.from(new Set(\n    activeDeptPeople.map(p => getPersonSubGroup(p, selectedDept)).filter(Boolean) as string[]\n  ));\n\n  // Flag: is this the Atalaias de Cristo department?\n  const isAtalaias = selectedDept.toLowerCase().includes('atalaia');\n\n  // --- Atalaias: alphabetical split into Grupo A and Grupo B ---\n  const sortedMembers = activeDeptPeople\n    .filter(p => p.role === 'Membro')\n    .sort(compareByName);\n  const midPoint = Math.ceil(sortedMembers.length / 2);\n  const groupAMembers = sortedMembers.slice(0, midPoint);\n  const groupBMembers = sortedMembers.slice(midPoint);\n  const otherProfiles = activeDeptPeople\n    .filter(p => p.role !== 'Membro')\n    .sort(compareByName);\n  const currentGroupList =\n    groupTab === 'grupoA' ? groupAMembers\n    : groupTab === 'grupoB' ? groupBMembers\n    : otherProfiles;\n\n  // --- Standard departments: Membros or Outros ---\n  const filteredDeptPeople = activeDeptPeople.filter(p =>\n    roleFilter === 'membros' ? p.role === 'Membro' : p.role !== 'Membro'\n  );\n\n  // Aplica o filtro de subgrupo (ex.: separar Huperetes) sobre o filtro de perfil\n  const subgroupFiltered = subGroupFilter === 'todos'\n    ? filteredDeptPeople\n    : filteredDeptPeople.filter(p => getPersonSubGroup(p, selectedDept) === subGroupFilter);\n\n  // The active list for select-all depends on which mode we're in\n  const activeList = isAtalaias ? currentGroupList : subgroupFiltered;\n\n  // Total exibido no cabeçalho da lista (respeita o filtro de subgrupo)\n  const headerTotal = isAtalaias ? activeDeptPeople.length : (subGroupFilter === 'todos' ? activeDeptPeople.length : subgroupFiltered.length);`
+
+    if (!code.includes(reactImport) || !code.includes(activeBlock)) {
+      throw new Error('Attendance perf v8.2.3: estrutura esperada não encontrada; build interrompido por segurança.')
+    }
+
+    const memoBlock = `  const { activeDeptPeople, availableSubGroups, isAtalaias, activeList, headerTotal } = useMemo(() => {\n    const activeDeptPeople = db.people.filter(\n      p => p.status === 'Ativo' && !p.deleted && personInDepartment(p, selectedDept)\n    );\n    const availableSubGroups = Array.from(new Set(\n      activeDeptPeople.map(p => getPersonSubGroup(p, selectedDept)).filter(Boolean) as string[]\n    ));\n    const isAtalaias = selectedDept.toLowerCase().includes('atalaia');\n    const sortedMembers = activeDeptPeople.filter(p => p.role === 'Membro').sort(compareByName);\n    const midPoint = Math.ceil(sortedMembers.length / 2);\n    const groupAMembers = sortedMembers.slice(0, midPoint);\n    const groupBMembers = sortedMembers.slice(midPoint);\n    const otherProfiles = activeDeptPeople.filter(p => p.role !== 'Membro').sort(compareByName);\n    const currentGroupList = groupTab === 'grupoA' ? groupAMembers : groupTab === 'grupoB' ? groupBMembers : otherProfiles;\n    const filteredDeptPeople = activeDeptPeople.filter(p => roleFilter === 'membros' ? p.role === 'Membro' : p.role !== 'Membro');\n    const subgroupFiltered = subGroupFilter === 'todos'\n      ? filteredDeptPeople\n      : filteredDeptPeople.filter(p => getPersonSubGroup(p, selectedDept) === subGroupFilter);\n    const activeList = isAtalaias ? currentGroupList : subgroupFiltered;\n    const headerTotal = isAtalaias ? activeDeptPeople.length : (subGroupFilter === 'todos' ? activeDeptPeople.length : subgroupFiltered.length);\n    return { activeDeptPeople, availableSubGroups, isAtalaias, activeList, headerTotal };\n  }, [db.people, selectedDept, groupTab, roleFilter, subGroupFilter]);`
+
+    return {
+      code: code
+        .replace(reactImport, "import { useState, useEffect, useRef, useMemo } from 'react';")
+        .replace(activeBlock, memoBlock),
+      map: null,
+    }
+  },
+})
+
 export default defineConfig({
-  plugins: [peopleListPerformanceTransform(), lazyHeavyViewsBuildTransform(), react()],
+  plugins: [peopleListPerformanceTransform(), attendancePerformanceTransform(), lazyHeavyViewsBuildTransform(), react()],
   build: {
     rollupOptions: {
       output: {
