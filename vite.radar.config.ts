@@ -27,9 +27,37 @@ const radarPerformanceTransform = () => ({
   },
 })
 
+const dashboardPerformanceTransform = () => ({
+  name: 'multiplica-dashboard-perf-v823',
+  enforce: 'pre' as const,
+  transform(code: string, id: string) {
+    const normalizedId = id.replace(/\\/g, '/')
+    if (!normalizedId.endsWith('/src/views/DashboardView.tsx')) return null
+
+    const staffBlock = `  const staffAndLeaders = db.people.filter(p => p.role !== 'Membro' && !p.deleted && (!deptFilter || personInDepartment(p, deptFilter)));`
+    const activationBlock = `  const activationStaff = staffAndLeaders.filter(p => p.role === 'Líder' || p.role === 'Multiplicador');\n  const activatedCount = activationStaff.filter(p => p.passwordChanged || (p.loginCount && p.loginCount > 0)).length;`
+    const rankedBlock = `  const rankedStaff = [...staffAndLeaders].sort((a, b) => {\n    const scoreA = getLeaderScore(a);\n    const scoreB = getLeaderScore(b);\n    if (scoreB !== scoreA) {\n      return scoreB - scoreA;\n    }\n    return (b.timeOnlineSeconds || 0) - (a.timeOnlineSeconds || 0);\n  });`
+    const latestBlock = `  const latEstadded = [...db.people]\n    .filter(p => !p.deleted && (!deptFilter || personInDepartment(p, deptFilter)))\n    .sort((a, b) => {\n      const dateA = a.createdAt || '';\n      const dateB = b.createdAt || '';\n      if (dateB !== dateA) return dateB.localeCompare(dateA);\n      return b.id.localeCompare(a.id);\n    })\n    .slice(0, isMobileViewport ? 15 : 30);`
+
+    const required = [staffBlock, activationBlock, rankedBlock, latestBlock]
+    if (required.some(fragment => !code.includes(fragment))) {
+      throw new Error('Dashboard perf v8.2.3: estrutura esperada não encontrada; build interrompido por segurança.')
+    }
+
+    return {
+      code: code
+        .replace(staffBlock, `  const staffAndLeaders = useMemo(() => db.people.filter(p => p.role !== 'Membro' && !p.deleted && (!deptFilter || personInDepartment(p, deptFilter))), [db.people, deptFilter]);`)
+        .replace(activationBlock, `  const activationStaff = useMemo(() => staffAndLeaders.filter(p => p.role === 'Líder' || p.role === 'Multiplicador'), [staffAndLeaders]);\n  const activatedCount = useMemo(() => activationStaff.filter(p => p.passwordChanged || (p.loginCount && p.loginCount > 0)).length, [activationStaff]);`)
+        .replace(rankedBlock, `  const rankedStaff = useMemo(() => [...staffAndLeaders].sort((a, b) => {\n    const scoreA = getLeaderScore(a);\n    const scoreB = getLeaderScore(b);\n    if (scoreB !== scoreA) {\n      return scoreB - scoreA;\n    }\n    return (b.timeOnlineSeconds || 0) - (a.timeOnlineSeconds || 0);\n  }), [staffAndLeaders]);`)
+        .replace(latestBlock, `  const latEstadded = useMemo(() => [...db.people]\n    .filter(p => !p.deleted && (!deptFilter || personInDepartment(p, deptFilter)))\n    .sort((a, b) => {\n      const dateA = a.createdAt || '';\n      const dateB = b.createdAt || '';\n      if (dateB !== dateA) return dateB.localeCompare(dateA);\n      return b.id.localeCompare(a.id);\n    })\n    .slice(0, isMobileViewport ? 15 : 30), [db.people, deptFilter, isMobileViewport]);`),
+      map: null,
+    }
+  },
+})
+
 const config = baseConfig as any
 
 export default defineConfig({
   ...config,
-  plugins: [...(config.plugins || []), radarPerformanceTransform()],
+  plugins: [...(config.plugins || []), radarPerformanceTransform(), dashboardPerformanceTransform()],
 })
