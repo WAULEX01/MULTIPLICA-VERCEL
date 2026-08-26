@@ -37,31 +37,11 @@ const lazyHeavyViewsBuildTransform = () => ({
     const settingsRender = `return (\n          <SettingsView\n            db={db}\n            session={activeSession}\n            onResetData={resetAllData}\n            onUpdateGoals={updateGoals}\n            onUpdateDatabase={updateDatabase}\n            onForcePull={forcePullFromServer}\n            onForcePush={forcePushToServer}\n          />\n        );`
 
     const requiredFragments = [
-      reactImport,
-      inicioImport,
-      dashboardImport,
-      departmentsImport,
-      peopleImport,
-      attendanceImport,
-      radarImport,
-      reportsImport,
-      agendaImport,
-      tutorialImport,
-      birthdaysImport,
-      settingsImport,
-      missionsImport,
-      chatImport,
-      inicioRender,
-      dashboardRender,
-      tutorialRender,
-      agendaRender,
-      peopleRender,
-      attendanceRender,
-      radarRender,
-      missionsRender,
-      departmentsRender,
-      reportsRender,
-      birthdaysRender,
+      reactImport, inicioImport, dashboardImport, departmentsImport, peopleImport,
+      attendanceImport, radarImport, reportsImport, agendaImport, tutorialImport,
+      birthdaysImport, settingsImport, missionsImport, chatImport, inicioRender,
+      dashboardRender, tutorialRender, agendaRender, peopleRender, attendanceRender,
+      radarRender, missionsRender, departmentsRender, reportsRender, birthdaysRender,
       settingsRender,
     ]
 
@@ -112,8 +92,37 @@ const lazyHeavyViewsBuildTransform = () => ({
   },
 })
 
+const peopleListPerformanceTransform = () => ({
+  name: 'multiplica-people-list-perf-v823',
+  enforce: 'pre' as const,
+  transform(code: string, id: string) {
+    const normalizedId = id.replace(/\\/g, '/')
+    if (!normalizedId.endsWith('/src/views/PeopleListView.tsx')) return null
+
+    const censusImport = "import { CENSUS_DATA } from '../services/census_data';"
+    const censusState = "const [simulatedPeople, setSimulatedPeople] = useState(() => [...CENSUS_DATA]);"
+    const censusButton = "onClick={() => { setSimulatedPeople([...CENSUS_DATA]); setIsCensusSimulatorOpen(true); }}"
+    const countsBlock = `const scopedPeople = db.people.filter(p => !p.deleted && (!session.department || personInDepartment(p, session.department)));\n  const activeCount = scopedPeople.filter(p => p.status === 'Ativo' || !p.status).length;\n  const visitorCount = scopedPeople.filter(p => p.status === 'Visitante').length;\n  const archivedCount = scopedPeople.filter(p => p.status === 'Arquivado').length;\n  const deletedCount = canViewDeletedRecords\n    ? db.people.filter(p => p.deleted).length\n    : db.people.filter(p => p.deleted && (!session.department || personInDepartment(p, session.department))).length;`
+
+    const required = [censusImport, censusState, censusButton, countsBlock]
+    if (required.some(fragment => !code.includes(fragment))) {
+      throw new Error('PeopleList perf v8.2.3: estrutura esperada não encontrada; build interrompido por segurança.')
+    }
+
+    const memoCounts = `const { activeCount, visitorCount, archivedCount, deletedCount } = useMemo(() => {\n    let activeCount = 0;\n    let visitorCount = 0;\n    let archivedCount = 0;\n    let deletedCount = 0;\n    for (const p of db.people) {\n      if (p.deleted) {\n        if (canViewDeletedRecords || !session.department || personInDepartment(p, session.department)) deletedCount++;\n        continue;\n      }\n      if (session.department && !personInDepartment(p, session.department)) continue;\n      if (p.status === 'Visitante') visitorCount++;\n      else if (p.status === 'Arquivado') archivedCount++;\n      else if (p.status === 'Ativo' || !p.status) activeCount++;\n    }\n    return { activeCount, visitorCount, archivedCount, deletedCount };\n  }, [db.people, session.department, canViewDeletedRecords]);`
+
+    const transformed = code
+      .replace(censusImport, '')
+      .replace(censusState, 'const [simulatedPeople, setSimulatedPeople] = useState<any[]>([]);')
+      .replace(censusButton, "onClick={async () => { const { CENSUS_DATA } = await import('../services/census_data'); setSimulatedPeople([...CENSUS_DATA]); setIsCensusSimulatorOpen(true); }}")
+      .replace(countsBlock, memoCounts)
+
+    return { code: transformed, map: null }
+  },
+})
+
 export default defineConfig({
-  plugins: [lazyHeavyViewsBuildTransform(), react()],
+  plugins: [peopleListPerformanceTransform(), lazyHeavyViewsBuildTransform(), react()],
   build: {
     rollupOptions: {
       output: {
