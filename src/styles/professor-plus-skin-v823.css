@@ -1,0 +1,260 @@
+/* Multiplica Plus v8.2.3 — camada visual inspirada no Professor Plus
+   Apenas apresentação. Não altera banco, Supabase, sincronização, estado ou regras de negócio. */
+
+:root {
+  --pp-accent: #ff6101;
+  --pp-accent-strong: #e95300;
+  --pp-accent-soft: #fff3eb;
+  --pp-surface: #ffffff;
+  --pp-surface-soft: #f7f8fb;
+  --pp-border: #e8eaf0;
+  --pp-text: #1d2433;
+  --pp-muted: #6f7787;
+  --pp-radius-lg: 20px;
+  --pp-radius-md: 14px;
+  --pp-shadow-soft: 0 8px 24px rgba(18, 26, 41, 0.07);
+}
+
+[data-theme="dark"] {
+  --pp-surface: #171a21;
+  --pp-surface-soft: #11141a;
+  --pp-border: #2a2f3a;
+  --pp-text: #f4f6fa;
+  --pp-muted: #a9b0be;
+  --pp-accent-soft: rgba(255, 97, 1, 0.12);
+  --pp-shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.16);
+}
+
+body {
+  background: var(--pp-surface-soft) !important;
+}
+
+.main-content {
+  background: transparent !important;
+}
+
+.card,
+.glass-card,
+.modal-content,
+.sidebar-user {
+  border: 1px solid var(--pp-border) !important;
+  border-radius: var(--pp-radius-lg) !important;
+  background: var(--pp-surface) !important;
+}
+
+.card,
+.glass-card {
+  box-shadow: var(--pp-shadow-soft) !important;
+}
+
+.card h1,
+.card h2,
+.card h3,
+.glass-card h1,
+.glass-card h2,
+.glass-card h3 {
+  color: var(--pp-text);
+  letter-spacing: -0.025em;
+}
+
+.card p,
+.glass-card p,
+.text-muted {
+  color: var(--pp-muted);
+}
+
+.btn,
+button,
+input,
+select,
+textarea,
+.form-control {
+  border-radius: var(--pp-radius-md) !important;
+}
+
+.btn-primary,
+button.btn-primary {
+  background: linear-gradient(135deg, var(--pp-accent), var(--pp-accent-strong)) !important;
+  border-color: transparent !important;
+  font-weight: 750;
+}
+
+.btn-secondary {
+  border-color: var(--pp-border) !important;
+  background: var(--pp-surface) !important;
+}
+
+input,
+select,
+textarea,
+.form-control {
+  border-color: var(--pp-border) !important;
+  background: var(--pp-surface) !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+.form-control:focus {
+  border-color: var(--pp-accent) !important;
+  box-shadow: 0 0 0 3px rgba(255, 97, 1, 0.12) !important;
+}
+
+.badge,
+.badge-active {
+  border-radius: 999px !important;
+}
+
+.mobile-header,
+.desktop-topbar {
+  background: var(--pp-surface) !important;
+  border-color: var(--pp-border) !important;
+}
+
+.mobile-header-title h1,
+.topbar-title h1 {
+  color: var(--pp-text) !important;
+  font-weight: 850 !important;
+  letter-spacing: -0.035em !important;
+}
+
+.mobile-header-version,
+.topbar-version,
+.topbar-title-accent {
+  color: var(--pp-accent) !important;
+}
+
+.sidebar {
+  background: var(--pp-surface) !important;
+  border-color: var(--pp-border) !important;
+}
+
+.sidebar-link {
+  border-radius: var(--pp-radius-md) !important;
+  font-weight: 650;
+}
+
+.sidebar-link.active {
+  background: var(--pp-accent-soft) !important;
+  color: var(--pp-accent) !important;
+}
+
+.mobile-nav {
+  background: var(--pp-surface) !important;
+  border-color: var(--pp-border) !important;
+}
+
+.mobile-nav-item {
+  border-radius: 14px !important;
+  color: var(--pp-muted) !important;
+}
+
+.mobile-nav-item.active {
+  background: var(--pp-accent-soft) !important;
+  color: var(--pp-accent) !important;
+  font-weight: 800 !important;
+}
+
+.mobile-nav-item.active svg,
+.sidebar-link.active svg {
+  color: var(--pp-accent) !important;
+}
+
+.test-mode-bar {
+  border-radius: 16px !important;
+  border: 1px solid rgba(255, 97, 1, 0.22) !important;
+}
+
+@media (max-width: 768px) {
+  .mobile-header {
+    min-height: 64px;
+    padding-inline: 14px !important;
+  }
+
+  .mobile-header-brand img {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 12px;
+  }
+
+  .main-content {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    padding-bottom: 7.2rem !important;
+  }
+
+  .card,
+  .glass-card,
+  .modal-content {
+    border-radius: 18px !important;
+  }
+
+  .mobile-nav {
+    left: 10px !important;
+    right: 10px !important;
+    bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+    width: auto !important;
+    border: 1px solid var(--pp-border) !important;
+    border-radius: 22px !important;
+    padding: 6px !important;
+    box-shadow: 0 10px 28px rgba(18, 26, 41, 0.10) !important;
+  }
+
+  .mobile-nav-item {
+    min-height: 52px !important;
+    padding: 6px 9px !important;
+    font-size: 0.68rem !important;
+    line-height: 1.05 !important;
+  }
+
+  .mobile-nav-item svg {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .card,
+  .glass-card {
+    box-shadow: 0 3px 12px rgba(18, 26, 41, 0.055) !important;
+  }
+
+  .btn {
+    min-height: 42px;
+  }
+
+  input,
+  select,
+  textarea,
+  .form-control {
+    min-height: 44px;
+  }
+}
+
+@media (min-width: 769px) {
+  .main-content {
+    padding: 1.5rem 1.75rem 2rem !important;
+  }
+
+  .desktop-topbar {
+    box-shadow: 0 1px 0 var(--pp-border) !important;
+  }
+
+  .sidebar {
+    box-shadow: 10px 0 30px rgba(18, 26, 41, 0.035) !important;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .card,
+  .glass-card,
+  .btn,
+  .mobile-nav-item,
+  .sidebar-link {
+    transition: transform 120ms ease, border-color 120ms ease, background-color 120ms ease, color 120ms ease, box-shadow 120ms ease;
+  }
+
+  .btn:active,
+  .mobile-nav-item:active,
+  .sidebar-link:active {
+    transform: scale(0.98);
+  }
+}
