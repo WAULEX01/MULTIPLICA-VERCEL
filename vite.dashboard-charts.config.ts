@@ -23,12 +23,12 @@ const dashboardChartsPerformanceTransform = () => ({
 
     transformed = transformed.replace(
       attendanceStart,
-      `  return { growthData, growthChartMax };\n  }, [db.people, deptFilter]);\n\n  // 2. Attendance history chart (last N weeks, summing all departments per date)\n  const { groupedRecords, attendanceChartData } = useMemo(() => {\n  const allAttendances = db.attendances.filter(a => !a.deleted && (!deptFilter || isSameDepartment(a.department, deptFilter)));`
+      `  return { growthData, growthChartMax };\n  }, [db.people, deptFilter, todayStr]);\n\n  // 2. Attendance history chart (last N weeks, summing all departments per date)\n  const { groupedRecords, attendanceChartData } = useMemo(() => {\n  const allAttendances = db.attendances.filter(a => !a.deleted && (!deptFilter || isSameDepartment(a.department, deptFilter)));`
     )
 
     transformed = transformed.replace(
       chartPluginMarker,
-      `\n  return { groupedRecords, attendanceChartData };\n  }, [db.attendances, deptFilter, attendanceWeeks]);\n\n  const growthDatalabelsPlugin = {`
+      `\n  return { groupedRecords, attendanceChartData };\n  }, [db.attendances, deptFilter, attendanceWeeks, todayStr]);\n\n  const growthDatalabelsPlugin = {`
     )
 
     return { code: transformed, map: null }
