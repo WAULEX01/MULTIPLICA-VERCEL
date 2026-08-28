@@ -176,7 +176,7 @@ export const RadarView: React.FC<RadarViewProps> = ({ db, session, onUpdatePasto
         const lastDateFormatted = `${lastDateParts[2]}/${lastDateParts[1]}/${lastDateParts[0]}`;
         const absenteesOfLast = getLastServiceAbsentees();
         return (
-          <div className="glass-card" style={{ marginBottom: '2rem', padding: '1.25rem 1.5rem', borderLeft: '4px solid #f59e0b', background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.05) 0%, rgba(249, 115, 22, 0.03) 100%)' }}>
+          <div className="glass-card radar-service-summary" style={{ marginBottom: '2rem', padding: '1.25rem 1.5rem', borderLeft: '4px solid #f59e0b', background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.05) 0%, rgba(249, 115, 22, 0.03) 100%)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
                 <p style={{ fontSize: '0.7rem', fontWeight: 700, color: '#b45309', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.2rem' }}>Resumo — Último Culto Registrado</p>
@@ -222,7 +222,7 @@ export const RadarView: React.FC<RadarViewProps> = ({ db, session, onUpdatePasto
       })()}
 
       {/* Regras de Resgate Widget (Fixo no Topo) */}
-      <div className="glass-card" style={{ marginBottom: '1.5rem', padding: '1.25rem 1.5rem' }}>
+      <div className="glass-card radar-rescue-rules" style={{ marginBottom: '1.5rem', padding: '1.25rem 1.5rem' }}>
         <h3 style={{ fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', color: 'var(--color-text-main)' }}>
           <Sparkles size={18} style={{ color: '#f59e0b' }} />
           Regras de Resgate
@@ -246,7 +246,7 @@ export const RadarView: React.FC<RadarViewProps> = ({ db, session, onUpdatePasto
       </div>
 
       {/* Radar Alert List */}
-      <div className="glass-card">
+      <div className="glass-card radar-list-panel">
           <div className="search-bar-container">
             <div className="search-input-wrapper">
               <input
@@ -290,7 +290,7 @@ export const RadarView: React.FC<RadarViewProps> = ({ db, session, onUpdatePasto
                 }}
               >
                 <Send size={14} style={{ marginRight: '0.25rem' }} />
-                Disparo em Lote Crítico (8)
+                Disparo em Lote Crítico ({criticalAbsentees.length})
               </button>
             )}
 

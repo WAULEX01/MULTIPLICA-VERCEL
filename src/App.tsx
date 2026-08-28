@@ -102,7 +102,9 @@ import {
   Plus,
   BarChart3,
   Sun,
-  Moon
+  Moon,
+  PanelLeftClose,
+  PanelLeftOpen
 } from 'lucide-react';
 
 // A v8 usa sessão individual no Supabase; nenhuma chave compartilhada fica no frontend.
@@ -196,9 +198,11 @@ export default function App() {
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [quickAddModal, setQuickAddModal] = useState<{ open: boolean; type: 'membro' | 'departamento' }>({ open: false, type: 'membro' });
   const [chatOpen, setChatOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [emulatedRole, setEmulatedRole] = useState<string | null>(null);
   const [emulatedDept, setEmulatedDept] = useState('Novo Alvorecer (Jovens)');
   const [theme, setTheme] = useState<string>(() => localStorage.getItem('theme') || 'light');
+  const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
 
   const handleToggleTheme = () => {
     const next = theme === 'light' ? 'dark' : 'light';
@@ -1975,7 +1979,7 @@ export default function App() {
   };
 
   return (
-    <div className="app-container">
+    <div className={`app-container ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       <a className="skip-link" href="#main-content">Ir para o conteúdo principal</a>
       {versionNotice && (
         <div role="status" aria-live="polite" style={{
@@ -2071,15 +2075,17 @@ export default function App() {
           </div>
         </div>
 
-        {/* Back to Início button — shown when not on inicio view */}
-        {currentView !== 'inicio' && activeSession && (
-          <button className="btn btn-secondary btn-small" onClick={() => { setTargetDepartmentFilter(undefined); setCurrentView('inicio'); }} >
-            ← Início
-          </button>
-        )}
-
         {/* Actions */}
         <div className="topbar-actions">
+          <button
+            type="button"
+            className="btn btn-icon btn-outline desktop-sidebar-toggle"
+            onClick={() => setSidebarCollapsed((current) => !current)}
+            aria-label={sidebarCollapsed ? 'Expandir navegação lateral' : 'Recolher navegação lateral'}
+            title={sidebarCollapsed ? 'Expandir navegação lateral' : 'Recolher navegação lateral'}
+          >
+            {sidebarCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+          </button>
           {/* Online box */}
           {onlineProfiles.length > 0 && (
             <div className="topbar-online">
@@ -2182,6 +2188,8 @@ export default function App() {
                 className={`sidebar-link ${currentView === item.id ? 'active' : ''}`}
                 onClick={() => setCurrentView(item.id)}
                 aria-current={currentView === item.id ? 'page' : undefined}
+                aria-label={item.label}
+                title={item.label}
               >
                 {item.icon}
                 <span>{item.label}</span>
@@ -2203,11 +2211,16 @@ export default function App() {
           ))}
         </ul>
 
-        <div className="sidebar-user">
+        <div
+          className="sidebar-user"
+          aria-label={`${session?.name || ''}, ${activeSession?.role || ''}`}
+          title={`${session?.name || ''} — ${activeSession?.role || ''}`}
+          data-initials={(session?.name || '').split(' ').map(part => part[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()}
+        >
           <span className="sidebar-user-name">{session?.name || ''}</span>
           <span className="sidebar-user-role">{activeSession?.role || ''}</span>
-          <button className="sidebar-logout" onClick={handleLogout}>
-            <LogOut size={14} /> Sair
+          <button className="sidebar-logout" onClick={handleLogout} title="Sair">
+            <LogOut size={14} /> <span>Sair</span>
           </button>
           {isAdmin && (
             <button
@@ -2399,46 +2412,76 @@ export default function App() {
         {renderView()}
       </main>
 
-      {/* 4. Bottom Nav for Mobile — all items with horizontal scroll */}
-      <nav className="mobile-nav" aria-label="Navegação móvel" style={{ overflowX: 'auto', overflowY: 'hidden', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none', justifyContent: 'flex-start', gap: '0.15rem', padding: '0 0.25rem' }}>
-        <style>{`
-          .mobile-nav::-webkit-scrollbar { display: none; }
-          .mobile-nav-item { flex: 0 0 auto; min-width: 0; padding: 0.3rem 0.45rem; white-space: nowrap; }
-        `}</style>
-        {filteredMenuItems.map(item => (
+      {/* 4. Bottom Nav for Mobile — mobile-first premium */}
+      {mobileMoreOpen && (
+        <div className="mobile-more-layer" role="presentation">
           <button
             type="button"
-            key={item.id}
-            className={`mobile-nav-item ${currentView === item.id ? 'active' : ''}`}
-            onClick={() => setCurrentView(item.id)}
-            style={{ position: 'relative' }}
-            aria-current={currentView === item.id ? 'page' : undefined}
-          >
-            {item.icon}
-            <span>{item.label === 'Radar Inteligente' ? 'Radar' : item.label === 'Departamentos' ? 'Depts' : item.label === 'Aniversariantes' ? 'Aniv.' : item.label === 'Configurações' ? 'Config' : item.label === 'Relatórios' ? 'Relat.' : item.label === 'Projeto & Tutorial' ? 'Tutorial' : item.label}</span>
-            {item.badge && radarCount > 0 && (
-              <span 
-                style={{ 
-                  position: 'absolute', 
-                  top: '2px', 
-                  right: '10px',
-                  background: '#ef4444',
-                  color: 'white',
-                  borderRadius: '50%',
-                  width: '14px',
-                  height: '14px',
-                  fontSize: '0.6rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 'bold'
-                }}
-              >
-                {radarCount}
-              </span>
-            )}
-          </button>
-        ))}
+            className="mobile-more-backdrop"
+            aria-label="Fechar menu Mais"
+            onClick={() => setMobileMoreOpen(false)}
+          />
+          <section className="mobile-more-sheet" role="dialog" aria-modal="true" aria-label="Mais opções">
+            <div className="mobile-more-handle" />
+            <div className="mobile-more-header">
+              <div>
+                <strong>Mais</strong>
+                <span>Outras áreas do Multiplica Plus</span>
+              </div>
+              <button type="button" className="mobile-more-close" onClick={() => setMobileMoreOpen(false)} aria-label="Fechar">×</button>
+            </div>
+            <div className="mobile-more-grid">
+              {filteredMenuItems
+                .filter(item => !['inicio', 'membros', 'presenca', 'radar'].includes(item.id))
+                .map(item => (
+                  <button
+                    type="button"
+                    key={item.id}
+                    className={`mobile-more-item ${currentView === item.id ? 'active' : ''}`}
+                    onClick={() => {
+                      setCurrentView(item.id);
+                      setMobileMoreOpen(false);
+                    }}
+                  >
+                    <span className="mobile-more-icon">{item.icon}</span>
+                    <span>{item.label}</span>
+                    {item.badge && radarCount > 0 && <b className="mobile-more-badge">{radarCount}</b>}
+                  </button>
+                ))}
+            </div>
+          </section>
+        </div>
+      )}
+
+      <nav className="mobile-nav mobile-nav-premium" aria-label="Navegação móvel">
+        {filteredMenuItems
+          .filter(item => ['inicio', 'membros', 'presenca', 'radar'].includes(item.id))
+          .map(item => (
+            <button
+              type="button"
+              key={item.id}
+              className={`mobile-nav-item ${currentView === item.id ? 'active' : ''}`}
+              onClick={() => {
+                setCurrentView(item.id);
+                setMobileMoreOpen(false);
+              }}
+              aria-current={currentView === item.id ? 'page' : undefined}
+            >
+              <span className="mobile-nav-icon">{item.icon}</span>
+              <span>{item.label === 'Radar Inteligente' ? 'Radar' : item.label}</span>
+              {item.badge && radarCount > 0 && <b className="mobile-nav-badge">{radarCount}</b>}
+            </button>
+          ))}
+        <button
+          type="button"
+          className={`mobile-nav-item mobile-nav-more ${!['inicio', 'membros', 'presenca', 'radar'].includes(currentView) || mobileMoreOpen ? 'active' : ''}`}
+          onClick={() => setMobileMoreOpen(open => !open)}
+          aria-expanded={mobileMoreOpen}
+          aria-label="Mais opções"
+        >
+          <span className="mobile-more-dots" aria-hidden="true">•••</span>
+          <span>Mais</span>
+        </button>
       </nav>
 
       {/* Global Chat Widget — controlled from header */}

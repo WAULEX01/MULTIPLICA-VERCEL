@@ -44,6 +44,168 @@
   }
 }
 
+/* v8.2.3 — refinamentos de produtividade desktop.
+   Escopo visual: não altera dados, sincronização ou regras de negócio. */
+@media (min-width: 969px) {
+  .main-content > div {
+    max-width: 1440px;
+  }
+
+  .desktop-topbar {
+    padding-inline: clamp(1rem, 2vw, 2rem);
+  }
+
+  .topbar-actions {
+    gap: .6rem;
+  }
+
+  .desktop-sidebar-toggle {
+    display: inline-flex;
+    flex: 0 0 auto;
+  }
+
+  .app-container.sidebar-collapsed .sidebar {
+    width: 76px;
+    padding-inline: .65rem;
+  }
+
+  .app-container.sidebar-collapsed .main-content {
+    margin-left: 76px;
+  }
+
+  .app-container.sidebar-collapsed .sidebar-link {
+    justify-content: center;
+    gap: 0;
+    margin-inline: 0;
+    padding-inline: .75rem;
+  }
+
+  .app-container.sidebar-collapsed .sidebar-link > span:not(.badge),
+  .app-container.sidebar-collapsed .sidebar-user-name,
+  .app-container.sidebar-collapsed .sidebar-user-role,
+  .app-container.sidebar-collapsed .sidebar-user .btn {
+    display: none;
+  }
+
+  .app-container.sidebar-collapsed .sidebar-user {
+    min-height: 52px;
+    padding: .4rem;
+    align-items: center;
+    background: transparent;
+    border-color: transparent;
+  }
+
+  .app-container.sidebar-collapsed .sidebar-user::before {
+    content: attr(data-initials);
+    display: grid;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    border: 1px solid var(--power-line-strong);
+    border-radius: 50%;
+    color: var(--power-white);
+    font-size: .72rem;
+    font-weight: 700;
+  }
+
+  .app-container.sidebar-collapsed .sidebar-logout {
+    min-width: 42px;
+    min-height: 42px;
+    justify-content: center;
+    margin-top: .25rem;
+  }
+
+  .app-container.sidebar-collapsed .sidebar-logout span {
+    display: none;
+  }
+
+  .app-container.sidebar-collapsed .sidebar-link .badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+  }
+
+  .power-home-hero {
+    padding: clamp(2rem, 3vw, 3.5rem);
+  }
+
+  .power-home-heading {
+    max-width: 920px;
+    margin-bottom: 2rem;
+  }
+
+  .power-stats-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .power-stats-grid > .power-stat:nth-last-child(1):nth-child(5) {
+    grid-column: span 2;
+  }
+
+  .power-next-event {
+    min-height: 100%;
+  }
+
+  .people-page-actions {
+    justify-content: flex-end;
+  }
+
+  .people-category-tabs {
+    align-items: center;
+    padding-bottom: .25rem;
+    border-bottom: 1px solid var(--power-line);
+  }
+
+  .people-filter-panel {
+    gap: 1rem !important;
+    padding: 1rem;
+    border: 1px solid var(--power-line);
+    border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--power-surface) 92%, transparent);
+  }
+
+  .people-filter-toolbar {
+    align-items: end;
+    gap: .75rem !important;
+  }
+
+  .people-filter-toolbar > div {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: .35rem !important;
+  }
+
+  .people-filter-toolbar .form-control {
+    min-width: 152px;
+  }
+
+  .people-clear-filters {
+    margin-left: auto;
+  }
+
+  .radar-service-summary,
+  .radar-rescue-rules,
+  .radar-list-panel {
+    max-width: 1320px;
+    margin-inline: auto;
+  }
+
+  .radar-rescue-rules > div:last-child {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .radar-list-panel .search-bar-container {
+    display: grid;
+    grid-template-columns: minmax(260px, 1fr) auto auto auto;
+    align-items: end;
+    gap: .75rem;
+  }
+
+  .radar-list-panel .search-bar-container > div {
+    margin-left: 0 !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .btn,
   button,

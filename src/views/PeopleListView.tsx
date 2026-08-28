@@ -799,7 +799,7 @@ export const PeopleListView: React.FC<PeopleListViewProps> = ({ db, session, onU
           <p className="subtitle">Gestão geral de participantes, líderes e equipes da IEAD-JK</p>
         </div>
         
-        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+        <div className="people-page-actions" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                     {(session.role === 'Pastor' || session.role === 'Secretaria Geral' || session.role === 'Pastor Admin') && (
                       <>
                         <button className="btn btn-secondary btn-sm" onClick={() => { setSimulatedPeople([...CENSUS_DATA]); setIsCensusSimulatorOpen(true); }}>
@@ -819,7 +819,7 @@ export const PeopleListView: React.FC<PeopleListViewProps> = ({ db, session, onU
                   </div>
 
       {/* Category Tabs */}
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+      <div className="people-category-tabs" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
         <div className="flex gap-2 mb-5 flex-wrap">
                     {(['Ativo', 'Visitante', 'Arquivado'] as const).map((tab) => {
                       const count = tab === 'Ativo' ? activeCount : tab === 'Visitante' ? visitorCount : archivedCount;
@@ -880,12 +880,12 @@ export const PeopleListView: React.FC<PeopleListViewProps> = ({ db, session, onU
       </div>
 
       {/* Filtros e Pesquisa */}
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 people-filter-panel">
                     <div className="relative">
                       <input type="text" className="form-control w-full" placeholder="Buscar por nome ou telefone..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                       <Search className="search-icon-inside" size={18} />
                     </div>
-                    <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3 people-filter-toolbar">
                       {/* WhatsApp Contacts Copy Button */}
                       <button type="button" className="btn btn-secondary btn-sm inline-flex items-center gap-1 text-sm px-3 py-2 rounded-lg" style={{ background: 'rgba(15, 23, 42, 0.6)' }} onClick={handleCopyContacts}>
                         <FileSpreadsheet size={15} style={{ color: 'var(--power-orange)' }} /> Copiar Contatos (WhatsApp)
@@ -930,6 +930,22 @@ export const PeopleListView: React.FC<PeopleListViewProps> = ({ db, session, onU
                             ))}
                           </select>
                         </div>
+                      )}
+                      {(searchTerm || missingContactFilter || roleFilter !== 'Todos' || baptismFilter !== 'Todos' || deptFilter !== 'Todos') && (
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm people-clear-filters"
+                          onClick={() => {
+                            setSearchTerm('');
+                            setMissingContactFilter(false);
+                            setRoleFilter('Todos');
+                            setBaptismFilter('Todos');
+                            setDeptFilter('Todos');
+                            onChangeDepartment?.(undefined);
+                          }}
+                        >
+                          Limpar filtros
+                        </button>
                       )}
                     </div>
                   </div>
