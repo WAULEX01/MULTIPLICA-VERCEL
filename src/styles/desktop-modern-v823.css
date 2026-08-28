@@ -1,0 +1,311 @@
+/* Multiplica PLUS v8.2.3 — modernização visual desktop
+   Somente apresentação. Não altera estado, dados, Supabase, API, sincronização ou regras de negócio. */
+
+@media (min-width: 1024px) {
+  :root {
+    --desktop-accent: #ff6101;
+    --desktop-accent-soft: #fff4ec;
+    --desktop-line: rgba(148, 163, 184, 0.22);
+    --desktop-shadow: 0 8px 28px rgba(15, 23, 42, 0.07);
+    --desktop-shadow-hover: 0 14px 36px rgba(15, 23, 42, 0.11);
+    --desktop-radius: 18px;
+    --desktop-radius-sm: 13px;
+  }
+
+  body {
+    background-image: none !important;
+  }
+
+  .desktop-topbar {
+    min-height: 72px !important;
+    padding-inline: 1.25rem !important;
+    background: color-mix(in srgb, var(--bg-surface, #fff) 96%, transparent) !important;
+    border-bottom: 1px solid var(--desktop-line) !important;
+    box-shadow: 0 1px 0 rgba(15, 23, 42, 0.02) !important;
+  }
+
+  .topbar-logo {
+    border-radius: 16px !important;
+  }
+
+  .topbar-title h1 {
+    font-size: clamp(1.05rem, 1vw + .45rem, 1.35rem) !important;
+    letter-spacing: -0.035em !important;
+  }
+
+  .sidebar {
+    width: 244px !important;
+    padding: 0.9rem 0.55rem 1rem !important;
+    background: color-mix(in srgb, var(--bg-surface, #fff) 97%, var(--desktop-accent-soft)) !important;
+    border-right: 1px solid var(--desktop-line) !important;
+  }
+
+  .sidebar-link {
+    min-height: 48px !important;
+    margin: 3px 6px !important;
+    padding: .65rem .78rem !important;
+    border-radius: 13px !important;
+    font-weight: 650 !important;
+    gap: .72rem !important;
+    transition: background-color 140ms ease, color 140ms ease, transform 140ms ease !important;
+  }
+
+  .sidebar-link:hover {
+    background: var(--desktop-accent-soft) !important;
+    transform: translateX(2px);
+  }
+
+  .sidebar-link.active {
+    position: relative;
+    background: linear-gradient(90deg, rgba(255,97,1,.14), rgba(255,97,1,.055)) !important;
+    color: var(--desktop-accent) !important;
+    box-shadow: inset 0 0 0 1px rgba(255,97,1,.13) !important;
+  }
+
+  .sidebar-link.active::before {
+    content: '';
+    position: absolute;
+    left: -6px;
+    top: 9px;
+    bottom: 9px;
+    width: 3px;
+    border-radius: 999px;
+    background: var(--desktop-accent);
+  }
+
+  .sidebar-user {
+    margin: .65rem !important;
+    padding: .75rem !important;
+    border: 1px solid var(--desktop-line) !important;
+    background: var(--bg-surface, #fff) !important;
+    border-radius: var(--desktop-radius) !important;
+  }
+
+  .main-content {
+    padding: 1.65rem clamp(1.4rem, 2.5vw, 2.5rem) 2.5rem !important;
+    max-width: 1760px;
+    width: 100%;
+    margin-inline: auto;
+  }
+
+  .view-header {
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: space-between !important;
+    gap: 1.25rem !important;
+    margin-bottom: 1.35rem !important;
+    padding-bottom: .95rem !important;
+    border-bottom: 1px solid var(--desktop-line) !important;
+  }
+
+  .view-header h1,
+  .view-header h2 {
+    margin: 0 !important;
+    font-size: clamp(1.65rem, 1.35vw + .7rem, 2.25rem) !important;
+    line-height: 1.08 !important;
+    letter-spacing: -0.04em !important;
+  }
+
+  .view-header .subtitle,
+  .view-header p {
+    max-width: 780px;
+    margin-top: .35rem !important;
+    line-height: 1.5 !important;
+    opacity: .74;
+  }
+
+  .card,
+  .glass-card {
+    border: 1px solid var(--desktop-line) !important;
+    border-radius: var(--desktop-radius) !important;
+    box-shadow: var(--desktop-shadow) !important;
+    background: var(--bg-surface, #fff) !important;
+    transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease !important;
+  }
+
+  .card:hover,
+  .glass-card:hover {
+    border-color: rgba(255,97,1,.18) !important;
+    box-shadow: var(--desktop-shadow-hover) !important;
+  }
+
+  .stats-grid,
+  .dashboard-stats,
+  .stats-cards,
+  .summary-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 1rem !important;
+  }
+
+  .stat-card,
+  .metric-card,
+  .summary-card {
+    min-height: 128px;
+    padding: 1.05rem 1.15rem !important;
+    border: 1px solid var(--desktop-line) !important;
+    border-radius: var(--desktop-radius) !important;
+    background: var(--bg-surface, #fff) !important;
+    box-shadow: 0 5px 18px rgba(15,23,42,.055) !important;
+  }
+
+  .stat-card:hover,
+  .metric-card:hover,
+  .summary-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--desktop-shadow-hover) !important;
+  }
+
+  .btn,
+  button,
+  input,
+  select,
+  textarea,
+  .form-control {
+    min-height: 42px;
+    border-radius: var(--desktop-radius-sm) !important;
+  }
+
+  .btn-primary,
+  button.btn-primary {
+    box-shadow: 0 7px 18px rgba(255,97,1,.18) !important;
+  }
+
+  .btn-primary:hover,
+  button.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 24px rgba(255,97,1,.24) !important;
+  }
+
+  table {
+    border-collapse: separate !important;
+    border-spacing: 0 7px !important;
+  }
+
+  thead th {
+    font-size: .76rem !important;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    opacity: .66;
+  }
+
+  tbody tr {
+    background: var(--bg-surface, #fff);
+    transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+  }
+
+  tbody tr:hover {
+    background: var(--desktop-accent-soft) !important;
+  }
+
+  tbody td {
+    padding-top: .85rem !important;
+    padding-bottom: .85rem !important;
+    border-top: 1px solid var(--desktop-line) !important;
+    border-bottom: 1px solid var(--desktop-line) !important;
+  }
+
+  tbody td:first-child {
+    border-left: 1px solid var(--desktop-line) !important;
+    border-radius: 12px 0 0 12px;
+  }
+
+  tbody td:last-child {
+    border-right: 1px solid var(--desktop-line) !important;
+    border-radius: 0 12px 12px 0;
+  }
+
+  .modal-overlay {
+    padding: 1.5rem !important;
+  }
+
+  .modal-content {
+    border: 1px solid var(--desktop-line) !important;
+    box-shadow: 0 24px 64px rgba(15,23,42,.18) !important;
+  }
+
+  /* Membros: transforma o modal de edição em um painel lateral no desktop. */
+  .member-edit-modal-overlay {
+    justify-content: flex-end !important;
+    align-items: stretch !important;
+    padding: 0 !important;
+  }
+
+  .member-edit-modal {
+    width: min(560px, 42vw) !important;
+    max-width: 560px !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    margin: 0 !important;
+    border-radius: 22px 0 0 22px !important;
+    overflow: auto !important;
+    animation: desktopDrawerIn 180ms ease-out both;
+  }
+
+  @keyframes desktopDrawerIn {
+    from { transform: translateX(24px); opacity: .75; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  .member-edit-modal .member-edit-modal-header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+    background: var(--bg-surface, #fff) !important;
+    border-bottom: 1px solid var(--desktop-line) !important;
+  }
+
+  .member-edit-modal .member-edit-footer {
+    position: sticky !important;
+    bottom: 0 !important;
+    z-index: 10 !important;
+    background: var(--bg-surface, #fff) !important;
+    border-top: 1px solid var(--desktop-line) !important;
+    box-shadow: 0 -8px 22px rgba(15,23,42,.06) !important;
+  }
+
+  /* Gráficos e blocos analíticos: mais respiro, semelhante aos conceitos aprovados. */
+  canvas {
+    max-height: 360px;
+  }
+
+  .chart-container,
+  .chart-card,
+  .analytics-card {
+    min-height: 300px;
+  }
+
+  /* Barras de filtros e ações ficam limpas e alinhadas. */
+  .filters-bar,
+  .filter-bar,
+  .toolbar,
+  .actions-bar,
+  .view-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: .7rem !important;
+    flex-wrap: wrap !important;
+    padding: .8rem !important;
+    border: 1px solid var(--desktop-line) !important;
+    border-radius: 15px !important;
+    background: var(--bg-surface, #fff) !important;
+    box-shadow: 0 4px 15px rgba(15,23,42,.04) !important;
+  }
+
+  .badge,
+  [class*='badge-'] {
+    border-radius: 999px !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  .main-content {
+    padding-inline: clamp(1.8rem, 3vw, 3rem) !important;
+  }
+}
+
+@media (min-width: 1500px) {
+  .main-content {
+    max-width: 1880px;
+  }
+}
