@@ -1,4 +1,5 @@
 import './styles/desktop-modern-v823.css';
+import './styles/desktop-screen-refinements-v823.css';
 
 /* Camada de apresentação desktop v8.2.3.
    Apenas marca a página atual para permitir CSS mais específico; não lê nem altera dados. */
