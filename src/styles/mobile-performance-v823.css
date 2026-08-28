@@ -58,41 +58,6 @@
     background-image: none !important;
     background-color: var(--bg-app) !important;
   }
-
-  /* Correção robusta para modais longos em mobile.
-     Não depende de :has(), portanto funciona também em WebViews Android mais antigos.
-     Mantém qualquer modal dentro da altura real da tela e permite alcançar ações
-     que ficam no fim do conteúdo, como "Salvar Alterações" em Membros. */
-  .modal-overlay {
-    align-items: flex-start !important;
-    overflow-y: auto !important;
-    padding-top: max(0.5rem, env(safe-area-inset-top)) !important;
-    padding-bottom: max(0.75rem, env(safe-area-inset-bottom)) !important;
-  }
-
-  .modal-content {
-    width: min(100%, calc(100vw - 1rem)) !important;
-    max-height: calc(100dvh - 1.25rem) !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
-    margin: 0 auto !important;
-    padding-bottom: max(1rem, env(safe-area-inset-bottom)) !important;
-  }
-
-  .modal-content form {
-    padding-bottom: max(1rem, env(safe-area-inset-bottom));
-  }
-
-  .modal-content form > div:last-child {
-    flex-wrap: wrap;
-  }
-
-  .modal-content form > div:last-child .btn {
-    min-height: 44px;
-    flex: 1 1 140px;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
