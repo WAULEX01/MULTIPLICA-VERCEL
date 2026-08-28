@@ -1457,7 +1457,16 @@ export const PeopleListView: React.FC<PeopleListViewProps> = ({ db, session, onU
               <button className="modal-close" onClick={() => setIsModalOpen(false)}>&times;</button>
             </div>
 
-            <form onSubmit={handleSave}>
+            <div className="member-edit-action-bar" aria-label="Ações do cadastro">
+              <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>
+                Cancelar
+              </button>
+              <button type="submit" form="member-edit-form" className="btn btn-primary">
+                {editingPerson ? 'Salvar Alterações' : 'Cadastrar Membro'}
+              </button>
+            </div>
+
+            <form id="member-edit-form" onSubmit={handleSave}>
               <div className="form-group">
                 <label htmlFor="reg-name">Nome Completo</label>
                 <input
@@ -1750,14 +1759,6 @@ export const PeopleListView: React.FC<PeopleListViewProps> = ({ db, session, onU
                 </select>
               </div>
 
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '2.5rem' }}>
-                <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>
-                  Cancelar
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  {editingPerson ? 'Salvar Alterações' : 'Cadastrar Membro'}
-                </button>
-              </div>
             </form>
           </div>
         </div>

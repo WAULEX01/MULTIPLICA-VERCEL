@@ -1,0 +1,304 @@
+/* Multiplica PLUS v8.2.3 — camada de responsividade e acessibilidade mobile.
+   Somente apresentação/UX. Não interfere em dados, API, Supabase ou sincronização. */
+
+@media (max-width: 768px) {
+  /* Cabeçalhos compartilhados: a cópia recebe classe explícita via mobileUxEnhancements. */
+  .view-header {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.75rem !important;
+  }
+
+  .view-header-copy {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    gap: 0.2rem !important;
+  }
+
+  .view-header-copy h1,
+  .view-header-copy h2,
+  .view-header-copy h3,
+  .view-header-copy .subtitle,
+  .view-header-copy p {
+    width: 100% !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    text-align: left !important;
+  }
+
+  .view-header-copy .subtitle,
+  .view-header-copy p {
+    line-height: 1.4 !important;
+  }
+
+  /* Modal de edição/cadastro de Membros: escopo específico, sem afetar outros modais. */
+  .member-edit-modal-overlay {
+    box-sizing: border-box !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    padding:
+      max(0.25rem, env(safe-area-inset-top))
+      0.5rem
+      max(0.25rem, env(safe-area-inset-bottom)) !important;
+  }
+
+  .member-edit-modal {
+    box-sizing: border-box !important;
+    display: grid !important;
+    grid-template-rows: auto auto minmax(0, 1fr) !important;
+    width: min(100%, 640px) !important;
+    max-width: 640px !important;
+    height: calc(100dvh - max(0.5rem, env(safe-area-inset-top)) - max(0.5rem, env(safe-area-inset-bottom))) !important;
+    max-height: calc(100dvh - max(0.5rem, env(safe-area-inset-top)) - max(0.5rem, env(safe-area-inset-bottom))) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    overscroll-behavior: contain !important;
+  }
+
+  .member-edit-modal .member-edit-modal-header {
+    position: relative !important;
+    z-index: 20 !important;
+    flex: 0 0 auto !important;
+    min-height: 56px !important;
+    margin: 0 !important;
+    padding: 0.75rem 0.85rem !important;
+    background: var(--bg-surface, #fff) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+  }
+
+  .member-edit-modal .member-edit-modal-header h3 {
+    margin: 0 !important;
+    padding-right: 3rem !important;
+    line-height: 1.25 !important;
+  }
+
+  .member-edit-modal .modal-close {
+    position: absolute !important;
+    top: 50% !important;
+    right: 0.6rem !important;
+    transform: translateY(-50%) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    z-index: 25 !important;
+  }
+
+  .member-edit-modal .member-edit-form {
+    position: relative !important;
+    display: block !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0.85rem 0.85rem 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-y: contain !important;
+    scrollbar-gutter: stable !important;
+  }
+
+  /* A ação principal fica no topo, antes do primeiro campo, para não sair
+     da área visível em formulários longos no celular. */
+  .member-edit-modal .member-edit-action-bar {
+    position: relative !important;
+    z-index: 20 !important;
+    display: flex !important;
+    gap: 0.65rem !important;
+    padding: 0.7rem 0.85rem !important;
+    background: var(--bg-surface, #fff) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    box-shadow: 0 5px 14px rgba(15, 23, 42, 0.06) !important;
+  }
+
+  .member-edit-modal .member-edit-action-bar .btn {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    min-height: 48px !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
+  }
+
+  .member-edit-modal .member-edit-footer {
+    position: sticky !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    z-index: 30 !important;
+    display: flex !important;
+    gap: 0.65rem !important;
+    flex-wrap: nowrap !important;
+    width: calc(100% + 1.7rem) !important;
+    margin: 1.25rem -0.85rem 0 !important;
+    padding: 0.75rem 0.85rem max(0.75rem, env(safe-area-inset-bottom)) !important;
+    background: var(--bg-surface, #fff) !important;
+    border-top: 1px solid var(--border-color) !important;
+    box-shadow: 0 -8px 20px rgba(15, 23, 42, 0.08) !important;
+  }
+
+  .member-edit-modal .member-edit-footer .btn {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    min-height: 48px !important;
+    justify-content: center !important;
+  }
+
+  /* Alvos de toque dentro do fluxo de membros. */
+  .member-edit-modal button,
+  .member-edit-modal .btn,
+  .member-edit-modal select,
+  .member-edit-modal input,
+  .member-edit-modal textarea,
+  .member-edit-modal .form-control {
+    min-height: 44px;
+  }
+
+  .member-edit-modal .form-group label button,
+  .member-edit-modal button[title="Remover departamento"] {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+
+  /* Painel de Modo de Teste: mais compacto e recolhível no celular. */
+  .test-mode-bar.mobile-test-mode-enhanced {
+    position: relative !important;
+    padding-right: 3.25rem !important;
+    transition: max-height 160ms ease, padding 160ms ease !important;
+  }
+
+  .test-mode-bar.mobile-test-mode-enhanced.is-collapsed {
+    max-height: 58px !important;
+    overflow: hidden !important;
+  }
+
+  .mobile-test-mode-toggle {
+    position: absolute !important;
+    top: 7px !important;
+    right: 7px !important;
+    z-index: 5 !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 12px !important;
+    background: var(--bg-surface, #fff) !important;
+    color: var(--color-text-main) !important;
+  }
+
+  /* Navegação persistente em páginas longas. */
+  .mobile-back-to-top {
+    position: fixed !important;
+    right: 14px !important;
+    bottom: calc(92px + env(safe-area-inset-bottom, 0px)) !important;
+    z-index: 9800 !important;
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    min-height: 48px !important;
+    display: grid !important;
+    place-items: center !important;
+    border: 1px solid rgba(255, 97, 1, 0.22) !important;
+    border-radius: 999px !important;
+    background: var(--bg-surface, #fff) !important;
+    color: #ff6101 !important;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transform: translateY(8px) !important;
+    transition: opacity 140ms ease, transform 140ms ease !important;
+  }
+
+  .mobile-back-to-top.is-visible {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    transform: translateY(0) !important;
+  }
+
+  /* Radar: resumo fica fácil de reencontrar e cards longos usam renderização sob demanda. */
+  [data-mobile-page="radar"] .view-header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 30 !important;
+    padding: 0.55rem 0 !important;
+    background: var(--bg-app) !important;
+  }
+
+  [data-mobile-page="radar"] .card,
+  [data-mobile-page="radar"] .glass-card {
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 260px;
+  }
+
+  /* Atalhos/filtros de páginas extensas permanecem visíveis quando já usam classes de toolbar. */
+  [data-mobile-page="attendance"] .filters-bar,
+  [data-mobile-page="birthdays"] .filters-bar,
+  [data-mobile-page="reports"] .filters-bar,
+  [data-mobile-page="tutorial"] .filters-bar,
+  [data-mobile-page="dashboard"] .filters-bar {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 24 !important;
+    background: var(--bg-app) !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .member-edit-modal-overlay {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .member-edit-modal {
+    width: 100% !important;
+    max-width: none !important;
+    border-left: 0 !important;
+    border-right: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  .member-edit-modal .member-edit-action-bar {
+    flex-direction: column !important;
+  }
+
+  .member-edit-modal .member-edit-action-bar .btn {
+    width: 100% !important;
+    flex: 0 0 auto !important;
+  }
+
+  .member-edit-modal .form-group,
+  .member-edit-modal .form-group > div,
+  .member-edit-modal select,
+  .member-edit-modal input,
+  .member-edit-modal textarea,
+  .member-edit-modal .form-control {
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+
+@media (min-width: 769px) {
+  /* Desktop: somente semântica/classes; nenhum rearranjo visual. */
+  .mobile-back-to-top,
+  .mobile-test-mode-toggle {
+    display: none !important;
+  }
+}

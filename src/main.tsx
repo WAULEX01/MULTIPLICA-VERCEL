@@ -6,6 +6,9 @@ import './styles/v823-production-layout.css'
 import './styles/mobile-performance-v823.css'
 import './styles/desktop-performance-v823.css'
 import './styles/professor-plus-skin-v823.css'
+import './desktopUxEnhancements.ts'
+import './mobileUxEnhancements.ts'
+import './mobileSectionNavigator.ts'
 import App from './App.tsx'
 
 // Aplica o tema salvo (dia/noite) antes do React montar, evitando flash de tema errado

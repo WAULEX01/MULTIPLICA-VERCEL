@@ -1,0 +1,71 @@
+/* Navegação auxiliar para telas mobile longas — v8.2.3 */
+@media (max-width: 768px) {
+  .mobile-section-nav-trigger {
+    position: fixed !important;
+    left: 14px !important;
+    bottom: calc(92px + env(safe-area-inset-bottom, 0px)) !important;
+    z-index: 9801 !important;
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    min-height: 48px !important;
+    display: grid !important;
+    place-items: center !important;
+    border: 1px solid rgba(255, 97, 1, 0.22) !important;
+    border-radius: 999px !important;
+    background: var(--bg-surface, #fff) !important;
+    color: #ff6101 !important;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14) !important;
+  }
+
+  .mobile-section-nav-panel {
+    position: fixed !important;
+    left: 12px !important;
+    right: 12px !important;
+    bottom: calc(150px + env(safe-area-inset-bottom, 0px)) !important;
+    z-index: 9802 !important;
+    max-height: min(56dvh, 420px) !important;
+    overflow-y: auto !important;
+    padding: 0.65rem !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 18px !important;
+    background: var(--bg-surface, #fff) !important;
+    box-shadow: 0 18px 50px rgba(15, 23, 42, 0.2) !important;
+  }
+
+  .mobile-section-nav-panel[hidden] {
+    display: none !important;
+  }
+
+  .mobile-section-nav-panel strong {
+    display: block !important;
+    padding: 0.45rem 0.55rem 0.6rem !important;
+  }
+
+  .mobile-section-nav-list {
+    display: grid !important;
+    gap: 0.4rem !important;
+  }
+
+  .mobile-section-nav-item {
+    width: 100% !important;
+    min-height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    padding: 0.55rem 0.7rem !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 12px !important;
+    background: var(--bg-surface, #fff) !important;
+    color: var(--color-text-main) !important;
+    text-align: left !important;
+    font-weight: 650 !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-section-nav-trigger,
+  .mobile-section-nav-panel {
+    display: none !important;
+  }
+}
