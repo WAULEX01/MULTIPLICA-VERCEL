@@ -58,6 +58,39 @@
     background-image: none !important;
     background-color: var(--bg-app) !important;
   }
+
+  /* Edição/cadastro de membros: o formulário é longo. Em telas pequenas o rodapé
+     podia ficar fora da área visível, dando a impressão de que não existia Salvar.
+     A regra é restrita ao formulário que contém #reg-name. */
+  .modal-overlay:has(#reg-name) {
+    align-items: flex-start !important;
+    overflow-y: auto !important;
+    padding-top: max(0.5rem, env(safe-area-inset-top)) !important;
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom)) !important;
+  }
+
+  .modal-content:has(#reg-name) {
+    max-height: calc(100dvh - 1rem) !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .modal-content form:has(#reg-name) > div:last-child {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    flex-wrap: wrap;
+    margin-top: 1.25rem !important;
+    padding: 0.75rem 0 max(0.75rem, env(safe-area-inset-bottom));
+    background: var(--bg-surface);
+    border-top: 1px solid var(--border-color);
+  }
+
+  .modal-content form:has(#reg-name) > div:last-child .btn {
+    min-height: 44px;
+    flex: 1 1 140px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
