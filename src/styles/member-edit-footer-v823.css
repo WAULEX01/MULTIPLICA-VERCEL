@@ -1,0 +1,27 @@
+/* Override final do modal de membros v8.2.3: rodapé sempre visível. */
+@media (max-width: 768px) {
+  .member-edit-modal {
+    position: relative !important;
+  }
+
+  .member-edit-modal .member-edit-form {
+    position: static !important;
+    padding-bottom: calc(6.5rem + env(safe-area-inset-bottom)) !important;
+  }
+
+  .member-edit-modal .member-edit-footer {
+    position: absolute !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .member-edit-modal .member-edit-form {
+    padding-bottom: calc(9rem + env(safe-area-inset-bottom)) !important;
+  }
+}
