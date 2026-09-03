@@ -27,9 +27,12 @@ export function multiDepartmentAndAlphabeticalTransform(): Plugin {
   const assignments: DepartmentRole[] = [];
   const seen = new Set<string>();
 
+  const normalizeDepartmentKey = (value: string = '') =>
+    value.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').trim().toLowerCase();
+
   const addAssignment = (assignment?: DepartmentRole) => {
     if (!assignment?.department) return;
-    const key = normalizeDepartmentName(assignment.department);
+    const key = normalizeDepartmentKey(assignment.department);
     if (!key || seen.has(key)) return;
     seen.add(key);
     assignments.push(assignment);
