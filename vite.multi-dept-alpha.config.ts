@@ -64,6 +64,23 @@ export function multiDepartmentAndAlphabeticalTransform(): Plugin {
         return { code: code.replace(oldSort, newSort), map: null }
       }
 
+      if (normalizedId.endsWith('/src/views/DepartmentsView.tsx')) {
+        const oldLeaders = `.filter(p => p.role === 'Líder')\n            .map(p => p.name);`
+        const newLeaders = `.filter(p => p.role === 'Líder')\n            .map(p => p.name)\n            .sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));`
+        const oldMultipliers = `.filter(p => p.role === 'Multiplicador')\n            .map(p => p.name);`
+        const newMultipliers = `.filter(p => p.role === 'Multiplicador')\n            .map(p => p.name)\n            .sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));`
+
+        if (!code.includes(oldLeaders) || !code.includes(oldMultipliers)) {
+          this.warn('Listas de liderança em Departamentos não encontradas no formato esperado; transformação não aplicada.')
+          return null
+        }
+
+        return {
+          code: code.replace(oldLeaders, newLeaders).replace(oldMultipliers, newMultipliers),
+          map: null,
+        }
+      }
+
       return null
     },
   }
