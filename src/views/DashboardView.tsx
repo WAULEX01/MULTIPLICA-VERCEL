@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { getLocalDateISO } from '../utils/localDate';
 import type { AppDatabase, UserSession, Person } from '../services/db';
 import { getStats, getWeekKey, getMissionForMultiplicador, recordWeeklyMissionMessage, isYouthOrTeenDepartment, calculateConsecutiveAbsences, getPersonGender, isSameDepartment, personInDepartment, getSpecialMissionForMultiplicador, recordSpecialMissionMessage, canUserSelectDepartment, getUserAllowedDepartments, getDepartmentTheme, getPersonMother, compareByName } from '../services/db';
-import { Users, CheckCircle, AlertTriangle, TrendingUp, Calendar, AlertCircle, Plus, Gift, Cake, MessageSquare, BookOpen, Activity, Trophy, Award, Sparkles, Copy, Edit2, Send, Target, ChevronDown } from 'lucide-react';
+import { Users, CheckCircle, AlertTriangle, TrendingUp, Calendar, AlertCircle, Plus, Gift, Cake, MessageSquare, BookOpen, Activity, Trophy, Award, Sparkles, Copy, Edit2, Send, Target, ChevronDown, ChevronUp } from 'lucide-react';
 import { apiGetActivityLogs } from '../services/api';
 import { Line, Bar } from 'react-chartjs-2';
 import {
@@ -51,6 +51,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
   const [loadedLogs, setLoadedLogs] = useState<any[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
   const [showFullAudit, setShowFullAudit] = useState(false);
+  const [showAllRecentPeople, setShowAllRecentPeople] = useState(false);
   const [attendanceWeeks, setAttendanceWeeks] = useState<number>(2); // F1: período do gráfico (1/2/3/4 semanas)
   const combinedLogs = useMemo(() => {
     const map = new Map<string, any>();
@@ -125,15 +126,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
   });
 
   // 3. Últimos adicionados (todos os membros / líderes adicionados recentemente)
-  const latEstadded = [...db.people]
-    .filter(p => !p.deleted && (!deptFilter || personInDepartment(p, deptFilter)))
+  // Pastores e Secretaria Geral recebem a visão consolidada. Perfis de
+  // departamento mantêm a lista limitada ao departamento ativo da sessão.
+  const recentPeopleDepartmentFilter = isAdmin ? undefined : deptFilter;
+  const recentPeople = [...db.people]
+    .filter(p => !p.deleted && (!recentPeopleDepartmentFilter || personInDepartment(p, recentPeopleDepartmentFilter)))
     .sort((a, b) => {
-      const dateA = a.createdAt || '';
-      const dateB = b.createdAt || '';
+      const dateA = a.createdAt || a.startDate || '';
+      const dateB = b.createdAt || b.startDate || '';
       if (dateB !== dateA) return dateB.localeCompare(dateA);
       return b.id.localeCompare(a.id);
-    })
-    .slice(0, isMobileViewport ? 15 : 30);
+    });
+  const visibleRecentPeople = showAllRecentPeople ? recentPeople : recentPeople.slice(0, 20);
+  const hasMoreRecentPeople = recentPeople.length > 20;
 
   const formatTimeOnline = (seconds: number | undefined) => {
     if (!seconds) return '0 min';
@@ -142,6 +147,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
     const hrs = Math.floor(mins / 60);
     const remMins = mins % 60;
     return `${hrs}h ${remMins}m`;
+  };
+
+  const formatRegistrationDate = (dateValue?: string) => {
+    if (!dateValue) return 'Data não informada';
+    const date = new Date(dateValue.includes('T') ? dateValue : `${dateValue}T12:00:00`);
+    if (Number.isNaN(date.getTime())) return 'Data não informada';
+    return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }).format(date);
   };
 
   const onlineThresholdMs = 5 * 60 * 1000; // 5 minutos
@@ -638,6 +650,62 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
           </button>
         )}
       </div>
+
+      <section className="card card-elevated mb-8" aria-labelledby="recent-members-heading">
+        <div className="flex justify-between items-start gap-4 flex-wrap mb-6">
+          <div>
+            <p className="text-sm font-semibold text-primary mb-1">{greeting.text}</p>
+            <h2 id="recent-members-heading" className="text-xl font-bold mb-1 flex items-center gap-2">
+              <Sparkles size={20} className="text-primary" aria-hidden="true" />
+              Novos integrantes
+            </h2>
+            <p className="subtitle m-0">
+              {recentPeopleDepartmentFilter
+                ? `Boas-vindas aos últimos cadastrados em ${recentPeopleDepartmentFilter}.`
+                : 'Boas-vindas aos últimos integrantes cadastrados em todos os departamentos.'}
+            </p>
+          </div>
+          <span className="badge badge-active" aria-label={`${recentPeople.length} integrantes cadastrados no escopo atual`}>
+            {recentPeople.length} cadastrados
+          </span>
+        </div>
+
+        {recentPeople.length === 0 ? (
+          <p className="text-sm text-muted m-0">Ainda não há integrantes cadastrados neste departamento.</p>
+        ) : (
+          <>
+            <ol id="recent-members-list" className="grid grid-cols-1 md:grid-cols-2 gap-3 m-0 p-0" aria-label="Integrantes cadastrados recentemente">
+              {visibleRecentPeople.map(person => (
+                <li key={person.id} className="list-none flex items-center justify-between gap-3 p-4 rounded-xl border" style={{ background: 'var(--power-raised)', borderColor: 'var(--border-color)' }}>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold truncate m-0">{person.name}</p>
+                    <p className="text-xs text-muted mt-0.5 mb-0 truncate">
+                      {person.role} • {recentPeopleDepartmentFilter || person.department}
+                    </p>
+                  </div>
+                  <time className="text-xs text-muted whitespace-nowrap" dateTime={person.createdAt || person.startDate}>
+                    {formatRegistrationDate(person.createdAt || person.startDate)}
+                  </time>
+                </li>
+              ))}
+            </ol>
+
+            {hasMoreRecentPeople && (
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm mt-5"
+                style={{ minHeight: '44px' }}
+                aria-expanded={showAllRecentPeople}
+                aria-controls="recent-members-list"
+                onClick={() => setShowAllRecentPeople(current => !current)}
+              >
+                {showAllRecentPeople ? <ChevronUp size={18} aria-hidden="true" /> : <ChevronDown size={18} aria-hidden="true" />}
+                {showAllRecentPeople ? 'Mostrar somente os 20 últimos' : `Ver todos os ${recentPeople.length} cadastrados`}
+              </button>
+            )}
+          </>
+        )}
+      </section>
 
       {/* TypeUI: stats cards with consistent spacing */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">

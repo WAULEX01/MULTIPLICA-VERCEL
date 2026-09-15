@@ -195,7 +195,9 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ db, session, onU
     : filteredDeptPeople.filter(p => getPersonSubGroup(p, selectedDept) === subGroupFilter);
 
   // The active list for select-all depends on which mode we're in
-  const activeList = isAtalaias ? currentGroupList : subgroupFiltered;
+  // A chamada deve manter a mesma ordem de nomes em todos os departamentos.
+  // Antes, somente os grupos especiais passavam pela ordenação alfabética.
+  const activeList = isAtalaias ? currentGroupList : [...subgroupFiltered].sort(compareByName);
 
   // Total exibido no cabeçalho da lista (respeita o filtro de subgrupo)
   const headerTotal = isAtalaias ? activeDeptPeople.length : (subGroupFilter === 'todos' ? activeDeptPeople.length : subgroupFiltered.length);
