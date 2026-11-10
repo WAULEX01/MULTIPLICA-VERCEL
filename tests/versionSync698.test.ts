@@ -74,6 +74,18 @@ describe('nova geração de dados da v6.9.8', () => {
     expect(queue[0].deviceId).toBeTruthy();
   });
 
+  it('preserva pendências de uma versão anterior da mesma geração após atualizar a interface', () => {
+    activateCurrentDataGeneration(17910);
+    localStorage.setItem('pm_sync_queue', JSON.stringify([{
+      id: 'pending-826', type: 'people', itemId: 'p1', data: { id: 'p1', phone: '222' },
+      timestamp: new Date().toISOString(), generation: DATA_GENERATION, clientVersion: 'v8.2.6',
+    }]));
+
+    const queue = getSyncQueue();
+    expect(queue).toHaveLength(1);
+    expect(queue[0].itemId).toBe('p1');
+  });
+
   it('ignora silenciosamente qualquer item de uma geração anterior', () => {
     activateCurrentDataGeneration(17910);
     localStorage.setItem('pm_sync_queue', JSON.stringify([{

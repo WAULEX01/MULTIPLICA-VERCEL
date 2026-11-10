@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <!-- Identidade visual unificada: mesma logo no cabeçalho, aba e PWA. -->
-    <link rel="icon" type="image/png" href="/logo.png?v=brand-826" />
-    <link rel="shortcut icon" type="image/png" href="/logo.png?v=brand-826" />
-    <link rel="apple-touch-icon" href="/logo.png?v=brand-826" />
-    <link rel="manifest" href="/manifest.json?v=brand-826" />
+    <link rel="icon" type="image/png" href="/logo.png?v=brand-827" />
+    <link rel="shortcut icon" type="image/png" href="/logo.png?v=brand-827" />
+    <link rel="apple-touch-icon" href="/logo.png?v=brand-827" />
+    <link rel="manifest" href="/manifest.json?v=brand-827" />
     <meta name="theme-color" content="#ff6101" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Multiplica PLUS | IEAD - JOTA</title>
@@ -19,11 +19,11 @@
     <script>
       const isLocalPreview = ['localhost', '127.0.0.1'].includes(window.location.hostname);
       if ('serviceWorker' in navigator && !isLocalPreview) {
-        // v8.2.6: força a atualização do cache visual/PWA desta versão.
+        // v8.2.7: mantém o Service Worker e os assets da interface atualizados.
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js?v=826-brand')
+          navigator.serviceWorker.register('/sw.js?v=827-update')
             .then(reg => {
-              console.log('[SW v8.2.6] registrado', reg.scope);
+              console.log('[SW v8.2.7] registrado', reg.scope);
               reg.update().catch(() => {});
             })
             .catch(err => console.error('[SW v8.2.6] falha no registro:', err));

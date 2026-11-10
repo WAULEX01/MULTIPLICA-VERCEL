@@ -18,6 +18,8 @@ const runWhenIdle = (callback: () => void, fallbackDelay: number) => {
 };
 
 const shouldAvoidBackgroundPreload = () => {
+  if (window.matchMedia('(max-width: 768px), (pointer: coarse)').matches) return true;
+
   const connection = (navigator as Navigator & {
     connection?: { saveData?: boolean; effectiveType?: string };
   }).connection;

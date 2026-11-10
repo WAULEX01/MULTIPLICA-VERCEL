@@ -3,7 +3,7 @@
 // Force rebuild hash to bypass cache
 console.log("CACHE_BUSTER_V21_V78_SYNC_CONSISTENCY");
 import { getLocalDateISO } from './utils/localDate';
-import { useState, useEffect, useRef } from 'react';
+import { lazy, Suspense, useState, useEffect, useRef } from 'react';
 import { initializeDB, saveDB, getWeekKey, createWeeklyMissionIfMissing, isYouthOrTeenDepartment, personInDepartment, generateUUID, getUserAllowedDepartments, canUserSelectDepartment, getDepartmentTheme, getVisibleDepartments, hashPassword, getSyncQueue, acknowledgeSyncQueue, markSyncQueueInFlight, rebaseSyncQueue } from './services/db';
 import { apiGetData, apiGetVersionInfo, apiPullChanges, apiPushPatches, apiLogout, apiSubscribeToChanges, apiSwitchDepartment } from './services/api';
 import { persistPreUpdateCheckpoint } from './services/versionSync';
@@ -24,19 +24,20 @@ import {
 
 import type { AppDatabase, UserSession, Person, AttendanceRecord, MonthlyGoal, PastoralLog, WeeklyMission, Message, ChurchEvent, ActivityLog } from './types';
 import { LoginView } from './views/LoginView';
-import { DashboardView } from './views/DashboardView';
-import { DepartmentsView } from './views/DepartmentsView';
-import { PeopleListView } from './views/PeopleListView';
-import { AttendanceView } from './views/AttendanceView';
-import { RadarView } from './views/RadarView';
-import { ReportsView } from './views/ReportsView';
-import { AgendaView } from './views/AgendaView';
-import { TutorialView } from './views/TutorialView';
-import { BirthdaysView } from './views/BirthdaysView';
-import { SettingsView } from './views/SettingsView';
-import { SpecialMissionsView } from './views/SpecialMissionsView';
 import { InicioView } from './views/InicioView';
 import { ChatWidget } from './components/ChatWidget';
+
+const DashboardView = lazy(() => import('./views/DashboardView').then(module => ({ default: module.DashboardView })));
+const DepartmentsView = lazy(() => import('./views/DepartmentsView').then(module => ({ default: module.DepartmentsView })));
+const PeopleListView = lazy(() => import('./views/PeopleListView').then(module => ({ default: module.PeopleListView })));
+const AttendanceView = lazy(() => import('./views/AttendanceView').then(module => ({ default: module.AttendanceView })));
+const RadarView = lazy(() => import('./views/RadarView').then(module => ({ default: module.RadarView })));
+const ReportsView = lazy(() => import('./views/ReportsView').then(module => ({ default: module.ReportsView })));
+const AgendaView = lazy(() => import('./views/AgendaView').then(module => ({ default: module.AgendaView })));
+const TutorialView = lazy(() => import('./views/TutorialView').then(module => ({ default: module.TutorialView })));
+const BirthdaysView = lazy(() => import('./views/BirthdaysView').then(module => ({ default: module.BirthdaysView })));
+const SettingsView = lazy(() => import('./views/SettingsView').then(module => ({ default: module.SettingsView })));
+const SpecialMissionsView = lazy(() => import('./views/SpecialMissionsView').then(module => ({ default: module.SpecialMissionsView })));
 
 // Indicador de sincronização — bolinha discreta no canto superior direito
 // 🔴 Vermelho = offline | 🟠 Laranja = conectado sincronizando | 🟢 Verde = sincronizado
@@ -71,6 +72,13 @@ const SyncIndicator = ({ isSyncing, hasPendingSync, isOnline }: { isSyncing: boo
 // Executa antes da primeira leitura do banco local. A geração Supabase master
 // ou fila pertencente às versões anteriores é descartado uma única vez.
 prepareCurrentDataGeneration();
+
+try {
+  if (localStorage.getItem('pm_update_target_version') === APP_VERSION) {
+    localStorage.removeItem('pm_update_target_version');
+    sessionStorage.removeItem('pm_update_reload_target');
+  }
+} catch {}
 
 // Marcador da limpeza automática de banco divergente. Quando este valor muda,
 // todos os aparelhos JÁ ATIVADOS fazem UMA vez a reconciliação completa com o
@@ -699,6 +707,7 @@ export default function App() {
     let versionTimer: any;
     let retryTimer: any;
     let readyNoticeTimer: any;
+    let updateReloadTimer: any;
     let retryAttempt = 0;
 
     // Mostra um aviso que some sozinho depois de alguns segundos (não fica preso na tela).
@@ -709,17 +718,61 @@ export default function App() {
     };
 
     const installNewVersion = async (targetVersion: string) => {
+      const previousReloadTarget = sessionStorage.getItem('pm_update_reload_target');
+      if (previousReloadTarget === targetVersion) {
+        setVersionNotice({ kind: 'warning', text: `A versão ${targetVersion} já foi solicitada. Reabra o app se a atualização ainda não apareceu.` });
+        return;
+      }
+
+      if (getSyncQueue().length > 0) {
+        try {
+          await runPendingPushRef.current();
+        } catch (error) {
+          console.warn('[VersionSync] Pendências continuam seguras para o próximo envio:', error);
+        }
+      }
+
       persistPreUpdateCheckpoint(dbRef.current, getSyncQueue(), APP_VERSION);
       localStorage.setItem('pm_update_target_version', targetVersion);
-      setVersionNotice({ kind: 'warning', text: `Nova versão ${targetVersion} disponível. O app continuará aberto; atualize pelo navegador quando for conveniente.` });
+      sessionStorage.setItem('pm_update_reload_target', targetVersion);
+      setVersionNotice({ kind: 'updating', text: `Instalando automaticamente a versão ${targetVersion}…` });
+
+      let reloadStarted = false;
+      const reloadWithLatestAssets = () => {
+        if (reloadStarted) return;
+        const activeElement = document.activeElement;
+        const userIsEditing = activeElement instanceof HTMLInputElement
+          || activeElement instanceof HTMLTextAreaElement
+          || activeElement instanceof HTMLSelectElement
+          || activeElement?.getAttribute('contenteditable') === 'true';
+        const dialogIsOpen = Array.from(document.querySelectorAll<HTMLElement>('.modal-overlay, [role="dialog"]'))
+          .some(element => !element.hidden && element.getClientRects().length > 0);
+
+        if (userIsEditing || dialogIsOpen || pushInProgressRef.current) {
+          setVersionNotice({ kind: 'warning', text: `Versão ${targetVersion} pronta. A atualização será aplicada assim que o cadastro atual for fechado.` });
+          updateReloadTimer = window.setTimeout(reloadWithLatestAssets, 3000);
+          return;
+        }
+
+        reloadStarted = true;
+        window.location.reload();
+      };
+
       if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.addEventListener('controllerchange', reloadWithLatestAssets, { once: true });
         const registrations = await navigator.serviceWorker.getRegistrations();
         await Promise.all(registrations.map(async registration => {
           await registration.update();
           registration.waiting?.postMessage({ type: 'SKIP_WAITING' });
+          if (registration.installing) {
+            registration.installing.addEventListener('statechange', () => {
+              registration.waiting?.postMessage({ type: 'SKIP_WAITING' });
+            });
+          }
         }));
       }
-      console.warn('[VersionSync] Atualização disponível sem reload automático:', targetVersion); return;
+
+      updateReloadTimer = window.setTimeout(reloadWithLatestAssets, 1500);
     };
 
     const runLifecycle = async () => {
@@ -902,6 +955,7 @@ export default function App() {
       if (versionTimer) clearInterval(versionTimer);
       if (retryTimer) clearTimeout(retryTimer);
       if (readyNoticeTimer) clearTimeout(readyNoticeTimer);
+      if (updateReloadTimer) clearTimeout(updateReloadTimer);
     };
   }, [!!db, isOnline, session?.sessionToken]);
 
@@ -2409,7 +2463,9 @@ export default function App() {
             </div>
           </div>
         )}
-        {renderView()}
+        <Suspense fallback={<div className="page-container" role="status" aria-live="polite">Carregando tela…</div>}>
+          {renderView()}
+        </Suspense>
       </main>
 
       {/* 4. Bottom Nav for Mobile — mobile-first premium */}

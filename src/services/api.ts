@@ -1,6 +1,6 @@
 // Multiplica Plus 8.1 — Supabase adapter.
 // Mantém a mesma interface usada pelas views da v7.8.6 para preservar o layout.
-import { APP_VERSION, DATA_GENERATION, getOrCreateDeviceId } from './release';
+import { APP_VERSION, DATA_GENERATION, SCHEMA_VERSION, getOrCreateDeviceId } from './release';
 import { assertSessionToken, getMultiplicaSessionToken, isSupabaseConfigured, subscribeToRevisionSignal, supabase } from './supabase';
 
 // Compatibilidade temporária com imports antigos. A v8 NÃO usa chave compartilhada de API.
@@ -84,7 +84,22 @@ export async function apiPullChanges(sinceRevision: number) {
 }
 
 export async function apiGetVersionInfo() {
-  return { appVersion: APP_VERSION, dataGeneration: DATA_GENERATION, schemaVersion: 11 };
+  try {
+    const response = await fetch('/version.json', {
+      cache: 'no-store',
+      headers: { Accept: 'application/json' },
+    });
+    if (!response.ok) throw new Error(`VERSION_HTTP_${response.status}`);
+    const release = await response.json();
+    return {
+      appVersion: String(release?.appVersion || APP_VERSION),
+      dataGeneration: String(release?.dataGeneration || DATA_GENERATION),
+      schemaVersion: Number(release?.schemaVersion || SCHEMA_VERSION),
+    };
+  } catch (error) {
+    console.warn('[VersionSync] Manifesto remoto indisponível:', error);
+    return { appVersion: APP_VERSION, dataGeneration: DATA_GENERATION, schemaVersion: SCHEMA_VERSION };
+  }
 }
 
 export async function apiReconcileCache(_payload: any) {

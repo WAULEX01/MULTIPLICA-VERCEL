@@ -1,8 +1,8 @@
-// Service Worker — Multiplica Plus v8.2.6
-const CACHE_NAME = 'multiplica-plus-v8.2.6-brand-v1';
+// Service Worker — Multiplica Plus v8.2.7
+const CACHE_NAME = 'multiplica-plus-v8.2.7-update-v1';
 const ASSETS = [
-  '/manifest.json?v=brand-826',
-  '/logo.png?v=brand-826',
+  '/manifest.json?v=brand-827',
+  '/logo.png?v=brand-827',
   '/banner.jpg'
 ];
 
@@ -33,6 +33,13 @@ self.addEventListener('fetch', (event) => {
   // Supabase e qualquer serviço externo nunca passam pelo cache do PWA.
   if (url.origin !== self.location.origin) {
     event.respondWith(fetch(request));
+    return;
+  }
+
+  // O manifesto de versão nunca pode vir do cache: clientes antigos usam esta
+  // resposta para descobrir e instalar automaticamente o deploy mais recente.
+  if (url.pathname === '/version.json') {
+    event.respondWith(fetch(request, { cache: 'no-store' }));
     return;
   }
 

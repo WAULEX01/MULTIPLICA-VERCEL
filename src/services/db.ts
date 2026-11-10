@@ -1482,7 +1482,9 @@ export function getSyncQueue(): SyncQueueItem[] {
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed)
       ? parsed
-          .filter(item => item?.generation === DATA_GENERATION && ['v7.8.5', APP_VERSION].includes(String(item?.clientVersion || '')))
+          // A versão da interface pode mudar sem trocar a geração dos dados.
+          // Pendências da mesma geração continuam válidas após atualização automática.
+          .filter(item => item?.generation === DATA_GENERATION)
           .map(item => ({
             ...item,
             // Compatibilidade com uma pendência criada pelo Hotfix R2: na
