@@ -48,6 +48,12 @@ try {
   if (fs.existsSync(batchPath)) fs.unlinkSync(batchPath);
 }
 
+// Algumas versões do SFTP da hospedagem criam diretórios enviados com modo
+// 700. O servidor web precisa de leitura/travessia para servir JS e CSS.
+console.log(' Ajustando permissões públicas dos arquivos estáticos...');
+const sshPermissionsCmd = `ssh -p ${SSH_PORT} -i "${KEY_PATH}" -o StrictHostKeyChecking=accept-new ${SSH_USER}@${SSH_HOST} "find ${REMOTE_PATH} -type d -exec chmod 755 {} \\; && find ${REMOTE_PATH} -type f -exec chmod 644 {} \\;"`;
+execSync(sshPermissionsCmd, { stdio: 'inherit' });
+
 console.log('\n✅ Deploy realizado com sucesso para multiplicaplus.com.br! 🎉');
 console.log('🌐 Acesse: https://multiplicaplus.com.br');
 console.log('🔄 Limpe o cache do navegador (Ctrl+Shift+R)');
