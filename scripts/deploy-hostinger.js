@@ -8,6 +8,14 @@ const SSH_PORT = '65002';
 const REMOTE_PATH = 'domains/multiplicaplus.com.br/public_html';
 const KEY_PATH = 'C:/Users/Lenovo/.ssh/id_ed25519';
 
+// O domínio oficial ainda usa a aplicação legada v7.8.6 + MySQL. A árvore
+// atual do repositório usa Supabase e não pode substituir esse frontend sem
+// uma migração planejada dos dados. Esta trava evita outro deploy incompatível.
+const releaseSource = fs.readFileSync(path.resolve('src/services/release.ts'), 'utf8');
+if (releaseSource.includes("DATA_GENERATION = 'supabase-")) {
+  throw new Error('Deploy bloqueado: multiplicaplus.com.br ainda usa v7.8.6 + MySQL. Migre e valide os dados antes de publicar a versão Supabase neste domínio.');
+}
+
 console.log('🚀 Iniciando build da aplicação...');
 execSync('npm run build', { stdio: 'inherit' });
 
