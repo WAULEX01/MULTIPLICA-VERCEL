@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - perf/mobile-lazy-members-v823
+      - perf/mobile-deep-audit-20261123
   workflow_dispatch:
 
 jobs:
@@ -20,5 +21,9 @@ jobs:
           cache-dependency-path: package.json
       - name: Install dependencies
         run: npm install
+      - name: TypeScript / lint
+        run: npm run lint
+      - name: Tests
+        run: npm test
       - name: Build
         run: npm run build
