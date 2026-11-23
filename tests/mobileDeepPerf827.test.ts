@@ -35,7 +35,7 @@ describe('mobile deep performance regressions', () => {
   it('waits for local DB/outbox persistence before resolving updateDatabase', () => {
     const source = readFileSync('src/App.tsx', 'utf8');
     expect(source).toContain("await new Promise<void>((resolve)");
-    expect(source).toContain("persistAndQueue();");
+    expect(source).toContain("void persistAndQueue().finally(resolve);");
   });
 
   it('deduplicates focus/visibility pulls and preserves a missed realtime signal', () => {
