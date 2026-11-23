@@ -240,6 +240,8 @@ export default function App() {
   const lastPushTimeRef = useRef<number>(Date.now());
   const runPendingPushRef = useRef<() => Promise<void>>(async () => {});
   const pushRetryCountRef = useRef<Map<string, number>>(new Map());
+  const activityFlushInProgressRef = useRef(false);
+  const ACTIVITY_HEARTBEAT_KEY = 'pm_activity_heartbeat_v1';
 
   // ⚠️ SISTEMA DE SINCRONIZAÇÃO FINALIZADO v5.8.0 — Não alterar sem autorização do Pastor Wagner
   const updateDatabase = async (newDB: AppDatabase, isInteraction = true, skipPush = false, logAction?: string) => {
@@ -361,37 +363,108 @@ export default function App() {
     window.setTimeout(persistAndQueue, 0);
   };
 
-  // Rastreamento de tempo ativo online do líder logado (soma +30s a cada 30 segundos)
+  // Atividade online: o heartbeat de 30s é persistido em uma chave pequena e
+  // NÃO reconstrói/salva o banco inteiro. A cada 5 minutos consolidamos uma única
+  // alteração da pessoa, gerando somente uma versão e uma operação na Outbox.
   useEffect(() => {
-    if (!session || !versionSyncReady || !isCurrentDataGenerationActive()) return;
-    const interval = setInterval(() => {
+    if (!session?.personId || !versionSyncReady || !isCurrentDataGenerationActive()) return;
+
+    type ActivityHeartbeat = {
+      personId: string;
+      accumulatedSeconds: number;
+      lastActive: string;
+      lastFlushAt: number;
+    };
+
+    const readHeartbeat = (): ActivityHeartbeat => {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(ACTIVITY_HEARTBEAT_KEY) || '{}');
+        if (parsed?.personId === session.personId) {
+          return {
+            personId: session.personId,
+            accumulatedSeconds: Math.max(0, Number(parsed.accumulatedSeconds || 0)),
+            lastActive: String(parsed.lastActive || ''),
+            lastFlushAt: Math.max(0, Number(parsed.lastFlushAt || 0)),
+          };
+        }
+      } catch {}
+      return { personId: session.personId, accumulatedSeconds: 0, lastActive: '', lastFlushAt: Date.now() };
+    };
+
+    const writeHeartbeat = (heartbeat: ActivityHeartbeat) => {
+      try { localStorage.setItem(ACTIVITY_HEARTBEAT_KEY, JSON.stringify(heartbeat)); } catch {}
+    };
+
+    const flushHeartbeat = async (force = false) => {
+      if (activityFlushInProgressRef.current) return;
       const currentDBState = dbRef.current;
       if (!currentDBState) return;
 
-      const updatedPeople = currentDBState.people.map(p => {
-        if (p.id === session.personId) {
-          return {
-            ...p,
-            timeOnlineSeconds: (p.timeOnlineSeconds || 0) + 30,
-            lastActive: new Date().toISOString(),
-            version: (p.version || 0) + 1,
-            updatedAt: new Date().toISOString(),
-            updatedBy: session.personId
-          };
-        }
-        return p;
-      });
+      const heartbeat = readHeartbeat();
+      if (heartbeat.accumulatedSeconds <= 0) return;
+      if (!force && Date.now() - heartbeat.lastFlushAt < 300000) return;
 
-      // Throttle network push to once every 5 minutes (300000ms) to prevent server overload
-      const shouldPush = (Date.now() - lastPushTimeRef.current) > 300000;
-      updateDatabase({ ...currentDBState, people: updatedPeople }, false, !shouldPush);
-      if (shouldPush) {
+      const currentPerson = currentDBState.people.find(p => p.id === session.personId);
+      if (!currentPerson) return;
+
+      activityFlushInProgressRef.current = true;
+      try {
+        const nowIso = heartbeat.lastActive || new Date().toISOString();
+        const updatedPeople = currentDBState.people.map(p => p.id === session.personId
+          ? {
+              ...p,
+              timeOnlineSeconds: (p.timeOnlineSeconds || 0) + heartbeat.accumulatedSeconds,
+              lastActive: nowIso,
+              version: (p.version || 0) + 1,
+              updatedAt: nowIso,
+              updatedBy: session.personId
+            }
+          : p
+        );
+
+        // Enfileira/persiste uma única alteração consolidada. O heartbeat só é
+        // zerado depois que a alteração já entrou no fluxo local de persistência.
+        await updateDatabase({ ...currentDBState, people: updatedPeople }, false, false);
+        writeHeartbeat({
+          personId: session.personId,
+          accumulatedSeconds: 0,
+          lastActive: nowIso,
+          lastFlushAt: Date.now(),
+        });
         lastPushTimeRef.current = Date.now();
+      } finally {
+        activityFlushInProgressRef.current = false;
       }
-    }, 30000);
+    };
 
-    return () => clearInterval(interval);
-  }, [session, versionSyncReady]);
+    const recordHeartbeat = () => {
+      if (document.visibilityState === 'hidden') return;
+      const heartbeat = readHeartbeat();
+      heartbeat.accumulatedSeconds += 30;
+      heartbeat.lastActive = new Date().toISOString();
+      writeHeartbeat(heartbeat);
+      void flushHeartbeat(false);
+    };
+
+    // Recupera atividade leve que tenha ficado pendente após fechamento/reabertura.
+    void flushHeartbeat(false);
+    const interval = window.setInterval(recordHeartbeat, 30000);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'hidden') void flushHeartbeat(true);
+    };
+    const handlePageHide = () => { void flushHeartbeat(true); };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('pagehide', handlePageHide);
+
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('pagehide', handlePageHide);
+      void flushHeartbeat(true);
+    };
+  }, [session?.personId, versionSyncReady]);
 
 
   // Initial load
