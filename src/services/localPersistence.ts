@@ -6,6 +6,8 @@ const IDB_READY_KEY = 'pm_idb_cache_ready';
 
 let openPromise: Promise<IDBDatabase> | null = null;
 let pendingSnapshot: unknown | null = null;
+let pendingFallback: (() => void) | null = null;
+let pendingResolvers: Array<() => void> = [];
 let flushTimer: number | null = null;
 let idbFailed = false;
 
@@ -75,29 +77,34 @@ export function scheduleIndexedDbSnapshot(
   }
 
   pendingSnapshot = snapshot;
+  pendingFallback = fallbackToLocalStorage;
 
   return new Promise<void>((resolve) => {
-    if (flushTimer !== null) {
-      // A gravação já agendada usará sempre o snapshot mais recente.
-      window.setTimeout(resolve, 260);
-      return;
-    }
+    pendingResolvers.push(resolve);
+    if (flushTimer !== null) return;
 
     flushTimer = window.setTimeout(async () => {
       flushTimer = null;
       const latest = pendingSnapshot;
+      const latestFallback = pendingFallback;
+      const resolvers = pendingResolvers;
+
       pendingSnapshot = null;
+      pendingFallback = null;
+      pendingResolvers = [];
+
       if (latest == null) {
-        resolve();
+        resolvers.forEach(done => done());
         return;
       }
+
       try {
         await writeIndexedDbSnapshot(latest);
       } catch (error) {
         console.warn('[Cache] IndexedDB indisponível; usando fallback localStorage.', error);
-        fallbackToLocalStorage();
+        latestFallback?.();
       } finally {
-        resolve();
+        resolvers.forEach(done => done());
       }
     }, 180);
   });
