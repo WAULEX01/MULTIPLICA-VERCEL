@@ -1,35 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { lazy, Suspense, useEffect, useState, useMemo } from 'react';
 import { getLocalDateISO } from '../utils/localDate';
 import type { AppDatabase, UserSession, Person } from '../services/db';
 import { getStats, getWeekKey, getMissionForMultiplicador, recordWeeklyMissionMessage, isYouthOrTeenDepartment, calculateConsecutiveAbsences, getPersonGender, isSameDepartment, personInDepartment, getSpecialMissionForMultiplicador, recordSpecialMissionMessage, canUserSelectDepartment, getUserAllowedDepartments, getDepartmentTheme, getPersonMother, compareByName } from '../services/db';
 import { Users, CheckCircle, AlertTriangle, TrendingUp, Calendar, AlertCircle, Plus, Gift, Cake, MessageSquare, BookOpen, Activity, Trophy, Award, Sparkles, Copy, Edit2, Send, Target, ChevronDown, ChevronUp } from 'lucide-react';
 import { apiGetActivityLogs } from '../services/api';
-import { Line, Bar } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-} from 'chart.js';
-import type { ChartOptions } from 'chart.js';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-);
+const DashboardChart = lazy(() => import('../components/DashboardChart').then(module => ({ default: module.DashboardChart })));
 
 interface DashboardViewProps {
   db: AppDatabase;
@@ -53,6 +28,31 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
   const [showFullAudit, setShowFullAudit] = useState(false);
   const [showAllRecentPeople, setShowAllRecentPeople] = useState(false);
   const [attendanceWeeks, setAttendanceWeeks] = useState<number>(2); // F1: período do gráfico (1/2/3/4 semanas)
+  const [chartsReady, setChartsReady] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    let timer: number | undefined;
+    const idleWindow = window as Window & {
+      requestIdleCallback?: (callback: () => void, options?: { timeout?: number }) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
+    const reveal = () => { if (!cancelled) setChartsReady(true); };
+
+    if (typeof idleWindow.requestIdleCallback === 'function') {
+      const idleId = idleWindow.requestIdleCallback(reveal, { timeout: 1800 });
+      return () => {
+        cancelled = true;
+        idleWindow.cancelIdleCallback?.(idleId);
+      };
+    }
+
+    timer = window.setTimeout(reveal, isMobileViewport ? 1200 : 500);
+    return () => {
+      cancelled = true;
+      if (timer) window.clearTimeout(timer);
+    };
+  }, [isMobileViewport]);
   const combinedLogs = useMemo(() => {
     const map = new Map<string, any>();
     (db.activityLogs || []).forEach((l: any) => { if (l && l.id) map.set(l.id, l); });
@@ -570,7 +570,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
     }
   };
 
-  const lineChartOptions: ChartOptions<'line'> = {
+  const lineChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -602,7 +602,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
     },
   };
 
-  const barChartOptions: ChartOptions<'bar'> = {
+  const barChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -797,7 +797,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
               </div>
             </div>
             <div className="flex-1 relative">
-              <Line data={growthData} options={lineChartOptions as any} plugins={[growthDatalabelsPlugin as any]} />
+              {chartsReady ? (
+                <Suspense fallback={<div className="flex items-center justify-center h-full text-muted">Carregando gráfico…</div>}>
+                  <DashboardChart kind="line" data={growthData} options={lineChartOptions} plugins={[growthDatalabelsPlugin]} />
+                </Suspense>
+              ) : (
+                <div className="flex items-center justify-center h-full text-muted">Preparando gráfico…</div>
+              )}
             </div>
           </div>
 
@@ -919,7 +925,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
             </div>
             <div className="flex-1 relative">
               {groupedRecords.length > 0 ? (
-                <Bar data={attendanceChartData} options={barChartOptions as any} />
+                chartsReady ? (
+                  <Suspense fallback={<div className="flex items-center justify-center h-full text-muted">Carregando gráfico…</div>}>
+                    <DashboardChart kind="bar" data={attendanceChartData} options={barChartOptions} />
+                  </Suspense>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-muted">Preparando gráfico…</div>
+                )
               ) : (
                 <div className="flex items-center justify-center h-full text-muted">
                   Nenhuma chamada registrada neste período.
