@@ -31,6 +31,6 @@ describe('recuperação administrativa atual', () => {
 
   it('mantém alterações de cadastro no patch genérico enviado ao Supabase', () => {
     expect(syncEngine).toContain('buildEntityPatch');
-    expect(syncEngine).toContain('patch[key] = newItem[key]');
+    expect(syncEngine).toContain('patch[key] = value;');
   });
 });
