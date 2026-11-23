@@ -228,7 +228,21 @@ const scheduleEnhance = () => {
   });
 };
 
-const observer = new MutationObserver(scheduleEnhance);
+const ENHANCEABLE_SELECTOR = '.view-header, .modal-overlay, .test-mode-bar';
+
+const mutationTouchesEnhanceableUi = (mutation: MutationRecord) => {
+  const target = mutation.target instanceof Element ? mutation.target : mutation.target.parentElement;
+  if (target?.closest(ENHANCEABLE_SELECTOR)) return true;
+
+  return Array.from(mutation.addedNodes).some((node) => {
+    if (!(node instanceof Element)) return false;
+    return node.matches(ENHANCEABLE_SELECTOR) || Boolean(node.querySelector(ENHANCEABLE_SELECTOR));
+  });
+};
+
+const observer = new MutationObserver((mutations) => {
+  if (mutations.some(mutationTouchesEnhanceableUi)) scheduleEnhance();
+});
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
