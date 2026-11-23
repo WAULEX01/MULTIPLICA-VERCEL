@@ -11,7 +11,7 @@ let idbFailed = false;
 
 function openCacheDatabase(): Promise<IDBDatabase> {
   if (openPromise) return openPromise;
-  openPromise = new Promise((resolve, reject) => {
+  const opening = new Promise<IDBDatabase>((resolve, reject) => {
     if (typeof indexedDB === 'undefined') {
       reject(new Error('INDEXEDDB_UNAVAILABLE'));
       return;
@@ -24,12 +24,15 @@ function openCacheDatabase(): Promise<IDBDatabase> {
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error || new Error('INDEXEDDB_OPEN_FAILED'));
     request.onblocked = () => reject(new Error('INDEXEDDB_BLOCKED'));
-  }).catch(error => {
+  });
+
+  const guarded: Promise<IDBDatabase> = opening.catch((error): never => {
     openPromise = null;
     idbFailed = true;
     throw error;
   });
-  return openPromise;
+  openPromise = guarded;
+  return guarded;
 }
 
 export async function readIndexedDbSnapshot<T>(): Promise<T | null> {
