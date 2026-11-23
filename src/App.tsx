@@ -360,7 +360,14 @@ export default function App() {
 
     // setTimeout(0), e não Promise/microtask: microtasks ainda rodam antes da pintura.
     // O macrotask permite que o clique/fechamento do modal apareça imediatamente.
-    window.setTimeout(persistAndQueue, 0);
+    // A Promise resolve somente DEPOIS de saveDB + Outbox local; assim rotinas que
+    // precisam confirmar persistência (ex.: heartbeat) podem aguardar com segurança.
+    await new Promise<void>((resolve) => {
+      window.setTimeout(() => {
+        persistAndQueue();
+        resolve();
+      }, 0);
+    });
   };
 
   // Atividade online: o heartbeat de 30s é persistido em uma chave pequena e
