@@ -114,7 +114,20 @@ const scheduleRefresh = () => {
   });
 };
 
-const observer = new MutationObserver(scheduleRefresh);
+const mutationTouchesSectionNavigation = (mutation: MutationRecord) => {
+  const target = mutation.target instanceof Element ? mutation.target : mutation.target.parentElement;
+  if (target?.closest('[data-mobile-page], .view-header')) return true;
+
+  return Array.from(mutation.addedNodes).some((node) => {
+    if (!(node instanceof Element)) return false;
+    return node.matches('[data-mobile-page], h2, h3, .view-header')
+      || Boolean(node.querySelector('[data-mobile-page], h2, h3, .view-header'));
+  });
+};
+
+const observer = new MutationObserver((mutations) => {
+  if (mutations.some(mutationTouchesSectionNavigation)) scheduleRefresh();
+});
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
