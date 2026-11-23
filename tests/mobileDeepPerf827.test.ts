@@ -61,8 +61,10 @@ describe('mobile deep performance regressions', () => {
     const app = readFileSync('src/App.tsx', 'utf8');
 
     expect(db).toContain('initializeDBAsync');
-    expect(db).toContain('readIndexedDbSnapshot<AppDatabase>()');
-    expect(db).toContain('scheduleIndexedDbSnapshot(db');
+    expect(db).toContain('readIndexedDbSnapshot<PersistedDatabaseEnvelope>()');
+    expect(db).toContain('indexed?.generation === DATA_GENERATION');
+    expect(db).toContain('generation: DATA_GENERATION');
+    expect(db).toContain('scheduleIndexedDbSnapshot(envelope');
     expect(persistence).toContain("indexedDB.open(CACHE_DB_NAME");
     expect(persistence).toContain("objectStore(STORE_NAME).put(snapshot, SNAPSHOT_KEY)");
     expect(app).toContain('initializeDBAsync().then');
