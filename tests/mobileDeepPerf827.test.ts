@@ -37,4 +37,11 @@ describe('mobile deep performance regressions', () => {
     expect(source).toContain("await new Promise<void>((resolve)");
     expect(source).toContain("persistAndQueue();");
   });
+
+  it('deduplicates focus/visibility pulls and preserves a missed realtime signal', () => {
+    const source = readFileSync('src/App.tsx', 'utf8');
+    expect(source).toContain("pendingLoadRef.current = true");
+    expect(source).toContain("lastForegroundSyncRef.current < 1500");
+    expect(source).toContain("pendingLoadRef.current = false");
+  });
 });
