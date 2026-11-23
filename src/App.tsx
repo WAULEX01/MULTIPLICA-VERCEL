@@ -1081,26 +1081,37 @@ export default function App() {
           }
           let nextDb = dbRef.current;
           let nextRevision = Number(delta.server_revision || serverRevisionRef.current);
+          let shouldPersistDatabase = false;
           if (delta.reset_required) {
             console.log('[Sync] 🔄 RESET REQUIRED: baixando snapshot completo');
             const cloudData = await apiGetData();
             nextDb = applyPendingSyncOverlay(cloudPayloadToDatabase(cloudData));
             nextRevision = Number(cloudData.server_revision || 0);
+            shouldPersistDatabase = true;
           } else if (nextDb) {
             // Log detalhado das mudanças recebidas
             const changes = delta.changes || {};
+            const changedEntities = Object.keys(changes).filter(
+              (key) => Array.isArray(changes[key]) && changes[key].length > 0
+            );
+            const activityLogCountChanged =
+              typeof delta.activity_log_count === 'number' &&
+              delta.activity_log_count !== Number(nextDb.activityLogCount || 0);
             const changeSummary = Object.entries(changes).map(([entity, items]) => {
               const arr = Array.isArray(items) ? items : [];
-              const creates = arr.filter((i: any) => !i.deleted && !i.version || i.version === 1).length;
+              const creates = arr.filter((i: any) => (!i.deleted && !i.version) || i.version === 1).length;
               const updates = arr.filter((i: any) => !i.deleted && i.version > 1).length;
               const deletes = arr.filter((i: any) => i.deleted).length;
               return `${entity}: +${creates}/~${updates}/-${deletes}`;
             }).join(', ');
             console.log(`[Sync] 📊 Delta recebido: ${changeSummary || 'nenhuma mudança'} | rev ${nextRevision}`);
-            
-            nextDb = applyPendingSyncOverlay(applyServerDelta(nextDb, changes, delta.activity_log_count));
+
+            if (changedEntities.length > 0 || activityLogCountChanged) {
+              nextDb = applyPendingSyncOverlay(applyServerDelta(nextDb, changes, delta.activity_log_count));
+              shouldPersistDatabase = true;
+            }
           }
-          if (nextDb) {
+          if (nextDb && shouldPersistDatabase) {
             setDb(nextDb);
             dbRef.current = nextDb;
             saveDB(nextDb);
