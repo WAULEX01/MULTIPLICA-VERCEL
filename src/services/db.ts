@@ -1,6 +1,7 @@
 // src/services/db.ts
 
 import { APP_VERSION, DATA_GENERATION, DATA_GENERATION_KEY, PENDING_GENERATION_KEY, getOrCreateDeviceId, isCurrentDataGenerationActive } from './release';
+import { readIndexedDbSnapshot, scheduleIndexedDbSnapshot } from './localPersistence';
 
 export interface Syncable {
   updatedAt?: string;
@@ -1009,45 +1010,70 @@ export function guessGenderByName(nameStr: string): 'M' | 'F' | 'U' {
   return 'U';
 }
 
+const emptyDatabase = (): AppDatabase => ({
+  people: [], departments: [], attendances: [], goals: [], pastoralLogs: [],
+  activityLogs: [], weeklyMissions: [], specialMissions: [], messageHistory: [], events: [],
+});
+
+const normalizeDatabaseCache = (value: any): AppDatabase => {
+  const parsed = value && typeof value === 'object' ? value : {};
+  // Somente completa coleções técnicas ausentes; não altera pessoas,
+  // status, sexo, departamentos, datas ou qualquer dado de negócio.
+  parsed.people = Array.isArray(parsed.people) ? parsed.people : [];
+  parsed.departments = Array.isArray(parsed.departments) ? parsed.departments : [];
+  parsed.attendances = Array.isArray(parsed.attendances) ? parsed.attendances : [];
+  parsed.goals = Array.isArray(parsed.goals) ? parsed.goals : [];
+  parsed.pastoralLogs = Array.isArray(parsed.pastoralLogs) ? parsed.pastoralLogs : [];
+  parsed.activityLogs = Array.isArray(parsed.activityLogs) ? parsed.activityLogs : [];
+  parsed.weeklyMissions = Array.isArray(parsed.weeklyMissions) ? parsed.weeklyMissions : [];
+  parsed.specialMissions = Array.isArray(parsed.specialMissions) ? parsed.specialMissions : [];
+  parsed.messageHistory = Array.isArray(parsed.messageHistory) ? parsed.messageHistory : [];
+  parsed.events = Array.isArray(parsed.events) ? parsed.events : [];
+  return parsed as AppDatabase;
+};
+
 export function initializeDB(): AppDatabase {
-  // v7.8.5 SAFE STARTUP:
-  // Abrir/atualizar o app NUNCA modifica dados de negócio nem cria operações
-  // de sincronização. O cache local é somente uma réplica do Supabase.
+  // Fallback síncrono de compatibilidade. O snapshot principal passa a ser
+  // restaurado do IndexedDB por initializeDBAsync().
   localStorage.setItem(LAST_VERSION_KEY, APP_VERSION);
-
-  const emptyDb: AppDatabase = {
-    people: [], departments: [], attendances: [], goals: [], pastoralLogs: [],
-    activityLogs: [], weeklyMissions: [], specialMissions: [], messageHistory: [], events: [],
-  };
-
-  if (!isCurrentDataGenerationActive()) return emptyDb;
+  if (!isCurrentDataGenerationActive()) return emptyDatabase();
 
   const data = localStorage.getItem(STORAGE_KEY);
-  if (!data) return emptyDb; // nunca semear dados de demonstração em produção
+  if (!data) return emptyDatabase();
 
   try {
-    const parsed = JSON.parse(data);
-    // Somente completa coleções técnicas ausentes; não altera pessoas,
-    // status, sexo, departamentos, datas ou qualquer dado de negócio.
-    parsed.people = Array.isArray(parsed.people) ? parsed.people : [];
-    parsed.departments = Array.isArray(parsed.departments) ? parsed.departments : [];
-    parsed.attendances = Array.isArray(parsed.attendances) ? parsed.attendances : [];
-    parsed.goals = Array.isArray(parsed.goals) ? parsed.goals : [];
-    parsed.pastoralLogs = Array.isArray(parsed.pastoralLogs) ? parsed.pastoralLogs : [];
-    parsed.activityLogs = Array.isArray(parsed.activityLogs) ? parsed.activityLogs : [];
-    parsed.weeklyMissions = Array.isArray(parsed.weeklyMissions) ? parsed.weeklyMissions : [];
-    parsed.specialMissions = Array.isArray(parsed.specialMissions) ? parsed.specialMissions : [];
-    parsed.messageHistory = Array.isArray(parsed.messageHistory) ? parsed.messageHistory : [];
-    parsed.events = Array.isArray(parsed.events) ? parsed.events : [];
-    return parsed as AppDatabase;
+    return normalizeDatabaseCache(JSON.parse(data));
   } catch (e) {
-    console.error('[DB v7.8.5] Cache local inválido; aguardando snapshot oficial do Supabase.', e);
-    return emptyDb;
+    console.error('[DB] Cache fallback local inválido; aguardando IndexedDB/Supabase.', e);
+    return emptyDatabase();
   }
 }
 
-export function saveDB(db: AppDatabase) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+export async function initializeDBAsync(): Promise<AppDatabase> {
+  const fallback = initializeDB();
+  if (!isCurrentDataGenerationActive()) return fallback;
+
+  const indexed = await readIndexedDbSnapshot<AppDatabase>();
+  if (indexed) return normalizeDatabaseCache(indexed);
+
+  // Migração gradual: no primeiro uso da nova camada, copia o cache legado para
+  // IndexedDB sem removê-lo. Assim existe rollback seguro para versões anteriores.
+  if (fallback.people.length || fallback.departments.length || fallback.attendances.length) {
+    await scheduleIndexedDbSnapshot(fallback, () => {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(fallback)); } catch {}
+    });
+  }
+  return fallback;
+}
+
+export async function saveDB(db: AppDatabase): Promise<void> {
+  // Snapshot grande: IndexedDB usa structured clone e não bloqueia a thread
+  // principal com JSON.stringify/localStorage em cada alteração.
+  await scheduleIndexedDbSnapshot(db, () => {
+    // Fallback somente quando IndexedDB não existe/falha. A Outbox continua
+    // separada no localStorage e nunca depende deste snapshot.
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+  });
 }
 
 // ==========================================
