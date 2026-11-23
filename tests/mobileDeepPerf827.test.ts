@@ -41,7 +41,7 @@ describe('mobile deep performance regressions', () => {
   it('deduplicates focus/visibility pulls and preserves a missed realtime signal', () => {
     const source = readFileSync('src/App.tsx', 'utf8');
     expect(source).toContain("pendingLoadRef.current = true");
-    expect(source).toContain("lastForegroundSyncRef.current < 1500");
+    expect(source).toContain("now - lastForegroundSyncRef.current < 1500");
     expect(source).toContain("pendingLoadRef.current = false");
   });
 });
