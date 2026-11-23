@@ -4,7 +4,7 @@
 console.log("CACHE_BUSTER_V21_V78_SYNC_CONSISTENCY");
 import { getLocalDateISO } from './utils/localDate';
 import { lazy, Suspense, useState, useEffect, useRef } from 'react';
-import { initializeDB, saveDB, getWeekKey, createWeeklyMissionIfMissing, isYouthOrTeenDepartment, personInDepartment, generateUUID, getUserAllowedDepartments, canUserSelectDepartment, getDepartmentTheme, getVisibleDepartments, hashPassword, getSyncQueue, acknowledgeSyncQueue, markSyncQueueInFlight, rebaseSyncQueue } from './services/db';
+import { initializeDBAsync, saveDB, getWeekKey, createWeeklyMissionIfMissing, isYouthOrTeenDepartment, personInDepartment, generateUUID, getUserAllowedDepartments, canUserSelectDepartment, getDepartmentTheme, getVisibleDepartments, hashPassword, getSyncQueue, acknowledgeSyncQueue, markSyncQueueInFlight, rebaseSyncQueue } from './services/db';
 import { apiGetData, apiGetVersionInfo, apiPullChanges, apiPushPatches, apiLogout, apiSubscribeToChanges, apiSwitchDepartment } from './services/api';
 import { persistPreUpdateCheckpoint } from './services/versionSync';
 import { enqueueDatabaseChanges } from './services/syncEngine';
@@ -330,15 +330,19 @@ export default function App() {
     setDb(dbToSave);
     dbRef.current = dbToSave;
 
-    const persistAndQueue = () => {
+    const persistAndQueue = async () => {
       try {
-        saveDB(dbToSave);
-
         // ═══ MODO OFFLINE TIPO WHATSAPP ═══
         // Sempre enfileira para push, independente de conexão. A Outbox persiste
         // no localStorage e só remove a operação depois do ACK do Supabase.
         const shouldQueue = !skipPush;
         const queuedCount = shouldQueue ? enqueueDatabaseChanges(oldDB, dbToSave) : 0;
+
+        // A Outbox entra primeiro (síncrona e pequena). O snapshot grande vai
+        // para IndexedDB em seguida. Se o app fechar durante a gravação, a
+        // operação de negócio já está preservada para replay no próximo acesso.
+        await saveDB(dbToSave);
+
         if (queuedCount > 0) {
           localStorage.setItem('pm_pending_sync', 'true');
           setHasPendingSync(true);
@@ -364,8 +368,7 @@ export default function App() {
     // precisam confirmar persistência (ex.: heartbeat) podem aguardar com segurança.
     await new Promise<void>((resolve) => {
       window.setTimeout(() => {
-        persistAndQueue();
-        resolve();
+        void persistAndQueue().finally(resolve);
       }, 0);
     });
   };
@@ -474,13 +477,27 @@ export default function App() {
   }, [session?.personId, versionSyncReady]);
 
 
-  // Initial load
+  // Initial load: IndexedDB é a réplica local principal; localStorage fica
+  // apenas como fallback de migração/recuperação. Nenhum dado local é enviado
+  // antes da Outbox e das validações normais de geração.
   useEffect(() => {
-    if (!db) {
-      const initialDb = initializeDB();
+    let cancelled = false;
+    void initializeDBAsync().then(initialDb => {
+      if (cancelled) return;
+      dbRef.current = initialDb;
       setDb(initialDb);
-      
-    }
+    }).catch(error => {
+      console.warn('[Cache] Falha ao restaurar cache local; Supabase fará a reconciliação:', error);
+      if (!cancelled) {
+        const emptyDb: AppDatabase = {
+          people: [], departments: [], attendances: [], goals: [], pastoralLogs: [],
+          activityLogs: [], weeklyMissions: [], specialMissions: [], messageHistory: [], events: [],
+        };
+        dbRef.current = emptyDb;
+        setDb(emptyDb);
+      }
+    });
+    return () => { cancelled = true; };
   }, []);
 
   // Reenvia SOMENTE as operações realmente registradas na fila offline. O fluxo
