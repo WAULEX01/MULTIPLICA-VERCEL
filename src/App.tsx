@@ -775,6 +775,8 @@ export default function App() {
   const loadFromServerRef = useRef<(() => Promise<void>) | null>(null);
   // Evita múltiplos pulls simultâneos (polling + online + focus disparando juntos → menos carga no servidor)
   const loadInProgressRef = useRef<boolean>(false);
+  const pendingLoadRef = useRef<boolean>(false);
+  const lastForegroundSyncRef = useRef<number>(0);
   const versionLifecycleStartedRef = useRef(false);
 
   // Geração Supabase master: no primeiro acesso nenhum cache antigo é enviado.
@@ -1047,9 +1049,14 @@ export default function App() {
       console.log('[Sync] 🔄 loadFromServer chamado | online:', navigator.onLine, '| fila:', getSyncQueue().length, '| rev:', serverRevisionRef.current);
       if (!navigator.onLine) return;
       if (pushInProgressRef.current) return;
-      if (loadInProgressRef.current) return;
+      if (loadInProgressRef.current) {
+        // Realtime/focus pode chegar enquanto um pull está em andamento. Não abre
+        // uma segunda requisição, mas também não perde o sinal: refaz uma vez ao final.
+        pendingLoadRef.current = true;
+        return;
+      }
 
-      // ═══ FASE 2 — MYSQL É A FONTE ÚNICA ═══
+      // Supabase/PostgreSQL é a fonte única da verdade.
       // Se há itens na fila (edições feitas online que falharam o push),
       // envia primeiro. O pull abaixo traz o estado canônico do Supabase.
       if (getSyncQueue().length > 0) {
@@ -1213,6 +1220,10 @@ export default function App() {
         consecutiveFailuresRef.current++;
       } finally {
         loadInProgressRef.current = false;
+        if (pendingLoadRef.current) {
+          pendingLoadRef.current = false;
+          window.setTimeout(() => { void loadFromServerRef.current?.(); }, 250);
+        }
       }
     };
 
@@ -1256,17 +1267,19 @@ export default function App() {
     };
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
-    // Polling inteligente: ao voltar ao app (visible/focus), sincroniza imediatamente
+    // Focus + visibility normalmente disparam juntos no celular. Agrupamos esses
+    // sinais para evitar dois pulls quase idênticos, sem afetar Realtime/polling.
+    const requestForegroundSync = () => {
+      if (!navigator.onLine) return;
+      const now = Date.now();
+      if (now - lastForegroundSyncRef.current < 1500) return;
+      lastForegroundSyncRef.current = now;
+      void loadFromServerRef.current?.();
+    };
     const handleVisibility = () => {
-      if (document.visibilityState === 'visible' && navigator.onLine) {
-        if (loadFromServerRef.current) loadFromServerRef.current();
-      }
+      if (document.visibilityState === 'visible') requestForegroundSync();
     };
-    const handleFocus = () => {
-      if (navigator.onLine) {
-        if (loadFromServerRef.current) loadFromServerRef.current();
-      }
-    };
+    const handleFocus = () => requestForegroundSync();
     document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('focus', handleFocus);
 
