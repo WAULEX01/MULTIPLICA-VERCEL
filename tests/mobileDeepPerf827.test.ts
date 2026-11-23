@@ -44,4 +44,14 @@ describe('mobile deep performance regressions', () => {
     expect(source).toContain("now - lastForegroundSyncRef.current < 1500");
     expect(source).toContain("pendingLoadRef.current = false");
   });
+
+  it('keeps chart.js out of the main dashboard module and lazy loads charts', () => {
+    const dashboard = readFileSync('src/views/DashboardView.tsx', 'utf8');
+    const chart = readFileSync('src/components/DashboardChart.tsx', 'utf8');
+    expect(dashboard).toContain("lazy(() => import('../components/DashboardChart')");
+    expect(dashboard).toContain("requestIdleCallback");
+    expect(dashboard).not.toContain("from 'react-chartjs-2'");
+    expect(chart).toContain("from 'react-chartjs-2'");
+    expect(chart).toContain("from 'chart.js'");
+  });
 });
