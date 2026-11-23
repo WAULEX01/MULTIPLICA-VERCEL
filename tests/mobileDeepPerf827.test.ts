@@ -54,4 +54,23 @@ describe('mobile deep performance regressions', () => {
     expect(chart).toContain("from 'react-chartjs-2'");
     expect(chart).toContain("from 'chart.js'");
   });
+
+  it('uses IndexedDB for the large database snapshot while keeping localStorage fallback', () => {
+    const db = readFileSync('src/services/db.ts', 'utf8');
+    const persistence = readFileSync('src/services/localPersistence.ts', 'utf8');
+    const app = readFileSync('src/App.tsx', 'utf8');
+
+    expect(db).toContain('initializeDBAsync');
+    expect(db).toContain('readIndexedDbSnapshot<AppDatabase>()');
+    expect(db).toContain('scheduleIndexedDbSnapshot(db');
+    expect(persistence).toContain("indexedDB.open(CACHE_DB_NAME");
+    expect(persistence).toContain("objectStore(STORE_NAME).put(snapshot, SNAPSHOT_KEY)");
+    expect(app).toContain('initializeDBAsync().then');
+  });
+
+  it('preserves the offline Outbox in localStorage independently of IndexedDB', () => {
+    const db = readFileSync('src/services/db.ts', 'utf8');
+    expect(db).toContain("localStorage.getItem('pm_sync_queue')");
+    expect(db).toContain("localStorage.setItem('pm_sync_queue', JSON.stringify(queue))");
+  });
 });
