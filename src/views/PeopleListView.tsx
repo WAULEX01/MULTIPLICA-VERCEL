@@ -17,6 +17,7 @@ interface PeopleListViewProps {
 
 export const PeopleListView: React.FC<PeopleListViewProps> = ({ db, session, onUpdatePeople, onResetPassword, initialDepartmentFilter, onChangeDepartment }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [visibleCount, setVisibleCount] = useState(30);
   const [categoryTab, setCategoryTab] = useState<'Ativo' | 'Visitante' | 'Arquivado'>('Ativo');
   const [roleFilter, setRoleFilter] = useState('Todos');
   const [profileTab, setProfileTab] = useState<'todos' | 'membros' | 'outros'>('todos');
@@ -398,6 +399,17 @@ export const PeopleListView: React.FC<PeopleListViewProps> = ({ db, session, onU
 
     return isNotDeleted && matchesSearch && matchesCategory && matchesRole && matchesProfile && matchesDept && matchesScope && matchesMissingContact && matchesBaptism;
   }).sort(compareByName), [db.people, searchTerm, categoryTab, roleFilter, profileTab, deptFilter, missingContactFilter, showTrash, session.department, baptismFilter, canViewDeletedRecords]);
+
+  // Mobile/performance: a busca e os filtros continuam trabalhando sobre TODOS os
+  // membros, mas o DOM começa com somente 30 cartões e cresce sob demanda.
+  useEffect(() => {
+    setVisibleCount(30);
+  }, [searchTerm, categoryTab, roleFilter, profileTab, deptFilter, missingContactFilter, showTrash, baptismFilter]);
+
+  const visiblePeople = useMemo(
+    () => filteredPeople.slice(0, visibleCount),
+    [filteredPeople, visibleCount],
+  );
 
   // Category counts (scoped to chosen department when defined)
   const scopedPeople = db.people.filter(p => !p.deleted && (!session.department || personInDepartment(p, session.department)));
@@ -953,7 +965,7 @@ export const PeopleListView: React.FC<PeopleListViewProps> = ({ db, session, onU
 
       {/* Cards Grid */}
       <div className="people-grid">
-        {filteredPeople.map(p => {
+        {visiblePeople.map(p => {
           const isExpanded = expandedPersonId === p.id;
           const cleanPhone = p.phone ? p.phone.replace(/\D/g, '') : '';
           const absences = absencesMap.get(p.id) || 0;
@@ -1447,6 +1459,18 @@ export const PeopleListView: React.FC<PeopleListViewProps> = ({ db, session, onU
             </div>
           )}
         </div>
+
+        {visiblePeople.length < filteredPeople.length && (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '1rem 0 0.5rem' }}>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => setVisibleCount((count) => Math.min(count + 30, filteredPeople.length))}
+            >
+              Carregar mais ({visiblePeople.length}/{filteredPeople.length})
+            </button>
+          </div>
+        )}
 
       {/* Modal Add/Edit */}
       {isModalOpen && (
