@@ -1015,6 +1015,11 @@ const emptyDatabase = (): AppDatabase => ({
   activityLogs: [], weeklyMissions: [], specialMissions: [], messageHistory: [], events: [],
 });
 
+type PersistedDatabaseEnvelope = {
+  generation: string;
+  database: AppDatabase;
+};
+
 const normalizeDatabaseCache = (value: any): AppDatabase => {
   const parsed = value && typeof value === 'object' ? value : {};
   // Somente completa coleções técnicas ausentes; não altera pessoas,
@@ -1053,13 +1058,20 @@ export async function initializeDBAsync(): Promise<AppDatabase> {
   const fallback = initializeDB();
   if (!isCurrentDataGenerationActive()) return fallback;
 
-  const indexed = await readIndexedDbSnapshot<AppDatabase>();
-  if (indexed) return normalizeDatabaseCache(indexed);
+  const indexed = await readIndexedDbSnapshot<PersistedDatabaseEnvelope>();
+  if (indexed?.generation === DATA_GENERATION && indexed.database) {
+    return normalizeDatabaseCache(indexed.database);
+  }
 
   // Migração gradual: no primeiro uso da nova camada, copia o cache legado para
-  // IndexedDB sem removê-lo. Assim existe rollback seguro para versões anteriores.
+  // IndexedDB sem removê-lo. O envelope inclui a geração para impedir que uma
+  // futura geração restaure acidentalmente um snapshot antigo.
   if (fallback.people.length || fallback.departments.length || fallback.attendances.length) {
-    await scheduleIndexedDbSnapshot(fallback, () => {
+    const envelope: PersistedDatabaseEnvelope = {
+      generation: DATA_GENERATION,
+      database: fallback,
+    };
+    await scheduleIndexedDbSnapshot(envelope, () => {
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(fallback)); } catch {}
     });
   }
@@ -1069,7 +1081,11 @@ export async function initializeDBAsync(): Promise<AppDatabase> {
 export async function saveDB(db: AppDatabase): Promise<void> {
   // Snapshot grande: IndexedDB usa structured clone e não bloqueia a thread
   // principal com JSON.stringify/localStorage em cada alteração.
-  await scheduleIndexedDbSnapshot(db, () => {
+  const envelope: PersistedDatabaseEnvelope = {
+    generation: DATA_GENERATION,
+    database: db,
+  };
+  await scheduleIndexedDbSnapshot(envelope, () => {
     // Fallback somente quando IndexedDB não existe/falha. A Outbox continua
     // separada no localStorage e nunca depende deste snapshot.
     localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
