@@ -1,7 +1,8 @@
 import { getLocalDateISO } from '../utils/localDate';
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { AppDatabase, UserSession, PastoralLog } from '../services/db';
-import { calculateConsecutiveAbsences, getCriticalAbsenteesForDepartment, personInDepartment, generateUUID, compareByName } from '../services/db';
+import { personInDepartment, generateUUID, compareByName } from '../services/db';
+import { createRadarAttendanceIndex } from '../utils/radarAttendanceIndex';
 import { AlertTriangle, MessageSquare, Phone, Search, Calendar, Sparkles, Clock, PlusCircle, FileText, Send } from 'lucide-react';
 import { getDynamicHumanMessage } from '../services/genderMsg';
 
@@ -14,6 +15,7 @@ interface RadarViewProps {
 export const RadarView: React.FC<RadarViewProps> = ({ db, session, onUpdatePastoralLogs }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [alertFilter, setAlertFilter] = useState('Todos');
+  const [visibleCount, setVisibleCount] = useState(24);
   const [contactedIds, setContactedIds] = useState<string[]>([]);
 
   // States for WhatsApp Dynamic Template Modal
@@ -45,55 +47,21 @@ export const RadarView: React.FC<RadarViewProps> = ({ db, session, onUpdatePasto
   const [batchMessageText, setBatchMessageText] = useState('');
 
   const deptFilter = session.department || undefined;
-
-  const criticalAbsentees = getCriticalAbsenteesForDepartment(db, deptFilter, 8);
-
-  // Find members who missed the last service
-  const getLastServiceAbsentees = () => {
-    const lastAttendanceByDept: { [dept: string]: string | undefined } = {};
-    db.departments.forEach(d => {
-      const deptAtts = db.attendances.filter(a => a.department === d.name && !a.deleted);
-      const sorted = [...deptAtts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      lastAttendanceByDept[d.name] = sorted[0]?.id;
-    });
-
-    const fallbackDate = getLocalDateISO();
-    return db.people
-      .filter(p => p.status !== 'Arquivado' && p.status !== 'Inativo' && p.status !== 'Visitante' && (!deptFilter || personInDepartment(p, deptFilter)) && !p.deleted)
-      .filter(person => {
-        const targetDept = deptFilter || person.department;
-        const lastAttId = lastAttendanceByDept[targetDept];
-        if (!lastAttId) return false;
-        const lastAttRecord = db.attendances.find(a => a.id === lastAttId);
-        if (!lastAttRecord) return false;
-        return !lastAttRecord.presentIds.includes(person.id);
-      })
-      .map(person => {
-        const targetDept = deptFilter || person.department;
-        const absences = calculateConsecutiveAbsences(person.id, targetDept, person.startDate || fallbackDate, db.attendances);
-        return { id: person.id, name: person.name, phone: person.phone, department: targetDept, absences };
-      })
-      .sort((a, b) => b.absences - a.absences || compareByName(a, b));
-  };
-
   const fallbackDate = getLocalDateISO();
-  const radarData = db.people
+
+  // Uma leitura indexada do histórico elimina scans repetidos de chamadas
+  // por membro e preserva a presença em qualquer departamento na mesma semana.
+  const attendanceIndex = useMemo(
+    () => createRadarAttendanceIndex(db.attendances, fallbackDate),
+    [db.attendances, fallbackDate],
+  );
+
+  const radarBaseData = useMemo(() => db.people
     .filter(p => p.status !== 'Arquivado' && p.status !== 'Inativo' && p.status !== 'Visitante' && (!deptFilter || personInDepartment(p, deptFilter)) && !p.deleted)
     .map(person => {
       const targetDept = deptFilter || person.department;
-      const absences = calculateConsecutiveAbsences(person.id, targetDept, person.startDate || fallbackDate, db.attendances);
-
-      const deptAttendances = db.attendances.filter(a => a.department === targetDept && !a.deleted);
-      const sorted = [...deptAttendances].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-      let lastPresence = 'Nenhuma chamada';
-      for (const rec of sorted) {
-        if (rec.presentIds.includes(person.id)) {
-          const parts = rec.date.split('-');
-          lastPresence = `${parts[2]}/${parts[1]}/${parts[0]}`;
-          break;
-        }
-      }
+      const absences = attendanceIndex.calculateAbsences(person.id, targetDept, person.startDate || fallbackDate);
+      const lastPresence = attendanceIndex.lastPresence(person.id, targetDept);
 
       let severity: 'yellow' | 'orange' | 'red' | 'none' = 'none';
       let action = '';
@@ -103,15 +71,85 @@ export const RadarView: React.FC<RadarViewProps> = ({ db, session, onUpdatePasto
 
       return { person, absences, lastPresence, severity, action };
     })
-    .filter(item => item.absences >= 1 && (searchTerm === '' || item.person.name.toLowerCase().includes(searchTerm.toLowerCase())))
-    .filter(item => {
-      if (alertFilter === '1') return item.absences === 1;
-      if (alertFilter === '2') return item.absences === 2;
-      if (alertFilter === '3') return item.absences === 3;
-      if (alertFilter === '4_plus') return item.absences >= 4;
-      return item.absences >= 1;
-    })
-    .sort((a, b) => b.absences - a.absences || compareByName(a.person, b.person));
+    .filter(item => item.absences >= 1)
+    .sort((a, b) => b.absences - a.absences || compareByName(a.person, b.person)),
+  [db.people, deptFilter, attendanceIndex, fallbackDate]);
+
+  // Digitar na pesquisa ou abrir um modal não refaz o cálculo de faltas.
+  const radarData = useMemo(() => {
+    const search = searchTerm.toLowerCase();
+    return radarBaseData
+      .filter(item => !search || item.person.name.toLowerCase().includes(search))
+      .filter(item => {
+        if (alertFilter === '1') return item.absences === 1;
+        if (alertFilter === '2') return item.absences === 2;
+        if (alertFilter === '3') return item.absences === 3;
+        if (alertFilter === '4_plus') return item.absences >= 4;
+        return item.absences >= 1;
+      });
+  }, [radarBaseData, searchTerm, alertFilter]);
+
+  useEffect(() => {
+    setVisibleCount(24);
+  }, [deptFilter, searchTerm, alertFilter]);
+
+  const visibleRadarData = useMemo(
+    () => radarData.slice(0, visibleCount),
+    [radarData, visibleCount],
+  );
+
+  const criticalAbsentees = useMemo(() => db.people
+    .filter(p =>
+      p.role === 'Membro' &&
+      p.status !== 'Arquivado' &&
+      p.status !== 'Inativo' &&
+      p.status !== 'Visitante' &&
+      !p.deleted &&
+      p.phone &&
+      p.phone.trim().length >= 10 &&
+      (!deptFilter || personInDepartment(p, deptFilter))
+    )
+    .map(person => ({
+      person,
+      // Lista crítica usa o departamento principal, como antes.
+      absences: attendanceIndex.calculateAbsences(person.id, person.department, person.startDate || '2026-01-01'),
+    }))
+    .filter(entry => entry.absences > 0)
+    .sort((a, b) => b.absences - a.absences || compareByName(a.person, b.person))
+    .slice(0, 8)
+    .map(entry => entry.person),
+  [db.people, deptFilter, attendanceIndex]);
+
+  const lastScopedService = useMemo(() => {
+    // Mantém os mesmos critérios do resumo já exibido pelo Radar.
+    let latest: (typeof db.attendances)[number] | undefined;
+    for (const att of db.attendances) {
+      if ((deptFilter && att.department !== deptFilter) ||
+        att.date > fallbackDate || !att.presentIds || att.presentIds.length === 0) continue;
+      if (!latest || att.date > latest.date) latest = att;
+    }
+    return latest;
+  }, [db.attendances, deptFilter, fallbackDate]);
+
+  const lastServiceAbsentees = useMemo(() => {
+    if (!lastScopedService) return [];
+    const configuredDepartments = new Set(db.departments.map(d => d.name));
+    return db.people
+      .filter(p => p.status !== 'Arquivado' && p.status !== 'Inativo' && p.status !== 'Visitante' && (!deptFilter || personInDepartment(p, deptFilter)) && !p.deleted)
+      .filter(person => {
+        const targetDept = deptFilter || person.department;
+        // O resumo histórico só considera departamentos formalmente cadastrados.
+        if (!configuredDepartments.has(targetDept)) return false;
+        const lastAtt = attendanceIndex.lastAttendance(targetDept);
+        return Boolean(lastAtt && !lastAtt.presentIds.includes(person.id));
+      })
+      .map(person => {
+        const targetDept = deptFilter || person.department;
+        const absences = attendanceIndex.calculateAbsences(person.id, targetDept, person.startDate || fallbackDate);
+        return { id: person.id, name: person.name, phone: person.phone, department: targetDept, absences };
+      })
+      .sort((a, b) => b.absences - a.absences || compareByName(a, b));
+  }, [db.people, db.departments, deptFilter, attendanceIndex, fallbackDate, lastScopedService]);
 
   const getAlertColor = (severity: string) => {
     switch (severity) {
@@ -164,17 +202,11 @@ export const RadarView: React.FC<RadarViewProps> = ({ db, session, onUpdatePasto
 
       {/* Last Service Summary Widget */}
       {(() => {
-        // Find the last actual service for this dept scope
-        const d = new Date();
-        const todayStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-        const scopedAtts = db.attendances.filter(
-          a => (!deptFilter || a.department === deptFilter) && a.date <= todayStr && a.presentIds && a.presentIds.length > 0
-        );
-        if (scopedAtts.length === 0) return null;
-        const lastAtt = [...scopedAtts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+        if (!lastScopedService) return null;
+        const lastAtt = lastScopedService;
         const lastDateParts = lastAtt.date.split('-');
         const lastDateFormatted = `${lastDateParts[2]}/${lastDateParts[1]}/${lastDateParts[0]}`;
-        const absenteesOfLast = getLastServiceAbsentees();
+        const absenteesOfLast = lastServiceAbsentees;
         return (
           <div className="glass-card radar-service-summary" style={{ marginBottom: '2rem', padding: '1.25rem 1.5rem', borderLeft: '4px solid #f59e0b', background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.05) 0%, rgba(249, 115, 22, 0.03) 100%)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
@@ -282,7 +314,7 @@ export const RadarView: React.FC<RadarViewProps> = ({ db, session, onUpdatePasto
                 disabled={criticalAbsentees.length === 0}
                 onClick={() => {
                   const absentees = criticalAbsentees;
-                  setBatchQueue(absentees.map(a => ({ ...a, selected: true, absences: calculateConsecutiveAbsences(a.id, a.department, a.startDate || '2026-01-01', db.attendances) })));
+                  setBatchQueue(absentees.map(a => ({ ...a, selected: true, absences: attendanceIndex.calculateAbsences(a.id, a.department, a.startDate || '2026-01-01') })));
                   setBatchIndex(0);
                   setBatchStep('select');
                   setBatchDefaultMessage(`Olá, {NOME}! A paz do Senhor. 🙏 Como você está? Estou aqui para orar com você. Deus te abençoe.`);
@@ -327,7 +359,7 @@ export const RadarView: React.FC<RadarViewProps> = ({ db, session, onUpdatePasto
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginTop: '1.5rem' }}>
-            {radarData.map(({ person, absences, lastPresence, severity, action }) => {
+            {visibleRadarData.map(({ person, absences, lastPresence, severity, action }) => {
               const isContacted = contactedIds.includes(person.id);
               const alertColor = getAlertColor(severity);
               const alertBg = getAlertBgColor(severity);
@@ -492,6 +524,17 @@ export const RadarView: React.FC<RadarViewProps> = ({ db, session, onUpdatePasto
                 </div>
               );
             })}
+
+            {visibleRadarData.length < radarData.length && (
+              <button
+                type="button"
+                className="btn btn-secondary btn-small"
+                style={{ alignSelf: 'center', width: 'auto', marginTop: '0.75rem' }}
+                onClick={() => setVisibleCount(count => Math.min(count + 24, radarData.length))}
+              >
+                Carregar mais faltosos ({visibleRadarData.length}/{radarData.length})
+              </button>
+            )}
 
             {radarData.length === 0 && (
               <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--power-muted)' }}>
