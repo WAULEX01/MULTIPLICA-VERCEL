@@ -19,14 +19,14 @@
     <script>
       const isLocalPreview = ['localhost', '127.0.0.1'].includes(window.location.hostname);
       if ('serviceWorker' in navigator && !isLocalPreview) {
-        // v8.3.1: mantém o Service Worker e os assets da interface atualizados.
+        // v8.3: mantém o Service Worker e os assets da interface atualizados.
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js?v=831-release')
+          navigator.serviceWorker.register('/sw.js?v=83-release')
             .then(reg => {
-              console.log('[SW v8.3.1] registrado', reg.scope);
+              console.log('[SW v8.3] registrado', reg.scope);
               reg.update().catch(() => {});
             })
-            .catch(err => console.error('[SW v8.3.1] falha no registro:', err));
+            .catch(err => console.error('[SW v8.3] falha no registro:', err));
         });
       } else if ('serviceWorker' in navigator && isLocalPreview) {
         navigator.serviceWorker.getRegistrations().then(registrations => {
