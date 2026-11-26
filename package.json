@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build --config vite.mobile-ui.config.ts",
     "lint": "eslint .",
     "test": "vitest run --config vitest.config.ts",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "prebuild": "vitest run tests/mobileDeepPerf827.test.ts tests/mobileNavigationRadar.test.ts tests/mobileMemberRendering.test.ts tests/radarAttendanceIndex.test.ts tests/dashboardReportsPerformance.test.ts --config vitest.config.ts"
   },
   "dependencies": {
     "chart.js": "^4.5.1",
