@@ -73,6 +73,7 @@ export function scheduleMobileNavigationWarmup(): void {
         () => import('./views/AttendanceView'),
         () => import('./views/RadarView'),
         () => import('./views/DashboardView'),
+        () => import('./views/ReportsView'),
       ];
       for (const load of loaders) {
         if (document.hidden || !navigator.onLine) return;
