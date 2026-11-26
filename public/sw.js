@@ -1,5 +1,5 @@
-// Service Worker — Multiplica Plus v8.2.7
-const CACHE_NAME = 'multiplica-plus-v8.2.7-update-v1';
+// Service Worker — Multiplica Plus v8.2.8
+const CACHE_NAME = 'multiplica-plus-v8.2.8-update-v1';
 const ASSETS = [
   '/index.html',
   '/manifest.json?v=brand-827',
