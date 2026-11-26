@@ -4,6 +4,7 @@ import type { AppDatabase, UserSession, Person } from '../services/db';
 import { getStats, getWeekKey, getMissionForMultiplicador, recordWeeklyMissionMessage, isYouthOrTeenDepartment, calculateConsecutiveAbsences, getPersonGender, isSameDepartment, personInDepartment, getSpecialMissionForMultiplicador, recordSpecialMissionMessage, canUserSelectDepartment, getUserAllowedDepartments, getDepartmentTheme, getPersonMother, compareByName } from '../services/db';
 import { Users, CheckCircle, AlertTriangle, TrendingUp, Calendar, AlertCircle, Plus, Gift, Cake, MessageSquare, BookOpen, Activity, Trophy, Award, Sparkles, Copy, Edit2, Send, Target, ChevronDown, ChevronUp } from 'lucide-react';
 import { apiGetActivityLogs } from '../services/api';
+import { getCachedRadarAttendanceIndex } from '../utils/radarAttendanceIndex';
 const DashboardChart = lazy(() => import('../components/DashboardChart').then(module => ({ default: module.DashboardChart })));
 
 interface DashboardViewProps {
@@ -97,12 +98,25 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
     finally { setLoadingLogs(false); }
   };
 
-  const stats = getStats(db, deptFilter);
+  const localToday = getLocalDateISO();
+  const indexedAttendance = useMemo(
+    () => getCachedRadarAttendanceIndex(db.attendances, localToday),
+    [db.attendances, localToday],
+  );
+  // Calcula alertas com um índice semanal compartilhado com o Radar.
+  // O restante da estatística mantém exatamente as regras do getStats original.
+  const stats = useMemo(
+    () => getStats(db, deptFilter, indexedAttendance.calculateAbsences),
+    [db.people, db.attendances, db.departments, deptFilter, indexedAttendance],
+  );
   const hasMissionsEnabled = isAdmin || isYouthOrTeenDepartment(session.department || '') || (db.departments.find(d => isSameDepartment(d.name, session.department || ''))?.missionsEnabled ?? false);
 
   // --- PAINEL DE Engajamento E acessos ---
   // Todos os Usuários administrativos / obreiros cadastrados (que nío sejam apenas membros e nío excluídos)
-  const staffAndLeaders = db.people.filter(p => p.role !== 'Membro' && !p.deleted && (!deptFilter || personInDepartment(p, deptFilter)));
+  const staffAndLeaders = useMemo(
+    () => db.people.filter(p => p.role !== 'Membro' && !p.deleted && (!deptFilter || personInDepartment(p, deptFilter))),
+    [db.people, deptFilter],
+  );
 
   // 1. Ativaçíogins (Líderes e Multiplicadores)
   const activationStaff = staffAndLeaders.filter(p => p.role === 'Líder' || p.role === 'Multiplicador');
@@ -116,27 +130,25 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
   };
 
   // 2. Ranking de Atividade geral (todos os obreiros, líderes, pastores, secretários)
-  const rankedStaff = [...staffAndLeaders].sort((a, b) => {
+  const rankedStaff = useMemo(() => [...staffAndLeaders].sort((a, b) => {
     const scoreA = getLeaderScore(a);
     const scoreB = getLeaderScore(b);
-    if (scoreB !== scoreA) {
-      return scoreB - scoreA;
-    }
+    if (scoreB !== scoreA) return scoreB - scoreA;
     return (b.timeOnlineSeconds || 0) - (a.timeOnlineSeconds || 0);
-  });
+  }), [staffAndLeaders]);
 
   // 3. Últimos adicionados (todos os membros / líderes adicionados recentemente)
   // Pastores e Secretaria Geral recebem a visão consolidada. Perfis de
   // departamento mantêm a lista limitada ao departamento ativo da sessão.
   const recentPeopleDepartmentFilter = isAdmin ? undefined : deptFilter;
-  const recentPeople = [...db.people]
+  const recentPeople = useMemo(() => db.people
     .filter(p => !p.deleted && (!recentPeopleDepartmentFilter || personInDepartment(p, recentPeopleDepartmentFilter)))
     .sort((a, b) => {
       const dateA = a.createdAt || a.startDate || '';
       const dateB = b.createdAt || b.startDate || '';
       if (dateB !== dateA) return dateB.localeCompare(dateA);
       return b.id.localeCompare(a.id);
-    });
+    }), [db.people, recentPeopleDepartmentFilter]);
   const visibleRecentPeople = showAllRecentPeople ? recentPeople : recentPeople.slice(0, 20);
   const hasMoreRecentPeople = recentPeople.length > 20;
 
@@ -157,11 +169,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
   };
 
   const onlineThresholdMs = 5 * 60 * 1000; // 5 minutos
-  const onlineProfiles = staffAndLeaders
-    .filter(p => p.lastActive)
-    .map(p => ({ ...p, lastActiveDate: new Date(p.lastActive!) }))
-    .filter(p => Date.now() - p.lastActiveDate.getTime() <= onlineThresholdMs)
-    .sort((a, b) => b.lastActiveDate.getTime() - a.lastActiveDate.getTime());
+  const onlineProfiles = useMemo(() => {
+    const now = Date.now();
+    return staffAndLeaders
+      .filter(p => p.lastActive)
+      .map(p => ({ ...p, lastActiveDate: new Date(p.lastActive!) }))
+      .filter(p => now - p.lastActiveDate.getTime() <= onlineThresholdMs)
+      .sort((a, b) => b.lastActiveDate.getTime() - a.lastActiveDate.getTime());
+  }, [staffAndLeaders]);
 
   const VERSICULOS = [
     { ref: "Josué 1:9", text: "Nío fui eu que ordenei a você? Seja forte e corajoso! Nío se apavore nem desanime, pois o Senhor, o seu Deus, Estará com você por onde você andar." },
@@ -373,33 +388,32 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
   };
 
   // Filter members in scope (ignoring deleted)
-  const activeMembers = db.people.filter(
+  const activeMembers = useMemo(() => db.people.filter(
     p => p.status !== 'Arquivado' && p.status !== 'Inativo' && p.status !== 'Visitante' && (!deptFilter || personInDepartment(p, deptFilter)) && !p.deleted
-  );
+  ), [db.people, deptFilter]);
 
   // Get most recent attendance to count today's check-ins (filtering out future or empty ones)
-  const d = new Date();
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  const todayStr = `${year}-${month}-${day}`;
+  const todayStr = localToday;
 
-  const depts = Array.from(new Set(activeMembers.flatMap(m =>
+  const depts = useMemo(() => Array.from(new Set(activeMembers.flatMap(m =>
     [m.department, ...(m.departments || []).map(d => d.department)]
-  )));
-  
-  // Build a map of the latest attendance record per department
-  const latestRecordByDept: { [dept: string]: { presentIds: string[]; date: string } | undefined } = {};
-  let hasAnyRecord = false;
-  depts.forEach(deptName => {
-    const deptAtts = db.attendances.filter(a => !a.deleted && a.department === deptName);
-    const validDeptAtts = deptAtts.filter(
-      a => a.date <= todayStr && a.presentIds && a.presentIds.length > 0
-    );
-    const sorted = [...validDeptAtts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    latestRecordByDept[deptName] = sorted[0] ? { presentIds: sorted[0].presentIds, date: sorted[0].date } : undefined;
-    if (sorted[0]) hasAnyRecord = true;
-  });
+  ))), [activeMembers]);
+
+  // O mesmo resultado anterior, sem filtrar e ordenar TODAS as chamadas
+  // novamente para cada departamento. Processa o histórico em uma passagem.
+  const { latestRecordByDept, hasAnyRecord } = useMemo(() => {
+    const selectedDepartments = new Set(depts);
+    const latest: Record<string, { presentIds: Set<string>; date: string }> = {};
+    for (const att of db.attendances) {
+      if (att.deleted || !selectedDepartments.has(att.department) ||
+          att.date > todayStr || !att.presentIds || att.presentIds.length === 0) continue;
+      const previous = latest[att.department];
+      if (!previous || att.date > previous.date) {
+        latest[att.department] = { date: att.date, presentIds: new Set(att.presentIds) };
+      }
+    }
+    return { latestRecordByDept: latest, hasAnyRecord: Object.keys(latest).length > 0 };
+  }, [db.attendances, depts, todayStr]);
 
   // Count unique members: present if found in ANY department's latest record
   let presentToday = 0;
@@ -408,7 +422,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
     const memberDepts = [member.department, ...(member.departments || []).map(d => d.department)];
     const isPresent = memberDepts.some(deptName => {
       const latest = latestRecordByDept[deptName];
-      return latest && latest.presentIds.includes(member.id);
+      return latest && latest.presentIds.has(member.id);
     });
     if (isPresent) presentToday++;
     else absentToday++;
