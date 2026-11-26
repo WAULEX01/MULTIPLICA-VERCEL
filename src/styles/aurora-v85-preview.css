@@ -1,0 +1,240 @@
+/* Multiplica PLUS — v8.5 Preview / Aurora
+   Design-only layer. No data, auth, sync, layout state or routing changes.
+   Loaded LAST so it deliberately overrides legacy orange themes.
+   Keep all current controls and IEAD-JOTA logo. */
+
+:root {
+  color-scheme: light;
+  --aurora-primary: #5859e8;
+  --aurora-primary-hover: #4345c8;
+  --aurora-violet: #7848d9;
+  --aurora-cyan: #0899c5;
+  --aurora-mint: #0f9e87;
+  --aurora-bg: #f5f7ff;
+  --aurora-card: #ffffff;
+  --aurora-stroke: #e3e8fa;
+  --aurora-text: #172340;
+  --aurora-muted: #63718d;
+  --aurora-glow: 0 10px 30px rgba(56, 63, 140, .075);
+
+  --pp-accent: var(--aurora-primary);
+  --pp-accent-strong: var(--aurora-violet);
+  --pp-accent-soft: #eeeeff;
+  --pp-surface: var(--aurora-card);
+  --pp-surface-soft: var(--aurora-bg);
+  --pp-border: var(--aurora-stroke);
+  --pp-text: var(--aurora-text);
+  --pp-muted: var(--aurora-muted);
+  --pp-shadow-soft: var(--aurora-glow);
+
+  --v823-orange: var(--aurora-primary);
+  --v823-orange-soft: #eeeeff;
+  --v823-orange-border: #dcdcff;
+  --power-orange: var(--aurora-primary);
+  --power-orange-hover: var(--aurora-primary-hover);
+  --power-orange-soft: #eeeeff;
+  --color-primary: var(--aurora-primary);
+  --color-primary-hover: var(--aurora-primary-hover);
+  --color-primary-light: #eeeeff;
+  --color-primary-text: #494bbb;
+  --color-accent: var(--aurora-violet);
+  --bg-app: var(--aurora-bg);
+  --bg-surface: var(--aurora-card);
+  --bg-card: var(--aurora-card);
+  --bg-sidebar: #fff;
+  --bg-input: #f8f9ff;
+  --border-color: var(--aurora-stroke);
+  --border-focus: var(--aurora-primary);
+  --color-text-main: var(--aurora-text);
+  --color-text-muted: var(--aurora-muted);
+  --gradient-primary: linear-gradient(118deg, var(--aurora-primary), var(--aurora-violet));
+  --focus-ring: 0 0 0 3px rgba(88, 89, 232, .19);
+  --font-title: 'Outfit', 'Inter', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+}
+
+:root:not([data-theme="dark"]) {
+  --aurora-bg: #f5f7ff;
+  --aurora-card: #fff;
+  --aurora-stroke: #e3e8fa;
+  --aurora-text: #172340;
+  --aurora-muted: #63718d;
+  --power-canvas: var(--aurora-bg);
+  --power-surface: #fff;
+  --power-raised: #f3f5ff;
+  --power-black: #fff;
+  --power-white: var(--aurora-text);
+  --power-muted: var(--aurora-muted);
+  --power-line: rgba(87, 104, 162, .15);
+  --power-orange: var(--aurora-primary);
+  --power-orange-hover: var(--aurora-primary-hover);
+  --power-orange-soft: #eeeeff;
+  --color-primary: var(--aurora-primary);
+  --color-primary-hover: var(--aurora-primary-hover);
+  --color-primary-light: #eeeeff;
+  --color-accent: var(--aurora-violet);
+  --color-text-main: var(--aurora-text);
+  --color-text-muted: var(--aurora-muted);
+  --bg-app: var(--aurora-bg);
+  --bg-surface: var(--aurora-card);
+  --bg-card: var(--aurora-card);
+  --bg-sidebar: #fff;
+  --bg-input: #f8f9ff;
+  --border-color: var(--aurora-stroke);
+  --border-focus: var(--aurora-primary);
+  --gradient-primary: linear-gradient(118deg, var(--aurora-primary), var(--aurora-violet));
+  --font-title: 'Outfit', 'Inter', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --aurora-primary: #9292ff;
+  --aurora-primary-hover: #b0acff;
+  --aurora-violet: #b79aff;
+  --aurora-cyan: #5ed4ef;
+  --aurora-bg: #101426;
+  --aurora-card: #1b2237;
+  --aurora-stroke: #323d5b;
+  --aurora-text: #f1f4ff;
+  --aurora-muted: #aebad6;
+  --aurora-glow: 0 12px 30px rgba(0,0,0,.17);
+  --pp-accent-soft: rgba(146, 146, 255, .16);
+  --v823-orange-soft: rgba(146, 146, 255, .16);
+  --v823-orange-border: #4c4f8c;
+  --power-canvas: var(--aurora-bg);
+  --power-surface: var(--aurora-card);
+  --power-raised: #242d48;
+  --power-black: #131829;
+  --power-white: var(--aurora-text);
+  --power-muted: var(--aurora-muted);
+  --power-line: rgba(186, 200, 255, .16);
+  --power-orange: var(--aurora-primary);
+  --power-orange-hover: var(--aurora-primary-hover);
+  --power-orange-soft: rgba(146, 146, 255, .16);
+  --bg-app: var(--aurora-bg);
+  --bg-surface: var(--aurora-card);
+  --bg-card: var(--aurora-card);
+  --bg-sidebar: #131829;
+  --bg-input: #222a42;
+  --border-color: var(--aurora-stroke);
+  --border-focus: var(--aurora-primary);
+  --color-text-main: var(--aurora-text);
+  --color-text-muted: var(--aurora-muted);
+  --color-primary: var(--aurora-primary);
+  --color-primary-hover: var(--aurora-primary-hover);
+  --color-primary-light: rgba(146,146,255,.16);
+  --color-primary-text: #c4bcff;
+  --color-accent: var(--aurora-violet);
+  --gradient-primary: linear-gradient(118deg,#7977ff,#a479ef);
+  --pp-surface: var(--aurora-card);
+  --pp-surface-soft: var(--aurora-bg);
+  --pp-border: var(--aurora-stroke);
+  --pp-text: var(--aurora-text);
+  --pp-muted: var(--aurora-muted);
+}
+
+body {
+  font-family: var(--font-body) !important;
+  background: var(--aurora-bg) !important;
+}
+h1, h2, h3, h4, .mobile-header-title h1, .topbar-title h1 {
+  font-family: var(--font-title) !important;
+  letter-spacing: -.035em;
+}
+.main-content { background: transparent !important; }
+.card, .glass-card, .modal-content, .sidebar-user {
+  background: var(--aurora-card) !important;
+  border: 1px solid var(--aurora-stroke) !important;
+  border-radius: 20px !important;
+  box-shadow: var(--aurora-glow) !important;
+}
+.card h1, .card h2, .card h3, .glass-card h1, .glass-card h2,
+.glass-card h3 { color: var(--aurora-text) !important; }
+.card p, .glass-card p, .text-muted { color: var(--aurora-muted); }
+.btn-primary, button.btn-primary {
+  background: linear-gradient(118deg, #5859e8, #7848d9) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+  box-shadow: 0 5px 16px rgba(87, 79, 213, .18) !important;
+  font-weight: 700 !important;
+}
+.btn-primary:hover, button.btn-primary:hover {
+  background: linear-gradient(118deg, #4345c8, #6239be) !important;
+}
+.btn-secondary {
+  background: var(--aurora-card) !important;
+  border-color: var(--aurora-stroke) !important;
+}
+.btn, button, input, select, textarea, .form-control {
+  border-radius: 14px !important;
+}
+input, select, textarea, .form-control {
+  border-color: var(--aurora-stroke) !important;
+  background: var(--bg-input) !important;
+}
+input:focus, select:focus, textarea:focus, .form-control:focus {
+  border-color: var(--aurora-primary) !important;
+  box-shadow: 0 0 0 3px rgba(88, 89, 232, .16) !important;
+}
+:focus-visible { outline-color: var(--aurora-primary); }
+
+.mobile-header, .desktop-topbar {
+  background: var(--aurora-card) !important;
+  border-color: var(--aurora-stroke) !important;
+}
+.mobile-header-title h1, .topbar-title h1 {
+  color: var(--aurora-text) !important;
+}
+.mobile-header-version, .topbar-version, .topbar-title-accent {
+  color: var(--aurora-primary) !important;
+}
+.mobile-header-version {
+  background: var(--pp-accent-soft) !important;
+  border-color: var(--v823-orange-border) !important;
+}
+.sidebar {
+  background: var(--bg-sidebar) !important;
+  border-color: var(--aurora-stroke) !important;
+}
+.sidebar-link.active, .mobile-nav-item.active, .mobile-more-item.active {
+  color: var(--aurora-primary) !important;
+  background: var(--pp-accent-soft) !important;
+}
+.sidebar-link.active svg, .mobile-nav-item.active svg,
+.mobile-more-item.active svg { color: var(--aurora-primary) !important; }
+.mobile-nav {
+  background: var(--aurora-card) !important;
+  border-color: var(--aurora-stroke) !important;
+  box-shadow: 0 -6px 24px rgba(29, 39, 91, .06);
+}
+.mobile-nav-item, .sidebar-link {
+  border-radius: 14px !important;
+}
+.badge, .badge-active { border-radius: 999px !important; }
+
+/* Keep logos unchanged; use a subtle frame, not a replacement. */
+.mobile-header-brand img, .topbar-logo img {
+  border-radius: 13px !important;
+  object-fit: contain !important;
+}
+@media (max-width: 768px) {
+  .main-content {
+    padding-inline: max(12px, env(safe-area-inset-left)) max(12px, env(safe-area-inset-right));
+  }
+  .card, .glass-card { border-radius: 18px !important; }
+  .mobile-header { box-shadow: 0 2px 18px rgba(44, 52, 116, .05) !important; }
+  .mobile-nav-item.active { border-radius: 13px !important; }
+  .btn, button.btn-primary { min-height: 40px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .card, .glass-card, .mobile-nav-item, .sidebar-link, .btn {
+    transition: background-color 140ms ease, border-color 140ms ease,
+      box-shadow 140ms ease, color 140ms ease, transform 140ms ease;
+  }
+  .btn:active, .mobile-nav-item:active { transform: scale(.98); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card, .glass-card, .mobile-nav-item, .sidebar-link, .btn { transition: none !important; }
+}
