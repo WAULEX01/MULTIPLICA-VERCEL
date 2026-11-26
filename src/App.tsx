@@ -764,13 +764,6 @@ export default function App() {
     }
   }, [db, activeSession?.personId, versionSyncReady]);
 
-  const onlineThresholdMs = 10 * 60 * 1000; // 10 minutos
-  const onlineProfiles = db ? db.people
-    .filter(p => p.lastActive && !p.deleted && p.role !== 'Membro')
-    .map(p => ({ ...p, lastActiveDate: new Date(p.lastActive!) }))
-    .filter(p => !isNaN(p.lastActiveDate.getTime()) && Date.now() - p.lastActiveDate.getTime() <= onlineThresholdMs)
-    .sort((a, b) => b.lastActiveDate.getTime() - a.lastActiveDate.getTime()) : [];
-
   const isAdmin = activeSession?.role === 'Pastor Admin' || activeSession?.role === 'Pastor' || activeSession?.role === 'Secretaria Geral';
 
   // Snapshot inicial único + Realtime; polling de 30s fica apenas como fallback.
@@ -793,6 +786,19 @@ export default function App() {
     try { return localStorage.getItem('pm_last_synced_at') || ''; } catch { return ''; }
   });
   const [hasInitialServerSnapshot, setHasInitialServerSnapshot] = useState<boolean>(() => isCurrentDataGenerationActive());
+
+  // Evita reordenar a lista de perfis online a cada troca de tela, abertura
+  // de menu ou atualização visual. Revalida quando chega novo banco/sync.
+  const onlineProfiles = useMemo(() => {
+    if (!db) return [];
+    const now = Date.now();
+    const onlineThresholdMs = 10 * 60 * 1000;
+    return db.people
+      .filter(p => p.lastActive && !p.deleted && p.role !== 'Membro')
+      .map(p => ({ ...p, lastActiveDate: new Date(p.lastActive!) }))
+      .filter(p => !isNaN(p.lastActiveDate.getTime()) && now - p.lastActiveDate.getTime() <= onlineThresholdMs)
+      .sort((a, b) => b.lastActiveDate.getTime() - a.lastActiveDate.getTime());
+  }, [db?.people, lastSyncedAt]);
 
   // Pré-carrega as telas mais usadas somente depois que a sessão e os dados
   // oficiais estiverem prontos. Em conexões lentas/baixo consumo, não pré-carrega.
