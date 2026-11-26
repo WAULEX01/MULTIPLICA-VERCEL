@@ -11,6 +11,7 @@ import { enqueueDatabaseChanges } from './services/syncEngine';
 import { applyServerDelta, normalizeServerEntity, applyPendingSyncOverlay } from './services/serverDelta';
 import {
   APP_VERSION,
+  APP_VERSION_LABEL,
   DATA_GENERATION,
   SCHEMA_VERSION,
   activateCurrentDataGeneration,
@@ -2240,7 +2241,7 @@ export default function App() {
           </div>
           <div className="topbar-title">
             <h1> Multiplica <span className="topbar-title-accent">PLUS</span> </h1>
-            <span className="topbar-subtitle"> IEAD - JOTA <span className="topbar-version" title={lastSyncedAt ? `Última sincronização: ${new Date(lastSyncedAt).toLocaleString('pt-BR')}` : 'Aguardando primeira sincronização'}>VERSÃO {APP_VERSION.replace(/^v/i, '')} • {isOnline ? 'Supabase' : 'Offline'} {serverRevision || '—'}</span> </span>
+            <span className="topbar-subtitle"> IEAD - JOTA <span className="topbar-version" title={lastSyncedAt ? `Última sincronização: ${new Date(lastSyncedAt).toLocaleString('pt-BR')}` : 'Aguardando primeira sincronização'}>{APP_VERSION_LABEL} • {isOnline ? 'Supabase' : 'Offline'} {serverRevision || '—'}</span> </span>
           </div>
         </div>
 
@@ -2411,7 +2412,7 @@ export default function App() {
           <div className="mobile-header-title">
             <h1>Multiplica PLUS</h1>
             <span>
-              IEAD - JOTA <span className="mobile-header-version" title={lastSyncedAt ? `Última sincronização: ${new Date(lastSyncedAt).toLocaleString('pt-BR')}` : 'Aguardando primeira sincronização'}>VERSÃO {APP_VERSION.replace(/^v/i, '')} • {isOnline ? 'Supabase' : 'Offline'} {serverRevision || '—'}</span>
+              IEAD - JOTA <span className="mobile-header-version" title={lastSyncedAt ? `Última sincronização: ${new Date(lastSyncedAt).toLocaleString('pt-BR')}` : 'Aguardando primeira sincronização'}>{APP_VERSION_LABEL} • {isOnline ? 'Supabase' : 'Offline'} {serverRevision || '—'}</span>
             </span>
           </div>
         </div>
