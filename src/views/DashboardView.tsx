@@ -588,7 +588,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
           ctx.fillText(value, point.x, point.y - 8);
         }
       });
-      ctx.re  }), []);
+      ctx.restore();
+    }
+  }), []);
 
   const lineChartOptions = useMemo(() => ({
     responsive: true,
@@ -618,7 +620,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
         ticks: { color: '#aaa6b8', font: { family: 'IBM Plex Mono', size: 11 } },
         min: 0,
         max: growthChartMax,
-   }), [growthChartMax]);
+      },
+    },
+  }), [growthChartMax]);
 
   const barChartOptions = useMemo(() => ({
     responsive: true,
@@ -648,7 +652,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
         ticks: { color: '#aaa6b8', font: { family: 'IBM Plex Mono', size: 11 } },
         min: 0,
         max: Math.max(...groupedRecords.map(r => r.presentIds.size), 10) * 1.2,
-   }), [groupedRecords]);
+      },
+    },
+  }), [groupedRecords]);
 
   const growthDatalabelsPlugins = useMemo(() => [growthDatalabelsPlugin], [growthDatalabelsPlugin]);
 
