@@ -1245,7 +1245,7 @@ export function calculateConsecutiveAbsences(personId: string, department: strin
 }
 
 // Stats helper
-export function getStats(db: AppDatabase, departmentFilter?: string) {
+export function getStats(db: AppDatabase, departmentFilter?: string, indexedAbsences?: (personId: string, department: string, startDate: string) => number) {
   // If no departmentFilter is selected, we filter out duplicates by name to prevent double-counting members in global stats
   const rawMembers = db.people.filter(
     p => p.status !== 'Arquivado' && p.status !== 'Inativo' && p.status !== 'Visitante' && (!departmentFilter || personInDepartment(p, departmentFilter)) && !p.deleted
@@ -1285,7 +1285,9 @@ export function getStats(db: AppDatabase, departmentFilter?: string) {
   let redCount = 0;
 
   activeMembers.forEach(p => {
-    const absences = calculateConsecutiveAbsences(p.id, p.department, p.startDate || '2026-01-01', db.attendances);
+    const absences = indexedAbsences
+      ? indexedAbsences(p.id, p.department, p.startDate || '2026-01-01')
+      : calculateConsecutiveAbsences(p.id, p.department, p.startDate || '2026-01-01', db.attendances);
     if (absences === 1) yellowCount++;
     else if (absences === 2) orangeCount++;
     else if (absences >= 3) redCount++;
