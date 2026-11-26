@@ -1,8 +1,10 @@
 // src/views/ReportsView.tsx
 import { getLocalDateISO } from '../utils/localDate';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { flushSync } from 'react-dom';
 import type { AppDatabase, UserSession } from '../services/db';
-import { calculateConsecutiveAbsences, personInDepartment, canUserSelectDepartment, getUserAllowedDepartments, getDepartmentTheme, compareByName } from '../services/db';
+import { personInDepartment, canUserSelectDepartment, getUserAllowedDepartments, getDepartmentTheme, compareByName } from '../services/db';
+import { getCachedRadarAttendanceIndex } from '../utils/radarAttendanceIndex';
 import { FileSpreadsheet, Download, Eye, Award, Printer, MessageSquare, AlertTriangle } from 'lucide-react';
 import { getDynamicHumanMessage, getNeutralWhatsAppMessage } from '../services/genderMsg';
 
@@ -16,6 +18,8 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ db, session }) => {
   const [selectedDept, setSelectedDept] = useState(session.department || 'Todos');
   const [showRedemptionReport, setShowRedemptionReport] = useState(false);
   const [absenceWeeksFilter, setAbsenceWeeksFilter] = useState<string>('all');
+  const [previewLimit, setPreviewLimit] = useState(60);
+  const [printAllRows, setPrintAllRows] = useState(false);
 
   useEffect(() => {
     if (session.department) {
@@ -23,24 +27,57 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ db, session }) => {
     }
   }, [session.department]);
 
-  // Filter people in scope (ignoring deleted members)
-  const scopedPeople = db.people.filter(
-    p => p.status !== 'Arquivado' && p.status !== 'Inativo' && p.status !== 'Visitante' && (selectedDept === 'Todos' || personInDepartment(p, selectedDept)) && !p.deleted
+  useEffect(() => { setPreviewLimit(60); }, [selectedDept]);
+
+  // Índice único por snapshot: uma chamada é lida uma vez, independentemente
+  // da quantidade de membros. Mantém a comparação exata de departamento usada
+  // antes para "Presenças" e "Reuniões"; faltas seguem a regra pastoral do Radar.
+  const attendanceTotals = useMemo(() => {
+    const meetingsByDept = new Map<string, number>();
+    const presenceByDept = new Map<string, Map<string, number>>();
+    const allPresence = new Map<string, number>();
+    let allMeetings = 0;
+    for (const attendance of db.attendances) {
+      if (attendance.deleted) continue;
+      allMeetings += 1;
+      meetingsByDept.set(attendance.department, (meetingsByDept.get(attendance.department) || 0) + 1);
+      let departmentCounts = presenceByDept.get(attendance.department);
+      if (!departmentCounts) {
+        departmentCounts = new Map();
+        presenceByDept.set(attendance.department, departmentCounts);
+      }
+      // O cadastro conta uma presença por chamada, mesmo se o ID estiver repetido.
+      for (const id of new Set(attendance.presentIds || [])) {
+        departmentCounts.set(id, (departmentCounts.get(id) || 0) + 1);
+        allPresence.set(id, (allPresence.get(id) || 0) + 1);
+      }
+    }
+    return { meetingsByDept, presenceByDept, allPresence, allMeetings };
+  }, [db.attendances]);
+
+  const today = getLocalDateISO();
+  const attendanceIndex = useMemo(
+    () => getCachedRadarAttendanceIndex(db.attendances, today),
+    [db.attendances, today],
   );
 
-  // Compute stats for each person based on consecutive absences
-  const reportData = scopedPeople.map(p => {
-    // Use the effective dept for filtering attendances:
-    // if selectedDept is a specific department, use it; otherwise fall back to person's own dept
+  const scopedPeople = useMemo(() => db.people.filter(
+    p => p.status !== 'Arquivado' && p.status !== 'Inativo' && p.status !== 'Visitante' &&
+      (selectedDept === 'Todos' || personInDepartment(p, selectedDept)) && !p.deleted
+  ), [db.people, selectedDept]);
+
+  const reportData = useMemo(() => scopedPeople.map(p => {
     const effectiveDept = selectedDept !== 'Todos' ? selectedDept : (p.department || '');
-    const deptAttendances = effectiveDept
-      ? db.attendances.filter(a => !a.deleted && a.department === effectiveDept)
-      : db.attendances.filter(a => !a.deleted);
-    const totalAttendances = deptAttendances.filter(a => a.presentIds.includes(p.id)).length;
-    
-    // Consecutive absences uses effective dept so the latest call chain is correct
-    const consecutiveAbsences = calculateConsecutiveAbsences(p.id, effectiveDept, p.startDate || '2026-01-01', db.attendances);
-    
+    const totalMeetings = effectiveDept
+      ? (attendanceTotals.meetingsByDept.get(effectiveDept) || 0)
+      : attendanceTotals.allMeetings;
+    const totalAttendances = effectiveDept
+      ? (attendanceTotals.presenceByDept.get(effectiveDept)?.get(p.id) || 0)
+      : (attendanceTotals.allPresence.get(p.id) || 0);
+    const consecutiveAbsences = attendanceIndex.calculateAbsences(
+      p.id, effectiveDept, p.startDate || '2026-01-01'
+    );
+
     let alertStatus = 'Frequente';
     if (consecutiveAbsences === 1) alertStatus = 'Atenção (1 Falta)';
     else if (consecutiveAbsences === 2) alertStatus = 'Importante (2 Faltas)';
@@ -51,12 +88,27 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ db, session }) => {
       name: p.name,
       phone: p.phone,
       department: p.department,
-      totalMeetings: deptAttendances.length,
+      totalMeetings,
       totalAttendances,
       consecutiveAbsences,
       alertStatus
     };
-  }).sort((a, b) => compareByName(a, b));
+  }).sort((a, b) => compareByName(a, b)),
+  [scopedPeople, selectedDept, attendanceTotals, attendanceIndex]);
+
+  // CSV sempre inclui todos os membros. Só a tabela de pré-visualização
+  // renderiza progressivamente para evitar centenas de <tr> no Android.
+  const visibleReportData = useMemo(
+    () => printAllRows ? reportData : reportData.slice(0, previewLimit),
+    [reportData, previewLimit, printAllRows],
+  );
+
+  const handlePrint = () => {
+    // A impressão/PDF preserva a lista completa, mesmo com prévia paginada.
+    flushSync(() => setPrintAllRows(true));
+    window.addEventListener('afterprint', () => setPrintAllRows(false), { once: true });
+    window.print();
+  };
 
   const handleExportCSV = () => {
     const headers = [
@@ -218,7 +270,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ db, session }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {reportData.map(row => (
+                  {visibleReportData.map(row => (
                     <tr key={row.id}>
                       <td style={{ fontWeight: 700, color: 'var(--color-text-main)' }}>{row.name}</td>
                       <td>{row.phone ? row.phone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3') : <span style={{ color: '#ef4444' }}>Sem telefone</span>}</td>
@@ -242,6 +294,13 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ db, session }) => {
               </p>
             )}
           </div>
+          {visibleReportData.length < reportData.length && (
+            <button type="button" className="btn btn-secondary btn-sm reports-hide-print"
+              style={{ marginTop: '0.75rem', width: '100%' }}
+              onClick={() => setPreviewLimit(limit => Math.min(limit + 60, reportData.length))}>
+              Carregar mais membros ({visibleReportData.length} de {reportData.length})
+            </button>
+          )}
         </div>
 
         {/* Informações de Exportação */}
@@ -284,7 +343,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ db, session }) => {
           </button>
 
           <button
-            onClick={() => window.print()}
+            onClick={handlePrint}
             className="btn btn-secondary"
             style={{ 
               display: 'flex', 
