@@ -2,7 +2,7 @@ import { getLocalDateISO } from '../utils/localDate';
 import { useState, useEffect, useMemo } from 'react';
 import type { AppDatabase, UserSession, PastoralLog } from '../services/db';
 import { personInDepartment, generateUUID, compareByName } from '../services/db';
-import { createRadarAttendanceIndex } from '../utils/radarAttendanceIndex';
+import { getCachedRadarAttendanceIndex } from '../utils/radarAttendanceIndex';
 import { AlertTriangle, MessageSquare, Phone, Search, Calendar, Sparkles, Clock, PlusCircle, FileText, Send } from 'lucide-react';
 import { getDynamicHumanMessage } from '../services/genderMsg';
 
@@ -52,7 +52,7 @@ export const RadarView: React.FC<RadarViewProps> = ({ db, session, onUpdatePasto
   // Uma leitura indexada do histórico elimina scans repetidos de chamadas
   // por membro e preserva a presença em qualquer departamento na mesma semana.
   const attendanceIndex = useMemo(
-    () => createRadarAttendanceIndex(db.attendances, fallbackDate),
+    () => getCachedRadarAttendanceIndex(db.attendances, fallbackDate),
     [db.attendances, fallbackDate],
   );
 
