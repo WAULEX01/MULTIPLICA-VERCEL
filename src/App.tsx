@@ -212,7 +212,7 @@ export default function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [emulatedRole, setEmulatedRole] = useState<string | null>(null);
   const [emulatedDept, setEmulatedDept] = useState('Novo Alvorecer (Jovens)');
-  const [theme, setTheme] = useState<string>(() => localStorage.getItem('theme') || 'light');
+  const [theme, setTheme] = useState<string>(() => localStorage.getItem('theme') || 'dark');
   const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
 
   const handleToggleTheme = () => {
@@ -1957,7 +1957,7 @@ export default function App() {
     { id: 'tutorial', label: 'Projeto & Tutorial', icon: <BookOpen size={20} /> },
     { id: 'agenda', label: 'Agenda', icon: <Calendar size={20} /> },
     { id: 'membros', label: 'Membros', icon: <Users size={20} /> },
-    { id: 'presenca', label: 'Presença', icon: <Calendar size={20} /> },
+    { id: 'presenca', label: 'Chamadas', icon: <Calendar size={20} /> },
     { id: 'aniversariantes', label: 'Aniversariantes', icon: <Cake size={20} /> },
     { id: 'radar', label: 'Radar Inteligente', icon: <AlertTriangle size={20} />, badge: true },
     { id: 'departamentos', label: 'Departamentos', icon: <Network size={20} /> },

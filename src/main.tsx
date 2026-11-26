@@ -6,6 +6,7 @@ import './styles/v823-production-layout.css'
 import './styles/mobile-performance-v823.css'
 import './styles/desktop-performance-v823.css'
 import './styles/professor-plus-skin-v823.css'
+import './styles/aurora-v85-preview.css'
 import './mobileUxEnhancements.ts'
 import './mobileSectionNavigator.ts'
 import App from './App.tsx'
@@ -14,7 +15,7 @@ import App from './App.tsx'
 (function applySavedTheme() {
   try {
     const saved = localStorage.getItem('theme');
-    if (saved === 'dark') {
+    if (saved !== 'light') {
       document.documentElement.setAttribute('data-theme', 'dark');
     } else {
       document.documentElement.removeAttribute('data-theme');
