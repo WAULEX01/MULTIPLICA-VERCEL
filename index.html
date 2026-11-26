@@ -7,7 +7,7 @@
     <link rel="shortcut icon" type="image/png" href="/logo.png?v=brand-827" />
     <link rel="apple-touch-icon" href="/logo.png?v=brand-827" />
     <link rel="manifest" href="/manifest.json?v=brand-827" />
-    <meta name="theme-color" content="#ff6101" />
+    <meta name="theme-color" content="#5859e8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Multiplica PLUS | IEAD - JOTA</title>
     <meta name="description" content="Aplicativo moderno e inteligente para acompanhamento de membros, controle de presença e relatórios pastorais da igreja." />
@@ -19,14 +19,14 @@
     <script>
       const isLocalPreview = ['localhost', '127.0.0.1'].includes(window.location.hostname);
       if ('serviceWorker' in navigator && !isLocalPreview) {
-        // v8.4.0: mantém o Service Worker e os assets da interface atualizados.
+        // v8.5.0 preview: mantém o Service Worker e os assets da interface atualizados.
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js?v=840-release')
+          navigator.serviceWorker.register('/sw.js?v=850-preview')
             .then(reg => {
-              console.log('[SW v8.4.0] registrado', reg.scope);
+              console.log('[SW v8.5.0 Preview] registrado', reg.scope);
               reg.update().catch(() => {});
             })
-            .catch(err => console.error('[SW v8.4.0] falha no registro:', err));
+            .catch(err => console.error('[SW v8.5.0 Preview] falha no registro:', err));
         });
       } else if ('serviceWorker' in navigator && isLocalPreview) {
         navigator.serviceWorker.getRegistrations().then(registrations => {
