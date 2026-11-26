@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { calculateConsecutiveAbsences } from '../src/services/db';
 import type { AttendanceRecord } from '../src/services/db';
-import { createRadarAttendanceIndex } from '../src/utils/radarAttendanceIndex';
+import { createRadarAttendanceIndex, getCachedRadarAttendanceIndex } from '../src/utils/radarAttendanceIndex';
 import { getLocalDateISO } from '../src/utils/localDate';
 
 const att = (id: string, department: string, date: string, presentIds: string[], deleted = false): AttendanceRecord =>
@@ -93,5 +93,30 @@ describe('radar indexed attendance: same pastoral absence rules', () => {
           .toBe(calculateConsecutiveAbsences(member, department, startDate, rows));
       }
     }
+  });
+});
+
+
+describe('radar cache across mobile navigation', () => {
+  it('reuses the index after screen remount without changing attendance results', () => {
+    const date = getLocalDateISO();
+    const rows = [att('1', 'JK', '2026-10-04', ['other']), att('2', 'JK', '2026-10-11', ['member'])];
+    const first = getCachedRadarAttendanceIndex(rows, date);
+    const returnToScreen = getCachedRadarAttendanceIndex(rows, date);
+    expect(returnToScreen).toBe(first);
+    expect(first.calculateAbsences('other', 'JK', '2026-01-01'))
+      .toBe(calculateConsecutiveAbsences('other', 'JK', '2026-01-01', rows));
+  });
+
+  it('invalidates on a changed snapshot or local date', () => {
+    const today = getLocalDateISO();
+    const rows = [att('1', 'JK', '2026-10-04', ['other'])];
+    const baseline = getCachedRadarAttendanceIndex(rows, today);
+    const changedRows = [...rows, att('2', 'JK', '2026-10-11', ['other'])];
+    const updated = getCachedRadarAttendanceIndex(changedRows, today);
+    const tomorrow = getCachedRadarAttendanceIndex(changedRows, '2026-12-01');
+    expect(updated).not.toBe(baseline);
+    expect(tomorrow).not.toBe(updated);
+    expect(getCachedRadarAttendanceIndex(changedRows, '2026-12-01')).toBe(tomorrow);
   });
 });
