@@ -3,8 +3,8 @@
 // Force rebuild hash to bypass cache
 console.log("CACHE_BUSTER_V21_V78_SYNC_CONSISTENCY");
 import { getLocalDateISO } from './utils/localDate';
-import { lazy, Suspense, useState, useEffect, useRef } from 'react';
-import { initializeDB, saveDB, getWeekKey, createWeeklyMissionIfMissing, isYouthOrTeenDepartment, personInDepartment, generateUUID, getUserAllowedDepartments, canUserSelectDepartment, getDepartmentTheme, getVisibleDepartments, hashPassword, getSyncQueue, acknowledgeSyncQueue, markSyncQueueInFlight, rebaseSyncQueue } from './services/db';
+import { lazy, Suspense, useState, useEffect, useRef, useMemo } from 'react';
+import { initializeDBAsync, saveDB, getWeekKey, createWeeklyMissionIfMissing, isYouthOrTeenDepartment, personInDepartment, generateUUID, getUserAllowedDepartments, canUserSelectDepartment, getDepartmentTheme, getVisibleDepartments, hashPassword, getSyncQueue, acknowledgeSyncQueue, markSyncQueueInFlight, rebaseSyncQueue } from './services/db';
 import { apiGetData, apiGetVersionInfo, apiPullChanges, apiPushPatches, apiLogout, apiSubscribeToChanges, apiSwitchDepartment } from './services/api';
 import { persistPreUpdateCheckpoint } from './services/versionSync';
 import { enqueueDatabaseChanges } from './services/syncEngine';
@@ -26,6 +26,8 @@ import type { AppDatabase, UserSession, Person, AttendanceRecord, MonthlyGoal, P
 import { LoginView } from './views/LoginView';
 import { InicioView } from './views/InicioView';
 import { ChatWidget } from './components/ChatWidget';
+import { calculateRadarBadgeCount } from './utils/radarBadgeCount';
+import { scheduleMobileNavigationWarmup } from './preloadAppViews';
 
 const DashboardView = lazy(() => import('./views/DashboardView').then(module => ({ default: module.DashboardView })));
 const DepartmentsView = lazy(() => import('./views/DepartmentsView').then(module => ({ default: module.DepartmentsView })));
@@ -233,6 +235,13 @@ export default function App() {
     ? { ...session, role: emulatedRole as any, department: emulatedDept }
     : session;
 
+  // Calcula o badge uma vez por mudança real de pessoas/chamadas/permissões.
+  // A troca de tela não percorre mais todo o histórico de presenças.
+  const radarCount = useMemo(
+    () => calculateRadarBadgeCount(db, activeSession),
+    [db, activeSession?.role, activeSession?.department],
+  );
+
   // Wrapper limpo: salva local + envia ao servidor
   const dbRef = useRef(db);
   useEffect(() => { dbRef.current = db; }, [db]);
@@ -240,6 +249,8 @@ export default function App() {
   const lastPushTimeRef = useRef<number>(Date.now());
   const runPendingPushRef = useRef<() => Promise<void>>(async () => {});
   const pushRetryCountRef = useRef<Map<string, number>>(new Map());
+  const activityFlushInProgressRef = useRef(false);
+  const ACTIVITY_HEARTBEAT_KEY = 'pm_activity_heartbeat_v1';
 
   // ⚠️ SISTEMA DE SINCRONIZAÇÃO FINALIZADO v5.8.0 — Não alterar sem autorização do Pastor Wagner
   const updateDatabase = async (newDB: AppDatabase, isInteraction = true, skipPush = false, logAction?: string) => {
@@ -328,15 +339,19 @@ export default function App() {
     setDb(dbToSave);
     dbRef.current = dbToSave;
 
-    const persistAndQueue = () => {
+    const persistAndQueue = async () => {
       try {
-        saveDB(dbToSave);
-
         // ═══ MODO OFFLINE TIPO WHATSAPP ═══
         // Sempre enfileira para push, independente de conexão. A Outbox persiste
         // no localStorage e só remove a operação depois do ACK do Supabase.
         const shouldQueue = !skipPush;
         const queuedCount = shouldQueue ? enqueueDatabaseChanges(oldDB, dbToSave) : 0;
+
+        // A Outbox entra primeiro (síncrona e pequena). O snapshot grande vai
+        // para IndexedDB em seguida. Se o app fechar durante a gravação, a
+        // operação de negócio já está preservada para replay no próximo acesso.
+        await saveDB(dbToSave);
+
         if (queuedCount > 0) {
           localStorage.setItem('pm_pending_sync', 'true');
           setHasPendingSync(true);
@@ -358,49 +373,140 @@ export default function App() {
 
     // setTimeout(0), e não Promise/microtask: microtasks ainda rodam antes da pintura.
     // O macrotask permite que o clique/fechamento do modal apareça imediatamente.
-    window.setTimeout(persistAndQueue, 0);
+    // A Promise resolve somente DEPOIS de saveDB + Outbox local; assim rotinas que
+    // precisam confirmar persistência (ex.: heartbeat) podem aguardar com segurança.
+    await new Promise<void>((resolve) => {
+      window.setTimeout(() => {
+        void persistAndQueue().finally(resolve);
+      }, 0);
+    });
   };
 
-  // Rastreamento de tempo ativo online do líder logado (soma +30s a cada 30 segundos)
+  // Atividade online: o heartbeat de 30s é persistido em uma chave pequena e
+  // NÃO reconstrói/salva o banco inteiro. A cada 5 minutos consolidamos uma única
+  // alteração da pessoa, gerando somente uma versão e uma operação na Outbox.
   useEffect(() => {
-    if (!session || !versionSyncReady || !isCurrentDataGenerationActive()) return;
-    const interval = setInterval(() => {
+    if (!session?.personId || !versionSyncReady || !isCurrentDataGenerationActive()) return;
+
+    type ActivityHeartbeat = {
+      personId: string;
+      accumulatedSeconds: number;
+      lastActive: string;
+      lastFlushAt: number;
+    };
+
+    const readHeartbeat = (): ActivityHeartbeat => {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(ACTIVITY_HEARTBEAT_KEY) || '{}');
+        if (parsed?.personId === session.personId) {
+          return {
+            personId: session.personId,
+            accumulatedSeconds: Math.max(0, Number(parsed.accumulatedSeconds || 0)),
+            lastActive: String(parsed.lastActive || ''),
+            lastFlushAt: Math.max(0, Number(parsed.lastFlushAt || 0)),
+          };
+        }
+      } catch {}
+      return { personId: session.personId, accumulatedSeconds: 0, lastActive: '', lastFlushAt: Date.now() };
+    };
+
+    const writeHeartbeat = (heartbeat: ActivityHeartbeat) => {
+      try { localStorage.setItem(ACTIVITY_HEARTBEAT_KEY, JSON.stringify(heartbeat)); } catch {}
+    };
+
+    const flushHeartbeat = async (force = false) => {
+      if (activityFlushInProgressRef.current) return;
       const currentDBState = dbRef.current;
       if (!currentDBState) return;
 
-      const updatedPeople = currentDBState.people.map(p => {
-        if (p.id === session.personId) {
-          return {
-            ...p,
-            timeOnlineSeconds: (p.timeOnlineSeconds || 0) + 30,
-            lastActive: new Date().toISOString(),
-            version: (p.version || 0) + 1,
-            updatedAt: new Date().toISOString(),
-            updatedBy: session.personId
-          };
-        }
-        return p;
-      });
+      const heartbeat = readHeartbeat();
+      if (heartbeat.accumulatedSeconds <= 0) return;
+      if (!force && Date.now() - heartbeat.lastFlushAt < 300000) return;
 
-      // Throttle network push to once every 5 minutes (300000ms) to prevent server overload
-      const shouldPush = (Date.now() - lastPushTimeRef.current) > 300000;
-      updateDatabase({ ...currentDBState, people: updatedPeople }, false, !shouldPush);
-      if (shouldPush) {
+      const currentPerson = currentDBState.people.find(p => p.id === session.personId);
+      if (!currentPerson) return;
+
+      activityFlushInProgressRef.current = true;
+      try {
+        const nowIso = heartbeat.lastActive || new Date().toISOString();
+        const updatedPeople = currentDBState.people.map(p => p.id === session.personId
+          ? {
+              ...p,
+              timeOnlineSeconds: (p.timeOnlineSeconds || 0) + heartbeat.accumulatedSeconds,
+              lastActive: nowIso,
+              version: (p.version || 0) + 1,
+              updatedAt: nowIso,
+              updatedBy: session.personId
+            }
+          : p
+        );
+
+        // Enfileira/persiste uma única alteração consolidada. O heartbeat só é
+        // zerado depois que a alteração já entrou no fluxo local de persistência.
+        await updateDatabase({ ...currentDBState, people: updatedPeople }, false, false);
+        writeHeartbeat({
+          personId: session.personId,
+          accumulatedSeconds: 0,
+          lastActive: nowIso,
+          lastFlushAt: Date.now(),
+        });
         lastPushTimeRef.current = Date.now();
+      } finally {
+        activityFlushInProgressRef.current = false;
       }
-    }, 30000);
+    };
 
-    return () => clearInterval(interval);
-  }, [session, versionSyncReady]);
+    const recordHeartbeat = () => {
+      if (document.visibilityState === 'hidden') return;
+      const heartbeat = readHeartbeat();
+      heartbeat.accumulatedSeconds += 30;
+      heartbeat.lastActive = new Date().toISOString();
+      writeHeartbeat(heartbeat);
+      void flushHeartbeat(false);
+    };
+
+    // Recupera atividade leve que tenha ficado pendente após fechamento/reabertura.
+    void flushHeartbeat(false);
+    const interval = window.setInterval(recordHeartbeat, 30000);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'hidden') void flushHeartbeat(true);
+    };
+    const handlePageHide = () => { void flushHeartbeat(true); };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('pagehide', handlePageHide);
+
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('pagehide', handlePageHide);
+      void flushHeartbeat(true);
+    };
+  }, [session?.personId, versionSyncReady]);
 
 
-  // Initial load
+  // Initial load: IndexedDB é a réplica local principal; localStorage fica
+  // apenas como fallback de migração/recuperação. Nenhum dado local é enviado
+  // antes da Outbox e das validações normais de geração.
   useEffect(() => {
-    if (!db) {
-      const initialDb = initializeDB();
+    let cancelled = false;
+    void initializeDBAsync().then(initialDb => {
+      if (cancelled) return;
+      dbRef.current = initialDb;
       setDb(initialDb);
-      
-    }
+    }).catch(error => {
+      console.warn('[Cache] Falha ao restaurar cache local; Supabase fará a reconciliação:', error);
+      if (!cancelled) {
+        const emptyDb: AppDatabase = {
+          people: [], departments: [], attendances: [], goals: [], pastoralLogs: [],
+          activityLogs: [], weeklyMissions: [], specialMissions: [], messageHistory: [], events: [],
+        };
+        dbRef.current = emptyDb;
+        setDb(emptyDb);
+      }
+    });
+    return () => { cancelled = true; };
   }, []);
 
   // Reenvia SOMENTE as operações realmente registradas na fila offline. O fluxo
@@ -658,13 +764,6 @@ export default function App() {
     }
   }, [db, activeSession?.personId, versionSyncReady]);
 
-  const onlineThresholdMs = 10 * 60 * 1000; // 10 minutos
-  const onlineProfiles = db ? db.people
-    .filter(p => p.lastActive && !p.deleted && p.role !== 'Membro')
-    .map(p => ({ ...p, lastActiveDate: new Date(p.lastActive!) }))
-    .filter(p => !isNaN(p.lastActiveDate.getTime()) && Date.now() - p.lastActiveDate.getTime() <= onlineThresholdMs)
-    .sort((a, b) => b.lastActiveDate.getTime() - a.lastActiveDate.getTime()) : [];
-
   const isAdmin = activeSession?.role === 'Pastor Admin' || activeSession?.role === 'Pastor' || activeSession?.role === 'Secretaria Geral';
 
   // Snapshot inicial único + Realtime; polling de 30s fica apenas como fallback.
@@ -687,6 +786,26 @@ export default function App() {
     try { return localStorage.getItem('pm_last_synced_at') || ''; } catch { return ''; }
   });
   const [hasInitialServerSnapshot, setHasInitialServerSnapshot] = useState<boolean>(() => isCurrentDataGenerationActive());
+
+  // Evita reordenar a lista de perfis online a cada troca de tela, abertura
+  // de menu ou atualização visual. Revalida quando chega novo banco/sync.
+  const onlineProfiles = useMemo(() => {
+    if (!db) return [];
+    const now = Date.now();
+    const onlineThresholdMs = 10 * 60 * 1000;
+    return db.people
+      .filter(p => p.lastActive && !p.deleted && p.role !== 'Membro')
+      .map(p => ({ ...p, lastActiveDate: new Date(p.lastActive!) }))
+      .filter(p => !isNaN(p.lastActiveDate.getTime()) && now - p.lastActiveDate.getTime() <= onlineThresholdMs)
+      .sort((a, b) => b.lastActiveDate.getTime() - a.lastActiveDate.getTime());
+  }, [db?.people, lastSyncedAt]);
+
+  // Pré-carrega as telas mais usadas somente depois que a sessão e os dados
+  // oficiais estiverem prontos. Em conexões lentas/baixo consumo, não pré-carrega.
+  useEffect(() => {
+    if (!session?.sessionToken || !versionSyncReady || !hasInitialServerSnapshot || !isOnline) return;
+    scheduleMobileNavigationWarmup();
+  }, [session?.sessionToken, versionSyncReady, hasInitialServerSnapshot, isOnline]);
   const serverRevisionRef = useRef(serverRevision);
   const initialSnapshotLoadedRef = useRef(isCurrentDataGenerationActive());
   useEffect(() => { serverRevisionRef.current = serverRevision; }, [serverRevision]);
@@ -695,6 +814,8 @@ export default function App() {
   const loadFromServerRef = useRef<(() => Promise<void>) | null>(null);
   // Evita múltiplos pulls simultâneos (polling + online + focus disparando juntos → menos carga no servidor)
   const loadInProgressRef = useRef<boolean>(false);
+  const pendingLoadRef = useRef<boolean>(false);
+  const lastForegroundSyncRef = useRef<number>(0);
   const versionLifecycleStartedRef = useRef(false);
 
   // Geração Supabase master: no primeiro acesso nenhum cache antigo é enviado.
@@ -967,9 +1088,14 @@ export default function App() {
       console.log('[Sync] 🔄 loadFromServer chamado | online:', navigator.onLine, '| fila:', getSyncQueue().length, '| rev:', serverRevisionRef.current);
       if (!navigator.onLine) return;
       if (pushInProgressRef.current) return;
-      if (loadInProgressRef.current) return;
+      if (loadInProgressRef.current) {
+        // Realtime/focus pode chegar enquanto um pull está em andamento. Não abre
+        // uma segunda requisição, mas também não perde o sinal: refaz uma vez ao final.
+        pendingLoadRef.current = true;
+        return;
+      }
 
-      // ═══ FASE 2 — MYSQL É A FONTE ÚNICA ═══
+      // Supabase/PostgreSQL é a fonte única da verdade.
       // Se há itens na fila (edições feitas online que falharam o push),
       // envia primeiro. O pull abaixo traz o estado canônico do Supabase.
       if (getSyncQueue().length > 0) {
@@ -1081,26 +1207,37 @@ export default function App() {
           }
           let nextDb = dbRef.current;
           let nextRevision = Number(delta.server_revision || serverRevisionRef.current);
+          let shouldPersistDatabase = false;
           if (delta.reset_required) {
             console.log('[Sync] 🔄 RESET REQUIRED: baixando snapshot completo');
             const cloudData = await apiGetData();
             nextDb = applyPendingSyncOverlay(cloudPayloadToDatabase(cloudData));
             nextRevision = Number(cloudData.server_revision || 0);
+            shouldPersistDatabase = true;
           } else if (nextDb) {
             // Log detalhado das mudanças recebidas
             const changes = delta.changes || {};
+            const changedEntities = Object.keys(changes).filter(
+              (key) => Array.isArray(changes[key]) && changes[key].length > 0
+            );
+            const activityLogCountChanged =
+              typeof delta.activity_log_count === 'number' &&
+              delta.activity_log_count !== Number(nextDb.activityLogCount || 0);
             const changeSummary = Object.entries(changes).map(([entity, items]) => {
               const arr = Array.isArray(items) ? items : [];
-              const creates = arr.filter((i: any) => !i.deleted && !i.version || i.version === 1).length;
+              const creates = arr.filter((i: any) => (!i.deleted && !i.version) || i.version === 1).length;
               const updates = arr.filter((i: any) => !i.deleted && i.version > 1).length;
               const deletes = arr.filter((i: any) => i.deleted).length;
               return `${entity}: +${creates}/~${updates}/-${deletes}`;
             }).join(', ');
             console.log(`[Sync] 📊 Delta recebido: ${changeSummary || 'nenhuma mudança'} | rev ${nextRevision}`);
-            
-            nextDb = applyPendingSyncOverlay(applyServerDelta(nextDb, changes, delta.activity_log_count));
+
+            if (changedEntities.length > 0 || activityLogCountChanged) {
+              nextDb = applyPendingSyncOverlay(applyServerDelta(nextDb, changes, delta.activity_log_count));
+              shouldPersistDatabase = true;
+            }
           }
-          if (nextDb) {
+          if (nextDb && shouldPersistDatabase) {
             setDb(nextDb);
             dbRef.current = nextDb;
             saveDB(nextDb);
@@ -1122,6 +1259,10 @@ export default function App() {
         consecutiveFailuresRef.current++;
       } finally {
         loadInProgressRef.current = false;
+        if (pendingLoadRef.current) {
+          pendingLoadRef.current = false;
+          window.setTimeout(() => { void loadFromServerRef.current?.(); }, 250);
+        }
       }
     };
 
@@ -1165,17 +1306,19 @@ export default function App() {
     };
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
-    // Polling inteligente: ao voltar ao app (visible/focus), sincroniza imediatamente
+    // Focus + visibility normalmente disparam juntos no celular. Agrupamos esses
+    // sinais para evitar dois pulls quase idênticos, sem afetar Realtime/polling.
+    const requestForegroundSync = () => {
+      if (!navigator.onLine) return;
+      const now = Date.now();
+      if (now - lastForegroundSyncRef.current < 1500) return;
+      lastForegroundSyncRef.current = now;
+      void loadFromServerRef.current?.();
+    };
     const handleVisibility = () => {
-      if (document.visibilityState === 'visible' && navigator.onLine) {
-        if (loadFromServerRef.current) loadFromServerRef.current();
-      }
+      if (document.visibilityState === 'visible') requestForegroundSync();
     };
-    const handleFocus = () => {
-      if (navigator.onLine) {
-        if (loadFromServerRef.current) loadFromServerRef.current();
-      }
-    };
+    const handleFocus = () => requestForegroundSync();
     document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('focus', handleFocus);
 
@@ -1899,34 +2042,6 @@ export default function App() {
     if (getSyncQueue().length === 0) alert('Pendências confirmadas. O snapshot oficial do Supabase foi aplicado.');
   };
 
-  // Calculate Radar badge alert count
-  const getRadarCount = () => {
-    if (!activeSession) return 0;
-    const isRestricted = activeSession.role === 'Líder' || activeSession.role === 'Multiplicador';
-    const deptFilter = isRestricted ? activeSession.department : undefined;
-
-    const absentees = db.people.filter(p => {
-      const isAtivo = p.status === 'Ativo' && !p.deleted;
-      const matchesDept = !deptFilter || personInDepartment(p, deptFilter);
-      if (!isAtivo || !matchesDept) return false;
-
-      // Count absences
-      const deptAttendances = db.attendances.filter(a => a.department === p.department);
-      const sorted = [...deptAttendances].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      
-      let count = 0;
-      for (const rec of sorted) {
-        if (rec.date < (p.startDate || '2026-01-01')) break;
-        if (rec.presentIds.includes(p.id)) break;
-        count++;
-      }
-      return count >= 1; // 1 or more absences triggers yellow/orange/red
-    });
-
-    return absentees.length;
-  };
-
-  const radarCount = getRadarCount();
 
   const renderView = () => {
     // If no session, always show LoginView
@@ -2125,7 +2240,7 @@ export default function App() {
           </div>
           <div className="topbar-title">
             <h1> Multiplica <span className="topbar-title-accent">PLUS</span> </h1>
-            <span className="topbar-subtitle"> IEAD - JOTA <span className="topbar-version" title={lastSyncedAt ? `Última sincronização: ${new Date(lastSyncedAt).toLocaleString('pt-BR')}` : 'Aguardando primeira sincronização'}>{APP_VERSION} • {isOnline ? 'Supabase' : 'Offline'} {serverRevision || '—'}</span> </span>
+            <span className="topbar-subtitle"> IEAD - JOTA <span className="topbar-version" title={lastSyncedAt ? `Última sincronização: ${new Date(lastSyncedAt).toLocaleString('pt-BR')}` : 'Aguardando primeira sincronização'}>VERSÃO {APP_VERSION.replace(/^v/i, '')} • {isOnline ? 'Supabase' : 'Offline'} {serverRevision || '—'}</span> </span>
           </div>
         </div>
 
@@ -2296,7 +2411,7 @@ export default function App() {
           <div className="mobile-header-title">
             <h1>Multiplica PLUS</h1>
             <span>
-              IEAD - JOTA <span className="mobile-header-version" title={lastSyncedAt ? `Última sincronização: ${new Date(lastSyncedAt).toLocaleString('pt-BR')}` : 'Aguardando primeira sincronização'}>{APP_VERSION} • {isOnline ? 'Supabase' : 'Offline'} {serverRevision || '—'}</span>
+              IEAD - JOTA <span className="mobile-header-version" title={lastSyncedAt ? `Última sincronização: ${new Date(lastSyncedAt).toLocaleString('pt-BR')}` : 'Aguardando primeira sincronização'}>VERSÃO {APP_VERSION.replace(/^v/i, '')} • {isOnline ? 'Supabase' : 'Offline'} {serverRevision || '—'}</span>
             </span>
           </div>
         </div>

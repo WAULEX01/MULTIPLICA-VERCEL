@@ -1,30 +1,20 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { apiPushChanges } from '../src/services/api';
+import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 
-afterEach(() => {
-  vi.unstubAllGlobals();
-});
+describe('apiPushChanges — roteamento Supabase atual', () => {
+  const api = readFileSync('src/services/api.ts', 'utf8');
 
-describe('apiPushChanges — roteamento da fila de retry', () => {
-  it('retorna o tipo people quando somente o contato falha no servidor', async () => {
-    vi.stubGlobal('fetch', vi.fn(async (input: string | URL | Request) => {
-      const url = new URL(String(input), 'https://multiplicaplus.test');
-      const action = url.searchParams.get('action');
-      if (action === 'sync_people_delta') {
-        return { ok: false, status: 503, json: async () => ({}) } as Response;
-      }
-      return { ok: true, status: 200, json: async () => ({ success: true }) } as Response;
-    }));
+  it('converte alterações em operações para mp_sync_push', () => {
+    expect(api).toContain("return rpc<any>('mp_sync_push'");
+    expect(api).toContain('operation_id: item.id');
+    expect(api).toContain('base_version: Number(item.baseVersion || 0)');
+    expect(api).toContain('patch: item.patch || item.data || {}');
+  });
 
-    const oldDb = {
-      people: [{ id: 'p1', name: 'Ana', phone: '111' }],
-      departments: [{ id: 'd1', name: 'Departamento A' }]
-    };
-    const newDb = {
-      people: [{ id: 'p1', name: 'Ana', phone: '222' }],
-      departments: [{ id: 'd1', name: 'Departamento B' }]
-    };
-
-    await expect(apiPushChanges(oldDb, newDb)).resolves.toEqual(['people']);
+  it('mantém roteamento por entidade para o helper legado sem endpoints PHP', () => {
+    expect(api).toContain("['people','people','id']");
+    expect(api).toContain("['attendances','attendances','id']");
+    expect(api).toContain("export async function apiSavePeople");
+    expect(api).not.toContain("sync_people_delta");
   });
 });

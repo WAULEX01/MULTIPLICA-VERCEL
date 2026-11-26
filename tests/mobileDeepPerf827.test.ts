@@ -1,0 +1,78 @@
+import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+
+describe('mobile deep performance regressions', () => {
+  it('renders member cards progressively while keeping full filtered data available', () => {
+    const source = readFileSync('src/views/PeopleListView.tsx', 'utf8');
+    expect(source).toContain("useState(30)");
+    expect(source).toContain("filteredPeople.slice(0, visibleCount)");
+    expect(source).toContain("{visiblePeople.map(p => {");
+    expect(source).toContain("Carregar mais");
+  });
+
+  it('does not rebuild and persist the local database for empty deltas', () => {
+    const source = readFileSync('src/App.tsx', 'utf8');
+    expect(source).toContain("let shouldPersistDatabase = false");
+    expect(source).toContain("changedEntities.length > 0 || activityLogCountChanged");
+    expect(source).toContain("if (nextDb && shouldPersistDatabase)");
+  });
+
+  it('keeps an offline navigation shell in the service worker cache', () => {
+    const source = readFileSync('public/sw.js', 'utf8');
+    expect(source).toContain("'/index.html'");
+    expect(source).toContain("caches.match('/index.html')");
+  });
+
+  it('batches 30s activity heartbeats instead of saving the full DB each tick', () => {
+    const source = readFileSync('src/App.tsx', 'utf8');
+    expect(source).toContain("pm_activity_heartbeat_v1");
+    expect(source).toContain("accumulatedSeconds += 30");
+    expect(source).toContain("Date.now() - heartbeat.lastFlushAt < 300000");
+    expect(source).toContain("await updateDatabase({ ...currentDBState, people: updatedPeople }, false, false)");
+    expect(source).not.toContain("timeOnlineSeconds: (p.timeOnlineSeconds || 0) + 30");
+  });
+
+  it('waits for local DB/outbox persistence before resolving updateDatabase', () => {
+    const source = readFileSync('src/App.tsx', 'utf8');
+    expect(source).toContain("await new Promise<void>((resolve)");
+    expect(source).toContain("void persistAndQueue().finally(resolve);");
+  });
+
+  it('deduplicates focus/visibility pulls and preserves a missed realtime signal', () => {
+    const source = readFileSync('src/App.tsx', 'utf8');
+    expect(source).toContain("pendingLoadRef.current = true");
+    expect(source).toContain("now - lastForegroundSyncRef.current < 1500");
+    expect(source).toContain("pendingLoadRef.current = false");
+  });
+
+  it('keeps chart.js out of the main dashboard module and lazy loads charts', () => {
+    const dashboard = readFileSync('src/views/DashboardView.tsx', 'utf8');
+    const chart = readFileSync('src/components/DashboardChart.tsx', 'utf8');
+    expect(dashboard).toContain("lazy(() => import('../components/DashboardChart')");
+    expect(dashboard).toContain("requestIdleCallback");
+    expect(dashboard).not.toContain("from 'react-chartjs-2'");
+    expect(chart).toContain("from 'react-chartjs-2'");
+    expect(chart).toContain("from 'chart.js'");
+  });
+
+  it('uses IndexedDB for the large database snapshot while keeping localStorage fallback', () => {
+    const db = readFileSync('src/services/db.ts', 'utf8');
+    const persistence = readFileSync('src/services/localPersistence.ts', 'utf8');
+    const app = readFileSync('src/App.tsx', 'utf8');
+
+    expect(db).toContain('initializeDBAsync');
+    expect(db).toContain('readIndexedDbSnapshot<PersistedDatabaseEnvelope>()');
+    expect(db).toContain('indexed?.generation === DATA_GENERATION');
+    expect(db).toContain('generation: DATA_GENERATION');
+    expect(db).toContain('scheduleIndexedDbSnapshot(envelope');
+    expect(persistence).toContain("indexedDB.open(CACHE_DB_NAME");
+    expect(persistence).toContain("objectStore(STORE_NAME).put(snapshot, SNAPSHOT_KEY)");
+    expect(app).toContain('initializeDBAsync().then');
+  });
+
+  it('preserves the offline Outbox in localStorage independently of IndexedDB', () => {
+    const db = readFileSync('src/services/db.ts', 'utf8');
+    expect(db).toContain("localStorage.getItem('pm_sync_queue')");
+    expect(db).toContain("localStorage.setItem('pm_sync_queue', JSON.stringify(queue))");
+  });
+});

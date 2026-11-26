@@ -17,6 +17,7 @@ interface PeopleListViewProps {
 
 export const PeopleListView: React.FC<PeopleListViewProps> = ({ db, session, onUpdatePeople, onResetPassword, initialDepartmentFilter, onChangeDepartment }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [visibleCount, setVisibleCount] = useState(30);
   const [categoryTab, setCategoryTab] = useState<'Ativo' | 'Visitante' | 'Arquivado'>('Ativo');
   const [roleFilter, setRoleFilter] = useState('Todos');
   const [profileTab, setProfileTab] = useState<'todos' | 'membros' | 'outros'>('todos');
@@ -399,6 +400,17 @@ export const PeopleListView: React.FC<PeopleListViewProps> = ({ db, session, onU
     return isNotDeleted && matchesSearch && matchesCategory && matchesRole && matchesProfile && matchesDept && matchesScope && matchesMissingContact && matchesBaptism;
   }).sort(compareByName), [db.people, searchTerm, categoryTab, roleFilter, profileTab, deptFilter, missingContactFilter, showTrash, session.department, baptismFilter, canViewDeletedRecords]);
 
+  // Mobile/performance: a busca e os filtros continuam trabalhando sobre TODOS os
+  // membros, mas o DOM começa com somente 30 cartões e cresce sob demanda.
+  useEffect(() => {
+    setVisibleCount(30);
+  }, [searchTerm, categoryTab, roleFilter, profileTab, deptFilter, missingContactFilter, showTrash, baptismFilter]);
+
+  const visiblePeople = useMemo(
+    () => filteredPeople.slice(0, visibleCount),
+    [filteredPeople, visibleCount],
+  );
+
   // Category counts (scoped to chosen department when defined)
   const scopedPeople = db.people.filter(p => !p.deleted && (!session.department || personInDepartment(p, session.department)));
   const activeCount = scopedPeople.filter(p => p.status === 'Ativo' || !p.status).length;
@@ -408,15 +420,17 @@ export const PeopleListView: React.FC<PeopleListViewProps> = ({ db, session, onU
     ? db.people.filter(p => p.deleted).length
     : db.people.filter(p => p.deleted && (!session.department || personInDepartment(p, session.department))).length;
 
-  // Memoized absences map (perf: evita recalcular O(N×M) a cada tecla de busca)
+  // Calcula o indicador de faltas somente para os cartões visíveis.
+  // A busca/filtros continuam considerando todo o cadastro; carregar mais
+  // expande o cálculo junto com os cartões, sem custo para membros ocultos.
   const absencesMap = useMemo(() => {
     const map = new Map<string, number>();
-    for (const p of db.people) {
+    for (const p of visiblePeople) {
       if (p.deleted) continue;
       map.set(p.id, calculateConsecutiveAbsences(p.id, p.department, p.startDate || '2026-01-01', db.attendances));
     }
     return map;
-  }, [db.people, db.attendances]);
+  }, [visiblePeople, db.attendances]);
 
   const handleChangeStatus = (id: string, newStatus: 'Ativo' | 'Visitante' | 'Arquivado') => {
     const updated = db.people.map(p =>
@@ -953,7 +967,7 @@ export const PeopleListView: React.FC<PeopleListViewProps> = ({ db, session, onU
 
       {/* Cards Grid */}
       <div className="people-grid">
-        {filteredPeople.map(p => {
+        {visiblePeople.map(p => {
           const isExpanded = expandedPersonId === p.id;
           const cleanPhone = p.phone ? p.phone.replace(/\D/g, '') : '';
           const absences = absencesMap.get(p.id) || 0;
@@ -1447,6 +1461,18 @@ export const PeopleListView: React.FC<PeopleListViewProps> = ({ db, session, onU
             </div>
           )}
         </div>
+
+        {visiblePeople.length < filteredPeople.length && (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '1rem 0 0.5rem' }}>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => setVisibleCount((count) => Math.min(count + 30, filteredPeople.length))}
+            >
+              Carregar mais ({visiblePeople.length}/{filteredPeople.length})
+            </button>
+          </div>
+        )}
 
       {/* Modal Add/Edit */}
       {isModalOpen && (

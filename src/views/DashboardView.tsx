@@ -1,35 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { lazy, Suspense, useEffect, useState, useMemo } from 'react';
 import { getLocalDateISO } from '../utils/localDate';
 import type { AppDatabase, UserSession, Person } from '../services/db';
 import { getStats, getWeekKey, getMissionForMultiplicador, recordWeeklyMissionMessage, isYouthOrTeenDepartment, calculateConsecutiveAbsences, getPersonGender, isSameDepartment, personInDepartment, getSpecialMissionForMultiplicador, recordSpecialMissionMessage, canUserSelectDepartment, getUserAllowedDepartments, getDepartmentTheme, getPersonMother, compareByName } from '../services/db';
 import { Users, CheckCircle, AlertTriangle, TrendingUp, Calendar, AlertCircle, Plus, Gift, Cake, MessageSquare, BookOpen, Activity, Trophy, Award, Sparkles, Copy, Edit2, Send, Target, ChevronDown, ChevronUp } from 'lucide-react';
 import { apiGetActivityLogs } from '../services/api';
-import { Line, Bar } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-} from 'chart.js';
-import type { ChartOptions } from 'chart.js';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-);
+import { getCachedRadarAttendanceIndex } from '../utils/radarAttendanceIndex';
+const DashboardChart = lazy(() => import('../components/DashboardChart').then(module => ({ default: module.DashboardChart })));
 
 interface DashboardViewProps {
   db: AppDatabase;
@@ -53,6 +29,31 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
   const [showFullAudit, setShowFullAudit] = useState(false);
   const [showAllRecentPeople, setShowAllRecentPeople] = useState(false);
   const [attendanceWeeks, setAttendanceWeeks] = useState<number>(2); // F1: período do gráfico (1/2/3/4 semanas)
+  const [chartsReady, setChartsReady] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    let timer: number | undefined;
+    const idleWindow = window as Window & {
+      requestIdleCallback?: (callback: () => void, options?: { timeout?: number }) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
+    const reveal = () => { if (!cancelled) setChartsReady(true); };
+
+    if (typeof idleWindow.requestIdleCallback === 'function') {
+      const idleId = idleWindow.requestIdleCallback(reveal, { timeout: 1800 });
+      return () => {
+        cancelled = true;
+        idleWindow.cancelIdleCallback?.(idleId);
+      };
+    }
+
+    timer = window.setTimeout(reveal, isMobileViewport ? 1200 : 500);
+    return () => {
+      cancelled = true;
+      if (timer) window.clearTimeout(timer);
+    };
+  }, [isMobileViewport]);
   const combinedLogs = useMemo(() => {
     const map = new Map<string, any>();
     (db.activityLogs || []).forEach((l: any) => { if (l && l.id) map.set(l.id, l); });
@@ -97,12 +98,25 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
     finally { setLoadingLogs(false); }
   };
 
-  const stats = getStats(db, deptFilter);
+  const localToday = getLocalDateISO();
+  const indexedAttendance = useMemo(
+    () => getCachedRadarAttendanceIndex(db.attendances, localToday),
+    [db.attendances, localToday],
+  );
+  // Calcula alertas com um índice semanal compartilhado com o Radar.
+  // O restante da estatística mantém exatamente as regras do getStats original.
+  const stats = useMemo(
+    () => getStats(db, deptFilter, indexedAttendance.calculateAbsences),
+    [db.people, db.attendances, db.departments, deptFilter, indexedAttendance],
+  );
   const hasMissionsEnabled = isAdmin || isYouthOrTeenDepartment(session.department || '') || (db.departments.find(d => isSameDepartment(d.name, session.department || ''))?.missionsEnabled ?? false);
 
   // --- PAINEL DE Engajamento E acessos ---
   // Todos os Usuários administrativos / obreiros cadastrados (que nío sejam apenas membros e nío excluídos)
-  const staffAndLeaders = db.people.filter(p => p.role !== 'Membro' && !p.deleted && (!deptFilter || personInDepartment(p, deptFilter)));
+  const staffAndLeaders = useMemo(
+    () => db.people.filter(p => p.role !== 'Membro' && !p.deleted && (!deptFilter || personInDepartment(p, deptFilter))),
+    [db.people, deptFilter],
+  );
 
   // 1. Ativaçíogins (Líderes e Multiplicadores)
   const activationStaff = staffAndLeaders.filter(p => p.role === 'Líder' || p.role === 'Multiplicador');
@@ -116,27 +130,25 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
   };
 
   // 2. Ranking de Atividade geral (todos os obreiros, líderes, pastores, secretários)
-  const rankedStaff = [...staffAndLeaders].sort((a, b) => {
+  const rankedStaff = useMemo(() => [...staffAndLeaders].sort((a, b) => {
     const scoreA = getLeaderScore(a);
     const scoreB = getLeaderScore(b);
-    if (scoreB !== scoreA) {
-      return scoreB - scoreA;
-    }
+    if (scoreB !== scoreA) return scoreB - scoreA;
     return (b.timeOnlineSeconds || 0) - (a.timeOnlineSeconds || 0);
-  });
+  }), [staffAndLeaders]);
 
   // 3. Últimos adicionados (todos os membros / líderes adicionados recentemente)
   // Pastores e Secretaria Geral recebem a visão consolidada. Perfis de
   // departamento mantêm a lista limitada ao departamento ativo da sessão.
   const recentPeopleDepartmentFilter = isAdmin ? undefined : deptFilter;
-  const recentPeople = [...db.people]
+  const recentPeople = useMemo(() => db.people
     .filter(p => !p.deleted && (!recentPeopleDepartmentFilter || personInDepartment(p, recentPeopleDepartmentFilter)))
     .sort((a, b) => {
       const dateA = a.createdAt || a.startDate || '';
       const dateB = b.createdAt || b.startDate || '';
       if (dateB !== dateA) return dateB.localeCompare(dateA);
       return b.id.localeCompare(a.id);
-    });
+    }), [db.people, recentPeopleDepartmentFilter]);
   const visibleRecentPeople = showAllRecentPeople ? recentPeople : recentPeople.slice(0, 20);
   const hasMoreRecentPeople = recentPeople.length > 20;
 
@@ -157,11 +169,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
   };
 
   const onlineThresholdMs = 5 * 60 * 1000; // 5 minutos
-  const onlineProfiles = staffAndLeaders
-    .filter(p => p.lastActive)
-    .map(p => ({ ...p, lastActiveDate: new Date(p.lastActive!) }))
-    .filter(p => Date.now() - p.lastActiveDate.getTime() <= onlineThresholdMs)
-    .sort((a, b) => b.lastActiveDate.getTime() - a.lastActiveDate.getTime());
+  const onlineProfiles = useMemo(() => {
+    const now = Date.now();
+    return staffAndLeaders
+      .filter(p => p.lastActive)
+      .map(p => ({ ...p, lastActiveDate: new Date(p.lastActive!) }))
+      .filter(p => now - p.lastActiveDate.getTime() <= onlineThresholdMs)
+      .sort((a, b) => b.lastActiveDate.getTime() - a.lastActiveDate.getTime());
+  }, [staffAndLeaders]);
 
   const VERSICULOS = [
     { ref: "Josué 1:9", text: "Nío fui eu que ordenei a você? Seja forte e corajoso! Nío se apavore nem desanime, pois o Senhor, o seu Deus, Estará com você por onde você andar." },
@@ -373,33 +388,32 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
   };
 
   // Filter members in scope (ignoring deleted)
-  const activeMembers = db.people.filter(
+  const activeMembers = useMemo(() => db.people.filter(
     p => p.status !== 'Arquivado' && p.status !== 'Inativo' && p.status !== 'Visitante' && (!deptFilter || personInDepartment(p, deptFilter)) && !p.deleted
-  );
+  ), [db.people, deptFilter]);
 
   // Get most recent attendance to count today's check-ins (filtering out future or empty ones)
-  const d = new Date();
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  const todayStr = `${year}-${month}-${day}`;
+  const todayStr = localToday;
 
-  const depts = Array.from(new Set(activeMembers.flatMap(m =>
+  const depts = useMemo(() => Array.from(new Set(activeMembers.flatMap(m =>
     [m.department, ...(m.departments || []).map(d => d.department)]
-  )));
-  
-  // Build a map of the latest attendance record per department
-  const latestRecordByDept: { [dept: string]: { presentIds: string[]; date: string } | undefined } = {};
-  let hasAnyRecord = false;
-  depts.forEach(deptName => {
-    const deptAtts = db.attendances.filter(a => !a.deleted && a.department === deptName);
-    const validDeptAtts = deptAtts.filter(
-      a => a.date <= todayStr && a.presentIds && a.presentIds.length > 0
-    );
-    const sorted = [...validDeptAtts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    latestRecordByDept[deptName] = sorted[0] ? { presentIds: sorted[0].presentIds, date: sorted[0].date } : undefined;
-    if (sorted[0]) hasAnyRecord = true;
-  });
+  ))), [activeMembers]);
+
+  // O mesmo resultado anterior, sem filtrar e ordenar TODAS as chamadas
+  // novamente para cada departamento. Processa o histórico em uma passagem.
+  const { latestRecordByDept, hasAnyRecord } = useMemo(() => {
+    const selectedDepartments = new Set(depts);
+    const latest: Record<string, { presentIds: Set<string>; date: string }> = {};
+    for (const att of db.attendances) {
+      if (att.deleted || !selectedDepartments.has(att.department) ||
+          att.date > todayStr || !att.presentIds || att.presentIds.length === 0) continue;
+      const previous = latest[att.department];
+      if (!previous || att.date > previous.date) {
+        latest[att.department] = { date: att.date, presentIds: new Set(att.presentIds) };
+      }
+    }
+    return { latestRecordByDept: latest, hasAnyRecord: Object.keys(latest).length > 0 };
+  }, [db.attendances, depts, todayStr]);
 
   // Count unique members: present if found in ANY department's latest record
   let presentToday = 0;
@@ -408,7 +422,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
     const memberDepts = [member.department, ...(member.departments || []).map(d => d.department)];
     const isPresent = memberDepts.some(deptName => {
       const latest = latestRecordByDept[deptName];
-      return latest && latest.presentIds.includes(member.id);
+      return latest && latest.presentIds.has(member.id);
     });
     if (isPresent) presentToday++;
     else absentToday++;
@@ -454,6 +468,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
 
 
   // 1. Growth chart (total members registered monthly - dynamic last 6 months)
+  const { growthChartMax, growthData } = useMemo(() => {
   const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
   
   // Generate last 6 months dynamically (e.g. ['2026-02', '2026-03', ..., '2026-07'])
@@ -507,7 +522,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
     ],
   };
 
+  return { growthChartMax, growthData };
+  }, [db.people, deptFilter, localToday]);
+
   // 2. Attendance history chart (last N weeks, summing all departments per date)
+  const { groupedRecords, attendanceChartData } = useMemo(() => {
   const allAttendances = db.attendances.filter(a => !a.deleted && (!deptFilter || isSameDepartment(a.department, deptFilter)));
   
   // Group attendances by date+type and sum unique presentIds across departments
@@ -549,7 +568,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
     ],
   };
 
-  const growthDatalabelsPlugin = {
+  return { groupedRecords, attendanceChartData };
+  }, [db.attendances, deptFilter, attendanceWeeks, localToday]);
+
+  const growthDatalabelsPlugin = useMemo(() => ({
     id: 'growthDatalabels',
     afterDatasetsDraw(chart: any) {
       const { ctx, data } = chart;
@@ -568,9 +590,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
       });
       ctx.restore();
     }
-  };
+  }), []);
 
-  const lineChartOptions: ChartOptions<'line'> = {
+  const lineChartOptions = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -600,9 +622,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
         max: growthChartMax,
       },
     },
-  };
+  }), [growthChartMax]);
 
-  const barChartOptions: ChartOptions<'bar'> = {
+  const barChartOptions = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -632,7 +654,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
         max: Math.max(...groupedRecords.map(r => r.presentIds.size), 10) * 1.2,
       },
     },
-  };
+  }), [groupedRecords]);
+
+  const growthDatalabelsPlugins = useMemo(() => [growthDatalabelsPlugin], [growthDatalabelsPlugin]);
 
   return (
     <div className="page-container animate-fade">
@@ -797,7 +821,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
               </div>
             </div>
             <div className="flex-1 relative">
-              <Line data={growthData} options={lineChartOptions as any} plugins={[growthDatalabelsPlugin as any]} />
+              {chartsReady ? (
+                <Suspense fallback={<div className="flex items-center justify-center h-full text-muted">Carregando gráfico…</div>}>
+                  <DashboardChart kind="line" data={growthData} options={lineChartOptions} plugins={growthDatalabelsPlugins} />
+                </Suspense>
+              ) : (
+                <div className="flex items-center justify-center h-full text-muted">Preparando gráfico…</div>
+              )}
             </div>
           </div>
 
@@ -919,7 +949,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
             </div>
             <div className="flex-1 relative">
               {groupedRecords.length > 0 ? (
-                <Bar data={attendanceChartData} options={barChartOptions as any} />
+                chartsReady ? (
+                  <Suspense fallback={<div className="flex items-center justify-center h-full text-muted">Carregando gráfico…</div>}>
+                    <DashboardChart kind="bar" data={attendanceChartData} options={barChartOptions} />
+                  </Suspense>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-muted">Preparando gráfico…</div>
+                )
               ) : (
                 <div className="flex items-center justify-center h-full text-muted">
                   Nenhuma chamada registrada neste período.

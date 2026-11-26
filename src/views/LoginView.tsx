@@ -47,7 +47,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ db: _db, onLogin }) => {
             alt="Multiplica Plus" 
             className="login-hero-logo" 
           />
-          <h2>Multiplica PLUS <span className="login-version">{APP_VERSION}</span></h2>
+          <h2>Multiplica PLUS <span className="login-version">VERSÃO {APP_VERSION.replace(/^v/i, '')}</span></h2>
           <p style={{ letterSpacing: '2.5px', fontWeight: 700, color: '#ff9a5f', margin: '0.25rem 0' }}>IEAD - JOTA</p>
           <p style={{ fontSize: '0.85rem', opacity: 0.8, margin: '0.25rem 0' }}>Templo JK</p>
           <div className="login-hero-footer-quote">

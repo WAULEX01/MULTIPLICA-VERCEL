@@ -1,7 +1,7 @@
 // Pré-aquecimento progressivo das telas do Multiplica PLUS.
-// Objetivo: manter a abertura inicial leve e, depois que o app estiver pronto,
-// baixar em segundo plano as telas mais usadas para que a navegação seguinte
-// fique mais rápida. Não acessa nem altera banco, sincronização ou sessão.
+// Desktop mantém a estratégia anterior. No celular, as telas mais usadas
+// são carregadas SOMENTE após login/snapshot, em momentos de ociosidade.
+// Nenhum acesso ao Supabase, fila offline ou banco é feito aqui.
 
 type IdleWindow = Window & {
   requestIdleCallback?: (callback: () => void, options?: { timeout?: number }) => number;
@@ -17,16 +17,23 @@ const runWhenIdle = (callback: () => void, fallbackDelay: number) => {
   window.setTimeout(callback, fallbackDelay);
 };
 
-const shouldAvoidBackgroundPreload = () => {
-  if (window.matchMedia('(max-width: 768px), (pointer: coarse)').matches) return true;
+const isMobileDevice = () =>
+  window.matchMedia('(max-width: 768px), (pointer: coarse)').matches;
 
-  const connection = (navigator as Navigator & {
+const shouldAvoidBackgroundPreload = (mobile: boolean) => {
+  const nav = navigator as Navigator & {
     connection?: { saveData?: boolean; effectiveType?: string };
-  }).connection;
+    deviceMemory?: number;
+  };
+  const connection = nav.connection;
+  if (connection?.saveData) return true;
+  if (connection?.effectiveType === 'slow-2g' || connection?.effectiveType === '2g') return true;
 
-  if (!connection) return false;
-  if (connection.saveData) return true;
-  return connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g';
+  // Evita competir por CPU, memória e rede em aparelhos modestos.
+  if (mobile && connection?.effectiveType === '3g') return true;
+  if (mobile && typeof nav.deviceMemory === 'number' && nav.deviceMemory <= 2) return true;
+
+  return false;
 };
 
 const warmPrimaryViews = () => {
@@ -48,12 +55,43 @@ const warmSecondaryViews = () => {
   ]);
 };
 
+let mobileWarmupScheduled = false;
+
+/**
+ * Chamado pelo App somente após sessão autenticada e snapshot disponível.
+ * As importações são sequenciais, para não disputar o primeiro carregamento
+ * nem baixar simultaneamente todas as telas em um celular.
+ */
+export function scheduleMobileNavigationWarmup(): void {
+  if (mobileWarmupScheduled || !isMobileDevice() || shouldAvoidBackgroundPreload(true)) return;
+  mobileWarmupScheduled = true;
+
+  window.setTimeout(() => runWhenIdle(() => {
+    void (async () => {
+      const loaders = [
+        () => import('./views/PeopleListView'),
+        () => import('./views/AttendanceView'),
+        () => import('./views/RadarView'),
+        () => import('./views/DashboardView'),
+        () => import('./views/ReportsView'),
+      ];
+      for (const load of loaders) {
+        if (document.hidden || !navigator.onLine) return;
+        try {
+          await load();
+        } catch (error) {
+          console.warn('[Mobile navigation] Pré-carregamento adiado:', error);
+          return;
+        }
+        await new Promise<void>((resolve) => window.setTimeout(resolve, 600));
+      }
+    })();
+  }, 1000), 1200);
+}
+
+// Mantém o pré-aquecimento original para desktop.
 window.addEventListener('load', () => {
-  if (shouldAvoidBackgroundPreload()) return;
-
-  // Primeiro deixa a tela inicial terminar de abrir e estabilizar.
+  if (isMobileDevice() || shouldAvoidBackgroundPreload(false)) return;
   window.setTimeout(() => runWhenIdle(warmPrimaryViews, 1200), 1800);
-
-  // As telas menos frequentes entram depois, sem disputar a abertura do app.
   window.setTimeout(() => runWhenIdle(warmSecondaryViews, 1800), 6000);
 }, { once: true });

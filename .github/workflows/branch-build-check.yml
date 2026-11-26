@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - perf/mobile-lazy-members-v823
+      - perf/mobile-deep-audit-20261123
   workflow_dispatch:
 
 jobs:
@@ -15,10 +16,18 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
           cache-dependency-path: package.json
       - name: Install dependencies
         run: npm install
-      - name: Build
+      - name: ESLint (baseline diagnostic)
+        continue-on-error: true
+        run: npm run lint
+      - name: Focused mobile performance tests
+        run: npx vitest run tests/mobileDeepPerf827.test.ts tests/radarAttendanceIndex.test.ts tests/dashboardReportsPerformance.test.ts --config vitest.config.ts
+      - name: Full test suite (baseline diagnostic)
+        continue-on-error: true
+        run: npm test
+      - name: Build / TypeScript
         run: npm run build
