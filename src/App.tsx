@@ -3,7 +3,7 @@
 // Force rebuild hash to bypass cache
 console.log("CACHE_BUSTER_V21_V78_SYNC_CONSISTENCY");
 import { getLocalDateISO } from './utils/localDate';
-import { lazy, Suspense, useState, useEffect, useRef } from 'react';
+import { lazy, Suspense, useState, useEffect, useRef, useMemo } from 'react';
 import { initializeDBAsync, saveDB, getWeekKey, createWeeklyMissionIfMissing, isYouthOrTeenDepartment, personInDepartment, generateUUID, getUserAllowedDepartments, canUserSelectDepartment, getDepartmentTheme, getVisibleDepartments, hashPassword, getSyncQueue, acknowledgeSyncQueue, markSyncQueueInFlight, rebaseSyncQueue } from './services/db';
 import { apiGetData, apiGetVersionInfo, apiPullChanges, apiPushPatches, apiLogout, apiSubscribeToChanges, apiSwitchDepartment } from './services/api';
 import { persistPreUpdateCheckpoint } from './services/versionSync';
@@ -26,6 +26,8 @@ import type { AppDatabase, UserSession, Person, AttendanceRecord, MonthlyGoal, P
 import { LoginView } from './views/LoginView';
 import { InicioView } from './views/InicioView';
 import { ChatWidget } from './components/ChatWidget';
+import { calculateRadarBadgeCount } from './utils/radarBadgeCount';
+import { scheduleMobileNavigationWarmup } from './preloadAppViews';
 
 const DashboardView = lazy(() => import('./views/DashboardView').then(module => ({ default: module.DashboardView })));
 const DepartmentsView = lazy(() => import('./views/DepartmentsView').then(module => ({ default: module.DepartmentsView })));
@@ -232,6 +234,13 @@ export default function App() {
   const activeSession = session && emulatedRole
     ? { ...session, role: emulatedRole as any, department: emulatedDept }
     : session;
+
+  // Calcula o badge uma vez por mudança real de pessoas/chamadas/permissões.
+  // A troca de tela não percorre mais todo o histórico de presenças.
+  const radarCount = useMemo(
+    () => calculateRadarBadgeCount(db, activeSession),
+    [db?.people, db?.attendances, activeSession?.role, activeSession?.department],
+  );
 
   // Wrapper limpo: salva local + envia ao servidor
   const dbRef = useRef(db);
@@ -784,6 +793,13 @@ export default function App() {
     try { return localStorage.getItem('pm_last_synced_at') || ''; } catch { return ''; }
   });
   const [hasInitialServerSnapshot, setHasInitialServerSnapshot] = useState<boolean>(() => isCurrentDataGenerationActive());
+
+  // Pré-carrega as telas mais usadas somente depois que a sessão e os dados
+  // oficiais estiverem prontos. Em conexões lentas/baixo consumo, não pré-carrega.
+  useEffect(() => {
+    if (!session?.sessionToken || !versionSyncReady || !hasInitialServerSnapshot || !isOnline) return;
+    scheduleMobileNavigationWarmup();
+  }, [session?.sessionToken, versionSyncReady, hasInitialServerSnapshot, isOnline]);
   const serverRevisionRef = useRef(serverRevision);
   const initialSnapshotLoadedRef = useRef(isCurrentDataGenerationActive());
   useEffect(() => { serverRevisionRef.current = serverRevision; }, [serverRevision]);
@@ -2020,34 +2036,6 @@ export default function App() {
     if (getSyncQueue().length === 0) alert('Pendências confirmadas. O snapshot oficial do Supabase foi aplicado.');
   };
 
-  // Calculate Radar badge alert count
-  const getRadarCount = () => {
-    if (!activeSession) return 0;
-    const isRestricted = activeSession.role === 'Líder' || activeSession.role === 'Multiplicador';
-    const deptFilter = isRestricted ? activeSession.department : undefined;
-
-    const absentees = db.people.filter(p => {
-      const isAtivo = p.status === 'Ativo' && !p.deleted;
-      const matchesDept = !deptFilter || personInDepartment(p, deptFilter);
-      if (!isAtivo || !matchesDept) return false;
-
-      // Count absences
-      const deptAttendances = db.attendances.filter(a => a.department === p.department);
-      const sorted = [...deptAttendances].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      
-      let count = 0;
-      for (const rec of sorted) {
-        if (rec.date < (p.startDate || '2026-01-01')) break;
-        if (rec.presentIds.includes(p.id)) break;
-        count++;
-      }
-      return count >= 1; // 1 or more absences triggers yellow/orange/red
-    });
-
-    return absentees.length;
-  };
-
-  const radarCount = getRadarCount();
 
   const renderView = () => {
     // If no session, always show LoginView
