@@ -1,7 +1,7 @@
-export const APP_VERSION = 'v8.3.1';
+export const APP_VERSION = 'v8.4.0';
 // A versão exibida tem apenas dois componentes; a revisão interna permite
-// que o PWA reconheça atualizações mesmo após uma release v8.3.0.
-export const APP_VERSION_LABEL = 'VERSÃO 8.3';
+// que o PWA reconheça atualizações mesmo após a release v8.3.
+export const APP_VERSION_LABEL = 'VERSÃO 8.4';
 export function formatAppVersionLabel(version: string = APP_VERSION): string {
   return `VERSÃO ${version.replace(/^v/i, '').split('.').slice(0, 2).join('.')}`;
 }
