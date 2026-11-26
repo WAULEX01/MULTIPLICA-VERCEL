@@ -15,7 +15,7 @@ import App from './App.tsx'
 (function applySavedTheme() {
   try {
     const saved = localStorage.getItem('theme');
-    if (saved === 'dark') {
+    if (saved !== 'light') {
       document.documentElement.setAttribute('data-theme', 'dark');
     } else {
       document.documentElement.removeAttribute('data-theme');
