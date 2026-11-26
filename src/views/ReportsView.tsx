@@ -5,6 +5,7 @@ import { flushSync } from 'react-dom';
 import type { AppDatabase, UserSession } from '../services/db';
 import { personInDepartment, canUserSelectDepartment, getUserAllowedDepartments, getDepartmentTheme, compareByName } from '../services/db';
 import { getCachedRadarAttendanceIndex } from '../utils/radarAttendanceIndex';
+import { buildReportAttendanceSummary } from '../utils/reportAttendanceSummary';
 import { FileSpreadsheet, Download, Eye, Award, Printer, MessageSquare, AlertTriangle } from 'lucide-react';
 import { getDynamicHumanMessage, getNeutralWhatsAppMessage } from '../services/genderMsg';
 
@@ -32,28 +33,10 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ db, session }) => {
   // Índice único por snapshot: uma chamada é lida uma vez, independentemente
   // da quantidade de membros. Mantém a comparação exata de departamento usada
   // antes para "Presenças" e "Reuniões"; faltas seguem a regra pastoral do Radar.
-  const attendanceTotals = useMemo(() => {
-    const meetingsByDept = new Map<string, number>();
-    const presenceByDept = new Map<string, Map<string, number>>();
-    const allPresence = new Map<string, number>();
-    let allMeetings = 0;
-    for (const attendance of db.attendances) {
-      if (attendance.deleted) continue;
-      allMeetings += 1;
-      meetingsByDept.set(attendance.department, (meetingsByDept.get(attendance.department) || 0) + 1);
-      let departmentCounts = presenceByDept.get(attendance.department);
-      if (!departmentCounts) {
-        departmentCounts = new Map();
-        presenceByDept.set(attendance.department, departmentCounts);
-      }
-      // O cadastro conta uma presença por chamada, mesmo se o ID estiver repetido.
-      for (const id of new Set(attendance.presentIds || [])) {
-        departmentCounts.set(id, (departmentCounts.get(id) || 0) + 1);
-        allPresence.set(id, (allPresence.get(id) || 0) + 1);
-      }
-    }
-    return { meetingsByDept, presenceByDept, allPresence, allMeetings };
-  }, [db.attendances]);
+  const attendanceTotals = useMemo(
+    () => buildReportAttendanceSummary(db.attendances),
+    [db.attendances],
+  );
 
   const today = getLocalDateISO();
   const attendanceIndex = useMemo(
