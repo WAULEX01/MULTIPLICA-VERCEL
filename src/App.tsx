@@ -239,7 +239,7 @@ export default function App() {
   // A troca de tela não percorre mais todo o histórico de presenças.
   const radarCount = useMemo(
     () => calculateRadarBadgeCount(db, activeSession),
-    [db?.people, db?.attendances, activeSession?.role, activeSession?.department],
+    [db, activeSession?.role, activeSession?.department],
   );
 
   // Wrapper limpo: salva local + envia ao servidor
