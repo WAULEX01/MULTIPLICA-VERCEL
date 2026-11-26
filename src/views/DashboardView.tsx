@@ -468,6 +468,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
 
 
   // 1. Growth chart (total members registered monthly - dynamic last 6 months)
+  const { growthChartMax, growthData } = useMemo(() => {
   const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
   
   // Generate last 6 months dynamically (e.g. ['2026-02', '2026-03', ..., '2026-07'])
@@ -521,7 +522,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
     ],
   };
 
+  return { growthChartMax, growthData };
+  }, [db.people, deptFilter, localToday]);
+
   // 2. Attendance history chart (last N weeks, summing all departments per date)
+  const { groupedRecords, attendanceChartData } = useMemo(() => {
   const allAttendances = db.attendances.filter(a => !a.deleted && (!deptFilter || isSameDepartment(a.department, deptFilter)));
   
   // Group attendances by date+type and sum unique presentIds across departments
@@ -563,7 +568,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
     ],
   };
 
-  const growthDatalabelsPlugin = {
+  return { groupedRecords, attendanceChartData };
+  }, [db.attendances, deptFilter, attendanceWeeks, localToday]);
+
+  const growthDatalabelsPlugin = useMemo(() => ({
     id: 'growthDatalabels',
     afterDatasetsDraw(chart: any) {
       const { ctx, data } = chart;
@@ -580,11 +588,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
           ctx.fillText(value, point.x, point.y - 8);
         }
       });
-      ctx.restore();
-    }
-  };
+      ctx.re  }), []);
 
-  const lineChartOptions = {
+  const lineChartOptions = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -612,11 +618,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
         ticks: { color: '#aaa6b8', font: { family: 'IBM Plex Mono', size: 11 } },
         min: 0,
         max: growthChartMax,
-      },
-    },
-  };
+   }), [growthChartMax]);
 
-  const barChartOptions = {
+  const barChartOptions = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -644,9 +648,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
         ticks: { color: '#aaa6b8', font: { family: 'IBM Plex Mono', size: 11 } },
         min: 0,
         max: Math.max(...groupedRecords.map(r => r.presentIds.size), 10) * 1.2,
-      },
-    },
-  };
+   }), [groupedRecords]);
+
+  const growthDatalabelsPlugins = useMemo(() => [growthDatalabelsPlugin], [growthDatalabelsPlugin]);
 
   return (
     <div className="page-container animate-fade">
@@ -813,7 +817,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ db, session, onNav
             <div className="flex-1 relative">
               {chartsReady ? (
                 <Suspense fallback={<div className="flex items-center justify-center h-full text-muted">Carregando gráfico…</div>}>
-                  <DashboardChart kind="line" data={growthData} options={lineChartOptions} plugins={[growthDatalabelsPlugin]} />
+                  <DashboardChart kind="line" data={growthData} options={lineChartOptions} plugins={growthDatalabelsPlugins} />
                 </Suspense>
               ) : (
                 <div className="flex items-center justify-center h-full text-muted">Preparando gráfico…</div>
