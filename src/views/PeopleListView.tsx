@@ -420,15 +420,17 @@ export const PeopleListView: React.FC<PeopleListViewProps> = ({ db, session, onU
     ? db.people.filter(p => p.deleted).length
     : db.people.filter(p => p.deleted && (!session.department || personInDepartment(p, session.department))).length;
 
-  // Memoized absences map (perf: evita recalcular O(N×M) a cada tecla de busca)
+  // Calcula o indicador de faltas somente para os cartões visíveis.
+  // A busca/filtros continuam considerando todo o cadastro; carregar mais
+  // expande o cálculo junto com os cartões, sem custo para membros ocultos.
   const absencesMap = useMemo(() => {
     const map = new Map<string, number>();
-    for (const p of db.people) {
+    for (const p of visiblePeople) {
       if (p.deleted) continue;
       map.set(p.id, calculateConsecutiveAbsences(p.id, p.department, p.startDate || '2026-01-01', db.attendances));
     }
     return map;
-  }, [db.people, db.attendances]);
+  }, [visiblePeople, db.attendances]);
 
   const handleChangeStatus = (id: string, newStatus: 'Ativo' | 'Visitante' | 'Arquivado') => {
     const updated = db.people.map(p =>
