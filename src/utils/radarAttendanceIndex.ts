@@ -122,3 +122,24 @@ export function createRadarAttendanceIndex(
     },
   };
 }
+
+// Reutiliza o mesmo índice quando o usuário sai do Radar e retorna.
+// WeakMap libera os dados antigos quando não houver mais referências ao
+// array de chamadas; a data local invalida o cache na virada do dia.
+// Qualquer novo snapshot com outro array cria um índice atualizado.
+type CachedRadarIndex = ReturnType<typeof createRadarAttendanceIndex>;
+const radarIndexCache = new WeakMap<
+  AttendanceRecord[],
+  { date: string; value: CachedRadarIndex }
+>();
+
+export function getCachedRadarAttendanceIndex(
+  attendances: AttendanceRecord[],
+  today: string,
+): CachedRadarIndex {
+  const cached = radarIndexCache.get(attendances);
+  if (cached?.date === today) return cached.value;
+  const value = createRadarAttendanceIndex(attendances, today);
+  radarIndexCache.set(attendances, { date: today, value });
+  return value;
+}
