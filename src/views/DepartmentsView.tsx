@@ -114,7 +114,7 @@ export const DepartmentsView: React.FC<DepartmentsViewProps> = ({ db, session, o
         )}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+      <div className="aurora-department-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
         {filteredDepts.map(dept => {
           // Calculate statistics
           const activePeople = (db.people || []).filter(p => p && personInDepartment(p, dept.name) && p.status === 'Ativo');
@@ -132,7 +132,7 @@ export const DepartmentsView: React.FC<DepartmentsViewProps> = ({ db, session, o
           return (
             <div 
               key={dept.id} 
-              className="glass-card" 
+              className="glass-card aurora-department-card" 
               style={{ 
                 borderLeft: isUserDept 
                   ? '5px solid var(--color-secondary)' 
