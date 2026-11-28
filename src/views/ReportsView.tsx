@@ -415,14 +415,14 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ db, session }) => {
       </div>
 
       {/* Relatório Específico REDENÇÃO */}
-      <div className="glass-card" style={{ marginTop: '2rem' }}>
+      <div className="glass-card ebd-reports-special" style={{ marginTop: '2rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <h3 style={{ fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-primary)' }}>
               <Award size={20} style={{ color: 'var(--power-orange)' }} />
               Relatório de Frequência - REDENÇÃO DA CRIANÇA E DO ADOLESCENTE
             </h3>
-            <p className="subtitle">Acompanhamento específico do departamento com 97 membros</p>
+            <p className="subtitle">Acompanhamento específico com {portalRedemptionSummary.people} pessoas cadastradas</p>
           </div>
 
           <button
@@ -442,7 +442,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ db, session }) => {
         </div>
 
         {showRedemptionReport && (
-          <div style={{ overflowX: 'auto', maxHeight: '500px', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <div className="ebd-reports-table-scroll" style={{ overflowX: 'auto', maxHeight: '500px', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
             {(() => {
               const redemptionPeople = db.people.filter(
                 p => !p.deleted && p.department === 'REDENÇÃO DA CRIANÇA E DO ADOLESCENTE'
@@ -453,7 +453,8 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ db, session }) => {
               ).sort((a, b) => a.date.localeCompare(b.date));
 
               return redemptionPeople.length > 0 ? (
-                <table className="custom-table" style={{ fontSize: '0.85rem', minWidth: '700px' }}>
+                <table className="custom-table ebd-reports-table" style={{ fontSize: '0.85rem', minWidth: '700px' }}>
+                  <caption className="ebd-visually-hidden">Frequência de participantes do departamento Redenção</caption>
                   <thead>
                     <tr>
                       <th>Nome</th>
@@ -528,17 +529,17 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ db, session }) => {
             <Award size={48} style={{ color: 'var(--power-orange)', marginBottom: '1rem' }} />
             <h4 style={{ marginBottom: '0.5rem', color: 'var(--color-text-main)' }}>Relatório de Frequência REDENÇÃO</h4>
             <p style={{ color: 'var(--power-muted)', fontSize: '0.9rem', marginBottom: '1rem' }}>
-              Clique no botão acima para visualizar o relatório completo com as 4 chamadas registradas (13/06, 27/06, 02/08, 15/08) e a frequência dos 97 membros.
+              Abra o relatório para consultar o histórico de chamadas e a frequência a partir dos registros existentes.
             </p>
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap', fontSize: '0.85rem' }}>
               <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
-                <strong style={{ color: '#10b981' }}>97 Membros</strong>
+                <strong style={{ color: '#10b981' }}>{portalRedemptionSummary.people} Pessoas</strong>
               </div>
               <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
-                <strong style={{ color: '#f59e0b' }}>4 Chamadas</strong>
+                <strong style={{ color: '#f59e0b' }}>{portalRedemptionSummary.calls} Chamadas</strong>
               </div>
               <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
-                <strong style={{ color: '#3b82f6' }}>Líder: Reginaldo</strong>
+                <strong style={{ color: '#3b82f6' }}>Liderança: {portalRedemptionSummary.leaders || 'Não cadastrada'}</strong>
               </div>
             </div>
           </div>
@@ -546,7 +547,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ db, session }) => {
       </div>
 
       {/* Relatório Dinâmico de Faltosos (Novo Recurso) */}
-      <div className="glass-card" style={{ marginTop: '2rem' }}>
+      <div className="glass-card ebd-reports-absentees" style={{ marginTop: '2rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <h3 style={{ fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-primary)' }}>
@@ -611,9 +612,10 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ db, session }) => {
           </div>
         </div>
 
-        <div style={{ overflowX: 'auto', maxHeight: '300px', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        <div className="ebd-reports-table-scroll" style={{ overflowX: 'auto', maxHeight: '300px', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
           {filteredAbsentees.length > 0 ? (
-            <table className="custom-table" style={{ fontSize: '0.85rem', minWidth: '520px' }}>
+            <table className="custom-table ebd-reports-table" style={{ fontSize: '0.85rem', minWidth: '520px' }}>
+              <caption className="ebd-visually-hidden">Relatório de pessoas com ausências consecutivas</caption>
               <thead>
                 <tr>
                   <th>Nome</th>
