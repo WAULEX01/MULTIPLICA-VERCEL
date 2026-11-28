@@ -211,122 +211,171 @@ export const InicioView: React.FC<InicioViewProps> = ({ db, session, onNavigate,
     }
   };
 
+  const portalData = useMemo(() => {
+    const department = session.department;
+    const visibleAttendance = (db.attendances || [])
+      .filter(a => !a.deleted && (!department || isSameDepartment(a.department, department)))
+      .sort((a, b) => b.date.localeCompare(a.date));
+    const latest = visibleAttendance[0] || null;
+    const members = (db.people || []).filter(p =>
+      !p.deleted && p.status === 'Ativo' && (!department || personInDepartment(p, department))
+    );
+    const visitorCount = (db.people || []).filter(p =>
+      !p.deleted && p.status === 'Visitante' && (!department || personInDepartment(p, department))
+    ).length;
+    const recentAttendance = visibleAttendance.slice(0, 4).map(record => ({
+      id: record.id,
+      date: record.date,
+      type: record.type,
+      department: record.department,
+      count: (record.presentIds || []).length,
+    }));
+    return { latest, members, visitorCount, recentAttendance, totalCalls: visibleAttendance.length };
+  }, [db, session.department]);
+
+  const firstName = session.name.split(' ')[0] || session.name;
+  const primaryButtons = allowedButtons.filter(btn =>
+    ['presenca', 'membros', 'dashboard', 'radar'].includes(btn.id)
+  );
+  const secondaryButtons = allowedButtons.filter(btn =>
+    !['presenca', 'membros', 'dashboard', 'radar'].includes(btn.id)
+  );
+
   return (
-    <div className="page-container power-home">
-      <section className="power-home-hero section-gap" aria-labelledby="inicio-title">
-        <div className="power-eyebrow">IEAD JOTA / PAINEL MINISTERIAL</div>
-        <div className="view-header power-home-heading">
-          <div className="view-header-main">
-            <div className="avatar avatar-lg power-avatar" aria-hidden="true">
-              {getInitials(session.name)}
-            </div>
-            <div>
-              <h1 id="inicio-title" className="page-title">Olá, {session.name}!</h1>
-              <div className="power-profile-line">
-                <span>{session.role}</span>
-                {session.department && <span className="badge badge-primary">{session.department}</span>}
-              </div>
-            </div>
-          </div>
-          <div className="power-header-actions">
-            <button className="btn btn-secondary btn-sm" onClick={() => onNavigate('tutorial')}>
-              <BookOpen size={16} aria-hidden="true" />
-              <span>Abrir tutorial</span>
-            </button>
-            {installPrompt && !isInstalled && (
-              <button className="btn btn-primary btn-sm" onClick={handleInstallApp}>
-                <Download size={16} aria-hidden="true" />
-                <span>Baixar como app</span>
-              </button>
-            )}
+    <main className="page-container power-home ebd-portal-home">
+      <header className="ebd-portal-welcome" aria-labelledby="inicio-title">
+        <div className="ebd-portal-welcome-main">
+          <span className="ebd-portal-eyebrow">IEAD-JOTA · CENTRAL MINISTERIAL</span>
+          <h1 id="inicio-title">A paz do Senhor, {firstName}!</h1>
+          <p>Bem-vindo ao seu espaço de acompanhamento. Tudo que importa para cuidar das vidas, em um só lugar.</p>
+          <div className="ebd-portal-persona">
+            <span className="ebd-portal-avatar" aria-hidden="true">{getInitials(session.name)}</span>
+            <span><strong>{session.role}</strong>{session.department ? ` · ${session.department}` : ' · Visão geral'}</span>
           </div>
         </div>
+        <div className="ebd-portal-welcome-actions">
+          {primaryButtons.some(btn => btn.id === 'presenca') && (
+            <button className="ebd-portal-hero-action" onClick={() => onNavigate('presenca')}>
+              <ClipboardCheck size={18} aria-hidden="true" /> Fazer chamada
+            </button>
+          )}
+          <button className="ebd-portal-hero-secondary" onClick={() => onNavigate('tutorial')}>
+            <BookOpen size={17} aria-hidden="true" /> Orientações
+          </button>
+          {installPrompt && !isInstalled && (
+            <button className="ebd-portal-hero-secondary" onClick={handleInstallApp}>
+              <Download size={17} aria-hidden="true" /> Instalar aplicativo
+            </button>
+          )}
+        </div>
+      </header>
 
-        <div className="power-overview-grid">
-          <div className="power-stats-grid" aria-label="Resumo do sistema">
-            <article className="power-stat">
-              <span className="stat-label">Membros ativos</span>
-              <strong className="stat-value">{stats.totalMembers}</strong>
-            </article>
-            {session.role === 'Pastor Admin' && (
-              <>
-                <article className="power-stat">
-                  <span className="stat-label">Arquivados</span>
-                  <strong className="stat-value">{stats.archivedMembers}</strong>
-                </article>
-                <article className="power-stat">
-                  <span className="stat-label">Excluídos / Lixeira</span>
-                  <strong className="stat-value">{stats.deletedMembers}</strong>
-                </article>
-              </>
-            )}
-            {!isRestricted && (
-              <article className="power-stat">
-                <span className="stat-label">Departamentos</span>
-                <strong className="stat-value">{stats.departmentsCount}</strong>
-              </article>
-            )}
-            <article className="power-stat">
-              <span className="stat-label">Aniversários hoje</span>
-              <strong className="stat-value">{stats.todayBirthdays}</strong>
-            </article>
-          </div>
+      <section className="ebd-portal-stats" aria-label="Resumo do ministério">
+        <article className="ebd-portal-metric">
+          <div className="ebd-portal-metric-icon violet"><Users size={22} aria-hidden="true" /></div>
+          <div><span>Membros ativos</span><strong>{stats.totalMembers}</strong><small>Cadastros em acompanhamento</small></div>
+        </article>
+        <article className="ebd-portal-metric">
+          <div className="ebd-portal-metric-icon teal"><ClipboardCheck size={22} aria-hidden="true" /></div>
+          <div><span>Última chamada</span><strong>{portalData.latest ? (portalData.latest.presentIds || []).length : '—'}</strong><small>{portalData.latest ? `Presentes · ${portalData.latest.date.split('-').reverse().join('/')}` : 'Nenhuma chamada encontrada'}</small></div>
+        </article>
+        <article className="ebd-portal-metric">
+          <div className="ebd-portal-metric-icon orange"><ChartNoAxesCombined size={22} aria-hidden="true" /></div>
+          <div><span>Chamadas registradas</span><strong>{portalData.totalCalls}</strong><small>Histórico disponível</small></div>
+        </article>
+        <article className="ebd-portal-metric">
+          <div className="ebd-portal-metric-icon magenta"><Cake size={22} aria-hidden="true" /></div>
+          <div><span>Aniversariantes hoje</span><strong>{stats.todayBirthdays}</strong><small>Celebrar e acolher</small></div>
+        </article>
+        {session.role === 'Pastor Admin' && (
+          <article className="ebd-portal-metric ebd-portal-metric-archive">
+            <div className="ebd-portal-metric-icon violet"><Settings size={20} aria-hidden="true" /></div>
+            <div><span>Arquivados / Excluídos</span><strong>{stats.archivedMembers} / {stats.deletedMembers}</strong><small>Visível apenas ao administrador</small></div>
+          </article>
+        )}
+      </section>
 
-          <article className="power-next-event">
-            <span className="power-kicker">PRÓXIMO EVENTO</span>
+      <div className="ebd-portal-columns">
+        <div className="ebd-portal-main-column">
+          <section className="ebd-portal-section" aria-labelledby="ebd-actions-title">
+            <div className="ebd-portal-section-head">
+              <div><span className="ebd-portal-eyebrow">AÇÃO RÁPIDA</span><h2 id="ebd-actions-title">O que você precisa fazer?</h2></div>
+            </div>
+            <div className="ebd-portal-primary-actions">
+              {primaryButtons.map(btn => (
+                <button key={btn.id} className="ebd-portal-action" onClick={() => onNavigate(btn.id)}>
+                  <span className="ebd-portal-action-symbol">{React.createElement(btn.icon, { size: 24, 'aria-hidden': true })}</span>
+                  <strong>{btn.id === 'presenca' ? 'Chamadas' : btn.label}</strong>
+                  <small>{btn.subtitle}</small>
+                  <span className="ebd-portal-action-chevron" aria-hidden="true">→</span>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="ebd-portal-section" aria-labelledby="ebd-calls-title">
+            <div className="ebd-portal-section-head">
+              <div><span className="ebd-portal-eyebrow">ACOMPANHAMENTO</span><h2 id="ebd-calls-title">Chamadas recentes</h2></div>
+              {allowedButtons.some(btn => btn.id === 'presenca') && (
+                <button className="ebd-portal-inline-action" onClick={() => onNavigate('presenca')}>Ver chamadas →</button>
+              )}
+            </div>
+            {portalData.recentAttendance.length === 0 ? (
+              <p className="ebd-portal-empty">Ainda não existem chamadas disponíveis para seu departamento.</p>
+            ) : (
+              <div className="ebd-portal-calls">
+                {portalData.recentAttendance.map(item => (
+                  <div className="ebd-portal-call" key={item.id}>
+                    <span className="ebd-portal-call-icon"><ClipboardCheck size={18} aria-hidden="true" /></span>
+                    <div className="ebd-portal-call-main">
+                      <strong>{item.type || 'Chamada'}</strong>
+                      <small>{item.department || 'Geral'} · {item.date.split('-').reverse().join('/')}</small>
+                    </div>
+                    <strong className="ebd-portal-call-count">{item.count} <small>presentes</small></strong>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+
+        <aside className="ebd-portal-side-column" aria-label="Programação e atalhos">
+          <section className="ebd-portal-section ebd-portal-next" aria-labelledby="ebd-next-title">
+            <span className="ebd-portal-eyebrow">PROGRAMAÇÃO</span>
+            <h2 id="ebd-next-title">Próximo evento</h2>
             {stats.nextEvent ? (
               <>
-                <strong>{stats.nextEvent.title}</strong>
-                <time dateTime={stats.nextEvent.date}>
-                  {new Date(stats.nextEvent.date + 'T12:00:00').toLocaleDateString('pt-BR', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric',
-                  })}
-                </time>
+                <strong className="ebd-portal-event-title">{stats.nextEvent.title}</strong>
+                <time dateTime={stats.nextEvent.date}>{stats.nextEvent.date.split('-').reverse().join('/')}</time>
+                {allowedButtons.some(btn => btn.id === 'agenda') && (
+                  <button className="ebd-portal-inline-action" onClick={() => onNavigate('agenda')}>Abrir agenda →</button>
+                )}
               </>
             ) : (
-              <span className="power-empty-copy">Nenhum evento futuro cadastrado.</span>
+              <p className="ebd-portal-empty">Nenhum evento futuro cadastrado.</p>
             )}
-          </article>
-        </div>
-      </section>
-
-      <section className="power-message section-gap" aria-labelledby="verse-title">
-        <div className="power-message-index" aria-hidden="true">01</div>
-        <div className="power-message-copy">
-          <span className="power-kicker" id="verse-title">VERSÍCULO DO DIA</span>
-          <blockquote>“{verse.text}”</blockquote>
-          <cite>{verse.ref}</cite>
-        </div>
-        <div className="power-ministry-note">
-          <strong>{greeting.text}</strong>
-          <p>{greeting.subtext}</p>
-        </div>
-      </section>
-
-      <section className="section-gap" aria-labelledby="atalhos-title">
-        <div className="power-section-heading">
-          <div>
-            <span className="power-kicker">ACESSO RÁPIDO</span>
-            <h2 id="atalhos-title">Onde vamos trabalhar hoje?</h2>
-          </div>
-          <span className="power-section-count">{String(allowedButtons.length).padStart(2, '0')} áreas</span>
-        </div>
-        <div className="power-action-grid">
-          {allowedButtons.map((btn, index) => (
-            <button key={btn.id} onClick={() => onNavigate(btn.id)} className="power-action-card">
-              <span className="power-action-number">{String(index + 1).padStart(2, '0')}</span>
-              {React.createElement(btn.icon, { size: 25, strokeWidth: 1.7, 'aria-hidden': true })}
-              <span className="power-action-copy">
-                <strong>{btn.label}</strong>
-                <small>{btn.subtitle}</small>
-              </span>
-              <span className="power-action-arrow" aria-hidden="true">↗</span>
-            </button>
-          ))}
-        </div>
-      </section>
-    </div>
+          </section>
+          <section className="ebd-portal-section" aria-labelledby="ebd-other-title">
+            <div className="ebd-portal-section-head">
+              <div><span className="ebd-portal-eyebrow">SERVIÇOS</span><h2 id="ebd-other-title">Outras áreas</h2></div>
+            </div>
+            <div className="ebd-portal-service-list">
+              {secondaryButtons.map(btn => (
+                <button className="ebd-portal-service" key={btn.id} onClick={() => onNavigate(btn.id)}>
+                  {React.createElement(btn.icon, { size: 19, 'aria-hidden': true })}
+                  <span>{btn.label}</span><span aria-hidden="true">›</span>
+                </button>
+              ))}
+            </div>
+          </section>
+          <section className="ebd-portal-verse" aria-label="Mensagem do dia">
+            <span className="ebd-portal-eyebrow">PALAVRA PARA HOJE</span>
+            <blockquote>“{verse.text}”</blockquote>
+            <cite>{verse.ref}</cite>
+            <strong>{greeting.text}</strong>
+          </section>
+        </aside>
+      </div>
+    </main>
   );
 };
