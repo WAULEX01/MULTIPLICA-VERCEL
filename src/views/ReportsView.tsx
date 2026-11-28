@@ -79,6 +79,34 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ db, session }) => {
   }).sort((a, b) => compareByName(a, b)),
   [scopedPeople, selectedDept, attendanceTotals, attendanceIndex]);
 
+  const portalReportOverview = useMemo(() => {
+    const noConsecutiveAbsences = reportData.filter(row => row.consecutiveAbsences === 0).length;
+    const oneWeek = reportData.filter(row => row.consecutiveAbsences === 1).length;
+    const twoWeeks = reportData.filter(row => row.consecutiveAbsences === 2).length;
+    const threePlus = reportData.filter(row => row.consecutiveAbsences >= 3).length;
+    const noPhone = reportData.filter(row => !row.phone?.trim()).length;
+    return {
+      total: reportData.length,
+      threePlus,
+      withAbsences: oneWeek + twoWeeks + threePlus,
+      noPhone,
+      distribution: [
+        { label: 'Sem falta consecutiva', count: noConsecutiveAbsences, tone: 'green' },
+        { label: '1 semana', count: oneWeek, tone: 'gold' },
+        { label: '2 semanas', count: twoWeeks, tone: 'orange' },
+        { label: '3 ou mais semanas', count: threePlus, tone: 'red' },
+      ],
+    };
+  }, [reportData]);
+
+  const portalRedemptionSummary = useMemo(() => {
+    const department = 'REDENÇÃO DA CRIANÇA E DO ADOLESCENTE';
+    const people = db.people.filter(p => !p.deleted && p.department === department);
+    const calls = db.attendances.filter(a => !a.deleted && a.department === department);
+    const leaders = people.filter(p => p.role === 'Líder').map(p => p.name).join(', ');
+    return { people: people.length, calls: calls.length, leaders };
+  }, [db.people, db.attendances]);
+
   // CSV sempre inclui todos os membros. Só a tabela de pré-visualização
   // renderiza progressivamente para evitar centenas de <tr> no Android.
   const visibleReportData = useMemo(
@@ -195,17 +223,54 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ db, session }) => {
   };
 
   return (
-    <div className="animate-fade">
-      <div className="view-header">
+    <div className="animate-fade ebd-reports-page">
+      <div className="view-header ebd-reports-heading">
         <div>
-          <h2>Relatórios & Planilhas</h2>
-          <p className="subtitle">Consolidação de frequência de membros e ferramentas de exportação</p>
+          <span className="ebd-page-eyebrow">ANÁLISE E PRESTAÇÃO DE CONTAS</span>
+          <h2>Relatórios ministeriais</h2>
+          <p className="subtitle">Consulte indicadores, acompanhe a frequência e exporte dados conforme seu departamento.</p>
         </div>
       </div>
 
-      <div className="responsive-split split-14-06">
+      <section className="ebd-reports-overview" aria-label="Indicadores do relatório">
+        <article className="ebd-reports-metric">
+          <span>Pessoas no relatório</span><strong>{portalReportOverview.total}</strong>
+          <small>Escopo: {selectedDept === 'Todos' ? 'todos os departamentos' : selectedDept}</small>
+        </article>
+        <article className="ebd-reports-metric">
+          <span>Com ausências seguidas</span><strong>{portalReportOverview.withAbsences}</strong>
+          <small>Uma ou mais semanas</small>
+        </article>
+        <article className="ebd-reports-metric">
+          <span>Prioridade pastoral</span><strong>{portalReportOverview.threePlus}</strong>
+          <small>Três ou mais semanas</small>
+        </article>
+        <article className="ebd-reports-metric">
+          <span>Sem telefone informado</span><strong>{portalReportOverview.noPhone}</strong>
+          <small>Cadastros para conferir</small>
+        </article>
+      </section>
+
+      <section className="ebd-reports-distribution" aria-label="Distribuição de ausências consecutivas">
+        <div className="ebd-reports-distribution-heading">
+          <div><span className="ebd-page-eyebrow">LEITURA DOS DADOS</span><h3>Distribuição das ausências</h3></div>
+          <span>Base: {portalReportOverview.total} pessoas</span>
+        </div>
+        <div className="ebd-reports-bars">
+          {portalReportOverview.distribution.map(group => (
+            <div className="ebd-reports-bar-row" key={group.label}>
+              <div className="ebd-reports-bar-meta"><span>{group.label}</span><strong>{group.count}</strong></div>
+              <div className="ebd-reports-bar-track" role="img" aria-label={`${group.label}: ${group.count} pessoas`}>
+                <div className={`ebd-reports-bar-fill ${group.tone}`} style={{ width: `${portalReportOverview.total ? Math.round(100 * group.count / portalReportOverview.total) : 0}%` }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <div className="responsive-split split-14-06 ebd-reports-layout">
         {/* Visualização Prévia */}
-        <div className="glass-card">
+        <div className="glass-card ebd-reports-preview">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '1rem' }}>
             <h3 style={{ fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Eye size={18} style={{ color: 'var(--power-orange)' }} />
@@ -239,9 +304,11 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ db, session }) => {
             )}
           </div>
 
-          <div style={{ overflowX: 'auto', maxHeight: '350px', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <p className="ebd-reports-scroll-hint">No celular, deslize a tabela para os lados para visualizar todas as colunas.</p>
+          <div className="ebd-reports-table-scroll" style={{ overflowX: 'auto', maxHeight: '350px', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
             {reportData.length > 0 ? (
-              <table className="custom-table" style={{ fontSize: '0.85rem', minWidth: '580px' }}>
+              <table className="custom-table ebd-reports-table" style={{ fontSize: '0.85rem', minWidth: '580px' }}>
+                <caption className="ebd-visually-hidden">Relatório de presença e ausências dos membros selecionados</caption>
                 <thead>
                   <tr>
                     <th>Nome</th>
@@ -287,11 +354,11 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ db, session }) => {
         </div>
 
         {/* Informações de Exportação */}
-        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <div className="glass-card ebd-reports-export" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <div>
             <h3 style={{ fontSize: '1.1rem', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <FileSpreadsheet size={18} style={{ color: '#10b981' }} />
-              Exportar para Excel
+              Exportar dados (CSV)
             </h3>
             <p className="subtitle">Gere o arquivo CSV formatado</p>
           </div>
