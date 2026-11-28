@@ -104,3 +104,15 @@
 :root[data-theme="dark"] .ebd-portal-metric span,:root[data-theme="dark"] .ebd-portal-metric small,:root[data-theme="dark"] .ebd-portal-action small,:root[data-theme="dark"] .ebd-portal-call-main small{color:#c7bbd3}
 :root[data-theme="dark"] .ebd-portal-verse{background:#30244e;border-color:#544267}
 :root[data-theme="dark"] .ebd-portal-verse blockquote{color:#f0e4f7}
+
+
+/* Grouped navigation sheet — semantic sections without removing routes. */
+.ebd-more-groups{display:grid;gap:21px;padding:4px 0 12px}
+.ebd-more-group h3{margin:0 0 11px;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:#9867a5;font-weight:850}
+.ebd-more-group .mobile-more-grid{gap:10px}
+.ebd-more-group .mobile-more-item{border:1px solid #ead9f1!important;background:#fff!important;color:#5c3968!important;border-radius:15px!important;min-height:88px}
+.ebd-more-group .mobile-more-item.active{background:#f1e0f7!important;color:#6d237a!important;border-color:#cb9dd8!important}
+.ebd-more-group .mobile-more-icon{color:#762e83!important}
+@media(max-width:380px){.ebd-more-group .mobile-more-item{min-height:77px;padding:8px!important}}
+:root[data-theme="dark"] .ebd-more-group .mobile-more-item{background:#1a234b!important;color:#e8d9f0!important;border-color:#403458!important}
+:root[data-theme="dark"] .ebd-more-group .mobile-more-icon{color:#d4a4e5!important}
