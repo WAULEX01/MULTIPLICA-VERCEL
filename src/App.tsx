@@ -1953,16 +1953,16 @@ export default function App() {
   // Navigation Items
   const menuItems = [
     { id: 'inicio', label: 'Início', icon: <LayoutDashboard size={20} /> },
-    { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
-    { id: 'tutorial', label: 'Projeto & Tutorial', icon: <BookOpen size={20} /> },
-    { id: 'agenda', label: 'Agenda', icon: <Calendar size={20} /> },
+    { id: 'dashboard', label: 'Painel geral', icon: <LayoutDashboard size={20} /> },
     { id: 'membros', label: 'Membros', icon: <Users size={20} /> },
     { id: 'presenca', label: 'Chamadas', icon: <Calendar size={20} /> },
-    { id: 'aniversariantes', label: 'Aniversariantes', icon: <Cake size={20} /> },
-    { id: 'radar', label: 'Radar Inteligente', icon: <AlertTriangle size={20} />, badge: true },
+    { id: 'radar', label: 'Radar pastoral', icon: <AlertTriangle size={20} />, badge: true },
     { id: 'departamentos', label: 'Departamentos', icon: <Network size={20} /> },
-    { id: 'missoes-especiais', label: 'Missões Especiais', icon: <Sparkles size={20} /> },
     { id: 'relatorios', label: 'Relatórios', icon: <BarChart3 size={20} /> },
+    { id: 'agenda', label: 'Agenda', icon: <Calendar size={20} /> },
+    { id: 'aniversariantes', label: 'Aniversariantes', icon: <Cake size={20} /> },
+    { id: 'missoes-especiais', label: 'Missões especiais', icon: <Sparkles size={20} /> },
+    { id: 'tutorial', label: 'Ajuda e tutorial', icon: <BookOpen size={20} /> },
     { id: 'configuracoes', label: 'Configurações', icon: <Settings size={20} /> },
   ];
 
@@ -2602,24 +2602,31 @@ export default function App() {
               </div>
               <button type="button" className="mobile-more-close" onClick={() => setMobileMoreOpen(false)} aria-label="Fechar">×</button>
             </div>
-            <div className="mobile-more-grid">
-              {filteredMenuItems
-                .filter(item => !['inicio', 'membros', 'presenca', 'radar'].includes(item.id))
-                .map(item => (
-                  <button
-                    type="button"
-                    key={item.id}
-                    className={`mobile-more-item ${currentView === item.id ? 'active' : ''}`}
-                    onClick={() => {
-                      setCurrentView(item.id);
-                      setMobileMoreOpen(false);
-                    }}
-                  >
-                    <span className="mobile-more-icon">{item.icon}</span>
-                    <span>{item.label}</span>
-                    {item.badge && radarCount > 0 && <b className="mobile-more-badge">{radarCount}</b>}
-                  </button>
-                ))}
+            <div className="ebd-more-groups">
+              {[
+                { label: 'Gestão e acompanhamento', ids: ['dashboard','departamentos','relatorios'] },
+                { label: 'Programação e serviços', ids: ['agenda','aniversariantes','missoes-especiais'] },
+                { label: 'Aplicativo', ids: ['tutorial','configuracoes'] },
+              ].map(group => {
+                const items = filteredMenuItems.filter(item => group.ids.includes(item.id));
+                if (items.length === 0) return null;
+                return (
+                  <section className="ebd-more-group" key={group.label}>
+                    <h3>{group.label}</h3>
+                    <div className="mobile-more-grid">
+                      {items.map(item => (
+                        <button type="button" key={item.id}
+                          className={`mobile-more-item ${currentView === item.id ? 'active' : ''}`}
+                          onClick={() => { setCurrentView(item.id); setMobileMoreOpen(false); }}>
+                          <span className="mobile-more-icon">{item.icon}</span>
+                          <span>{item.label}</span>
+                          {item.badge && radarCount > 0 && <b className="mobile-more-badge">{radarCount}</b>}
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+                );
+              })}
             </div>
           </section>
         </div>
