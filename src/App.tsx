@@ -212,7 +212,7 @@ export default function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [emulatedRole, setEmulatedRole] = useState<string | null>(null);
   const [emulatedDept, setEmulatedDept] = useState('Novo Alvorecer (Jovens)');
-  const [theme, setTheme] = useState<string>(() => localStorage.getItem('theme') || 'dark');
+  const [theme, setTheme] = useState<string>(() => localStorage.getItem('theme') || 'light');
   const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
 
   const handleToggleTheme = () => {
