@@ -116,3 +116,114 @@
 @media(max-width:380px){.ebd-more-group .mobile-more-item{min-height:77px;padding:8px!important}}
 :root[data-theme="dark"] .ebd-more-group .mobile-more-item{background:#1a234b!important;color:#e8d9f0!important;border-color:#403458!important}
 :root[data-theme="dark"] .ebd-more-group .mobile-more-icon{color:#d4a4e5!important}
+
+
+/* ============================================================
+   FASE 2 — CADASTRO E CHAMADAS
+   Changes presentation only; data operations remain on existing handlers.
+   ============================================================ */
+.ebd-page-eyebrow{display:block;font-size:.69rem;font-weight:850;letter-spacing:.105em;color:#9764a5;text-transform:uppercase;margin-bottom:7px}
+.ebd-people-page,.ebd-attendance-page{max-width:1450px;margin-inline:auto;padding:clamp(6px,1vw,16px)}
+.ebd-people-heading,.ebd-attendance-heading{margin-bottom:19px!important;padding:19px 23px;background:#fff;border:1px solid #ead9f1;border-radius:21px;box-shadow:0 8px 26px rgba(94,44,118,.045)}
+.ebd-people-heading h2,.ebd-attendance-heading h2{font-size:clamp(1.25rem,2vw,1.8rem);line-height:1.15;color:#35223f!important;letter-spacing:-.035em;font-weight:850}
+.ebd-people-heading .subtitle,.ebd-attendance-heading .subtitle{font-size:.85rem;color:#81758a!important;margin-top:7px}
+.ebd-people-heading .people-page-actions{align-items:center;justify-content:flex-end;gap:8px!important}
+.ebd-people-heading .people-page-actions .btn{font-weight:740;min-height:42px;border-radius:12px!important;white-space:normal;text-align:center;line-height:1.2}
+.ebd-people-overview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin:0 0 19px}
+.ebd-people-overview-card{display:flex;flex-direction:column;gap:5px;padding:19px 21px;background:#fff;border:1px solid #e9ddf0;border-radius:18px;box-shadow:0 7px 24px rgba(94,44,118,.045)}
+.ebd-people-overview-card:before{content:"";display:block;width:35px;height:4px;background:#8c3f9a;border-radius:5px;margin-bottom:7px}
+.ebd-people-overview-card:nth-child(2):before{background:#13a99c}
+.ebd-people-overview-card:nth-child(3):before{background:#edaa39}
+.ebd-people-overview-card>span{font-size:.79rem;color:#7c6b85;font-weight:740}
+.ebd-people-overview-card>strong{font-size:clamp(1.65rem,2.8vw,2.4rem);line-height:1.1;font-weight:850;color:#3d254b;letter-spacing:-.05em;font-variant-numeric:tabular-nums}
+.ebd-people-overview-card>small{font-size:.72rem;color:#8d8393}
+.ebd-people-workspace{background:#fff;border:1px solid #ead9f1;border-radius:21px;padding:clamp(13px,2vw,22px);margin-bottom:18px;box-shadow:0 9px 28px rgba(94,44,118,.04)}
+.ebd-people-workspace-title{margin-bottom:13px}
+.ebd-people-workspace-title h3,.ebd-people-results-heading h3{margin:0;font-size:1.1rem;letter-spacing:-.025em;font-weight:820;color:#382445}
+.ebd-people-workspace .people-category-tabs{padding:10px 0 5px;margin-bottom:12px!important;border-bottom:1px solid #f0e9f3;overflow-x:auto}
+.ebd-people-workspace .people-category-tabs>.flex{margin-bottom:12px;gap:7px;align-items:center}
+.ebd-people-workspace .people-category-tabs button{border-radius:100px!important;min-height:38px;font-weight:750}
+.ebd-people-workspace .people-filter-panel{padding:12px!important;border:0!important;border-radius:14px!important;box-shadow:none!important;background:#faf7fc!important;gap:12px!important}
+.ebd-people-workspace .people-filter-panel .relative{width:100%}
+.ebd-people-workspace .people-filter-panel .relative input{min-height:49px;font-size:.94rem;border:1px solid #e8d9ed!important;background:#fff!important;box-shadow:0 4px 14px rgba(87,33,111,.04)}
+.ebd-people-workspace .people-filter-toolbar{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px!important;align-items:end!important}
+.ebd-people-workspace .people-filter-toolbar>.flex{min-width:0;flex-wrap:wrap;gap:6px!important}
+.ebd-people-workspace .people-filter-toolbar .form-control{width:100%!important;min-width:0!important;max-width:100%;border-color:#e9d8ef!important}
+.ebd-people-workspace .people-filter-toolbar .btn{min-height:42px;white-space:normal;text-align:center}
+.ebd-people-workspace .people-filter-toolbar>.people-clear-filters{grid-column:auto}
+.ebd-people-results-heading{display:flex;gap:12px;align-items:center;justify-content:space-between;margin:0 0 13px;padding:0 4px}
+.ebd-people-results-heading .ebd-page-eyebrow{margin-bottom:4px}
+.ebd-people-results-count{display:inline-flex;align-items:center;padding:7px 12px;border-radius:100px;background:#f4e7f8;color:#793686;font-size:.75rem;font-weight:850;white-space:nowrap}
+.ebd-people-page .people-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:12px!important}
+.ebd-people-page .people-card{min-width:0;border:1px solid #ead9f1!important;border-radius:19px!important;overflow:hidden;background:#fff!important;box-shadow:0 7px 22px rgba(88,42,111,.055)!important}
+.ebd-people-page .people-card:focus-within{border-color:#b884c5!important}
+.ebd-people-page .people-card-summary{min-height:78px;align-items:center!important;padding:13px 16px!important;gap:10px!important}
+.ebd-people-page .people-card-summary .avatar-circle{background:#f0e0f5!important;color:#7e398e!important;width:43px!important;height:43px!important;min-width:43px!important;font-weight:800}
+.ebd-people-page .people-name{font-size:.93rem!important;font-weight:780!important;line-height:1.3}
+.ebd-people-page .people-card-details{padding:11px!important}
+.ebd-people-page .people-card .btn{border-radius:11px!important}
+.ebd-people-page .people-status-badge{border-radius:100px!important}
+/* Attendance filters sit above interactive checklist and save controls remain visible. */
+.ebd-attendance-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 18px}
+.ebd-attendance-summary-card{display:flex;flex-direction:column;gap:8px;padding:18px 19px;background:#fff;border:1px solid #ead9f1;border-radius:17px;box-shadow:0 8px 24px rgba(88,42,111,.045)}
+.ebd-attendance-summary-card:before{content:"";display:block;width:35px;height:4px;border-radius:4px;background:#8c3f9a}
+.ebd-attendance-summary-card:nth-child(2):before{background:#0aaa89}
+.ebd-attendance-summary-card:nth-child(3):before{background:#ed9b29}
+.ebd-attendance-summary-card:nth-child(4):before{background:#248dc1}
+.ebd-attendance-summary-card>span{font-size:.79rem;color:#776c7f;font-weight:750}
+.ebd-attendance-summary-card>strong{font-size:clamp(1.5rem,2.7vw,2.3rem);font-weight:850;line-height:1;color:#382445;font-variant-numeric:tabular-nums}
+.ebd-attendance-page>.glass-card{border-radius:20px!important;border-color:#ead9f1!important;box-shadow:0 8px 24px rgba(88,42,111,.05)!important}
+.ebd-attendance-page>.glass-card select{max-width:100%;min-width:0!important}
+.ebd-attendance-page .glass-card.animate-fade{padding:clamp(14px,2.2vw,24px);background:#fff!important}
+.ebd-attendance-page .form-group label{font-weight:760;color:#5e436a;margin-bottom:7px}
+.ebd-attendance-page .form-group .form-control{min-height:46px;border:1px solid #e6d7ed!important;background:#fff!important}
+.ebd-attendance-page .attendance-grid.ebd-attendance-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:10px!important}
+.ebd-attendance-page .attendance-card.ebd-attendance-person{min-width:0;min-height:68px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff!important;border:1px solid #e9ddec!important;border-left:4px solid #e5a24b!important;padding:13px 15px!important;border-radius:15px!important;box-shadow:0 4px 14px rgba(88,42,111,.04)!important;transition:background-color 120ms ease,border-color 120ms ease,transform 120ms ease}
+.ebd-attendance-page .attendance-card.ebd-is-present{border-left-color:#16ad86!important;background:#f4fdfa!important}
+.ebd-attendance-page .attendance-card.ebd-is-absent{border-left-color:#e0a344!important}
+.ebd-attendance-page .attendance-card.ebd-attendance-person:hover{border-color:#be91cb!important}
+.ebd-attendance-page .attendance-card.ebd-attendance-person>div:first-child{flex:1;min-width:0}
+.ebd-attendance-page .attendance-card.ebd-attendance-person p{color:#3a2945!important;margin:0;overflow-wrap:anywhere}
+.ebd-attendance-page .attendance-card.ebd-attendance-person .subtitle{margin-top:4px;color:#84778d!important}
+.ebd-attendance-page .attendance-card.ebd-attendance-person .switch-container{flex:0 0 auto}
+@media(max-width:1120px){.ebd-people-workspace .people-filter-toolbar{grid-template-columns:repeat(2,minmax(0,1fr))}.ebd-attendance-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:768px){
+  .ebd-people-page,.ebd-attendance-page{padding:5px 2px}
+  .ebd-people-heading,.ebd-attendance-heading{padding:15px 13px;border-radius:18px}
+  .ebd-people-heading .people-page-actions{justify-content:flex-start;gap:7px!important}
+  .ebd-people-heading .people-page-actions .btn{padding:9px 10px;font-size:.76rem}
+  .ebd-people-overview{gap:7px;margin-bottom:12px}
+  .ebd-people-overview-card{padding:12px 10px;border-radius:13px}
+  .ebd-people-overview-card>span{font-size:.7rem}
+  .ebd-people-overview-card>small{font-size:.6rem}
+  .ebd-people-overview-card>strong{font-size:1.6rem}
+  .ebd-people-workspace{padding:12px;border-radius:17px}
+  .ebd-people-workspace .people-filter-toolbar{grid-template-columns:minmax(0,1fr);gap:8px!important}
+  .ebd-people-results-heading{align-items:flex-start}
+  .ebd-people-results-count{font-size:.67rem;padding:6px 8px}
+  .ebd-attendance-summary{gap:8px;margin-bottom:13px}
+  .ebd-attendance-summary-card{padding:12px 11px;border-radius:14px}
+  .ebd-attendance-summary-card>span{font-size:.71rem}
+  .ebd-attendance-summary-card>strong{font-size:1.65rem}
+  .ebd-attendance-page .attendance-grid.ebd-attendance-list{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:380px){.ebd-people-overview-card>small{display:none}.ebd-people-overview-card{min-height:82px}.ebd-people-page .people-card-summary{padding:9px 10px!important}}
+@media(prefers-reduced-motion:reduce){.ebd-attendance-page .attendance-card.ebd-attendance-person{transition:none!important}}
+:root[data-theme="dark"] .ebd-people-heading,
+:root[data-theme="dark"] .ebd-attendance-heading,
+:root[data-theme="dark"] .ebd-people-overview-card,
+:root[data-theme="dark"] .ebd-people-workspace,
+:root[data-theme="dark"] .ebd-attendance-summary-card{background:#1c2346!important;border-color:#453457!important}
+:root[data-theme="dark"] .ebd-people-heading h2,
+:root[data-theme="dark"] .ebd-attendance-heading h2,
+:root[data-theme="dark"] .ebd-people-overview-card>strong,
+:root[data-theme="dark"] .ebd-attendance-summary-card>strong,
+:root[data-theme="dark"] .ebd-people-results-heading h3,
+:root[data-theme="dark"] .ebd-people-workspace-title h3{color:#f6eefc!important}
+:root[data-theme="dark"] .ebd-people-overview-card>span,
+:root[data-theme="dark"] .ebd-attendance-summary-card>span{color:#cec1d9}
+:root[data-theme="dark"] .ebd-people-workspace .people-filter-panel{background:#252b50!important}
+:root[data-theme="dark"] .ebd-people-page .people-card,
+:root[data-theme="dark"] .ebd-attendance-page .attendance-card.ebd-attendance-person{background:#1d264b!important;border-color:#473755!important}
+:root[data-theme="dark"] .ebd-attendance-page .attendance-card.ebd-attendance-person p{color:#f5f0fc!important}
+:root[data-theme="dark"] .ebd-attendance-page .attendance-card.ebd-is-present{background:#203b48!important}
