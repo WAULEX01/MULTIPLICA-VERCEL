@@ -1,0 +1,351 @@
+/* Multiplica Plus 8.5 — Portal EBD-inspired layout study.
+   Original implementation. No third-party logo, images, copied assets or
+   proprietary content. Presentation only: retain roles, data and event handlers.
+   Imported after the existing Aurora layer; reversible on its own branch. */
+
+:root:not([data-theme="dark"]) {
+  color-scheme: light;
+  --ebd-purple: #762e83;
+  --ebd-purple-bright: #8e49a5;
+  --ebd-purple-soft: #f5eafb;
+  --ebd-purple-line: #ead9f1;
+  --ebd-text: #30203f;
+  --ebd-muted: #7e728a;
+  --ebd-bg: #f8f5fc;
+  --ebd-surface: #fff;
+  --aurora-primary: var(--ebd-purple);
+  --aurora-primary-hover: #60246b;
+  --aurora-violet: #a34fba;
+  --aurora-cyan: #38a6bd;
+  --aurora-bg: var(--ebd-bg);
+  --aurora-card: var(--ebd-surface);
+  --aurora-stroke: var(--ebd-purple-line);
+  --aurora-text: var(--ebd-text);
+  --aurora-muted: var(--ebd-muted);
+  --pp-accent: var(--ebd-purple);
+  --pp-accent-strong: var(--ebd-purple-bright);
+  --pp-accent-soft: var(--ebd-purple-soft);
+  --pp-surface: var(--ebd-surface);
+  --pp-surface-soft: var(--ebd-bg);
+  --pp-border: var(--ebd-purple-line);
+  --pp-text: var(--ebd-text);
+  --pp-muted: var(--ebd-muted);
+  --v823-orange: var(--ebd-purple);
+  --v823-orange-soft: var(--ebd-purple-soft);
+  --v823-orange-border: var(--ebd-purple-line);
+  --power-orange: var(--ebd-purple);
+  --power-orange-hover: #60246b;
+  --power-orange-soft: var(--ebd-purple-soft);
+  --power-black: #fff;
+  --power-canvas: var(--ebd-bg);
+  --power-surface: #fff;
+  --power-raised: #f9f1fc;
+  --power-white: var(--ebd-text);
+  --power-muted: var(--ebd-muted);
+  --power-subtle: #a295ac;
+  --power-line: #ead9f1;
+  --color-primary: var(--ebd-purple);
+  --color-primary-hover: #60246b;
+  --color-primary-light: var(--ebd-purple-soft);
+  --color-primary-text: #762e83;
+  --color-accent: #a34fba;
+  --color-text-main: var(--ebd-text);
+  --color-text-muted: var(--ebd-muted);
+  --bg-app: var(--ebd-bg);
+  --bg-surface: #fff;
+  --bg-card: #fff;
+  --bg-sidebar: #fff;
+  --bg-input: #fdfaff;
+  --border-color: var(--ebd-purple-line);
+  --border-focus: var(--ebd-purple);
+  --gradient-primary: linear-gradient(125deg,#762e83,#a34fba);
+}
+
+/* Strong, welcoming white-card layout for readability on small phones. */
+:root:not([data-theme="dark"]) body {
+  background: #f8f5fc !important;
+  color: #30203f !important;
+}
+:root:not([data-theme="dark"]) .mobile-header,
+:root:not([data-theme="dark"]) .desktop-topbar {
+  background: #fff !important;
+  border-bottom: 1px solid #ead9f1 !important;
+  box-shadow: 0 5px 19px rgba(92, 41, 109, .04) !important;
+}
+:root:not([data-theme="dark"]) .sidebar,
+:root:not([data-theme="dark"]) .mobile-nav {
+  background: #fff !important;
+  border-color: #ead9f1 !important;
+}
+:root:not([data-theme="dark"]) .mobile-header-title h1,
+:root:not([data-theme="dark"]) .topbar-title h1,
+:root:not([data-theme="dark"]) .page-title,
+:root:not([data-theme="dark"]) .view-header h2 {
+  color: #30203f !important;
+  font-weight: 800;
+}
+:root:not([data-theme="dark"]) .card,
+:root:not([data-theme="dark"]) .glass-card,
+:root:not([data-theme="dark"]) .modal-content,
+:root:not([data-theme="dark"]) .people-card,
+:root:not([data-theme="dark"]) .attendance-card,
+:root:not([data-theme="dark"]) .radar-alert-card {
+  background: #fff !important;
+  color: #30203f !important;
+  border: 1px solid #eadff0 !important;
+  border-radius: 22px !important;
+  box-shadow: 0 10px 30px rgba(86, 35, 116, .05) !important;
+}
+:root:not([data-theme="dark"]) .card h1,
+:root:not([data-theme="dark"]) .card h2,
+:root:not([data-theme="dark"]) .card h3,
+:root:not([data-theme="dark"]) .glass-card h1,
+:root:not([data-theme="dark"]) .glass-card h2,
+:root:not([data-theme="dark"]) .glass-card h3 {
+  color: #30203f !important;
+}
+:root:not([data-theme="dark"]) .subtitle,
+:root:not([data-theme="dark"]) .text-muted {
+  color: #7e728a !important;
+}
+
+/* Portal-like headline area: colored top and calm rounded overview tiles.
+   No static numbers. All contents remain dynamically sourced. */
+.power-home-hero,
+:root:not([data-theme="dark"]) .power-home-hero {
+  color: #fff !important;
+  background:
+    radial-gradient(circle at 100% 0%,rgba(222,166,239,.24),transparent 50%),
+    linear-gradient(140deg,#64236d,#84378e 60%,#ad65b7) !important;
+  border: 0 !important;
+  border-radius: 30px !important;
+  box-shadow: 0 12px 32px rgba(105, 43, 122, .13) !important;
+}
+.power-home-hero::after {
+  border-color: rgba(255,255,255,.19);
+  box-shadow: 0 0 0 38px rgba(255,255,255,.04),0 0 0 76px rgba(255,255,255,.025);
+}
+.power-home-hero .power-avatar {
+  background: #fff !important;
+  color: #762e83 !important;
+  box-shadow: none !important;
+}
+.power-home-hero .power-eyebrow,
+.power-home-hero .power-kicker,
+.power-home-hero .power-profile-line {
+  color: #f6dfff !important;
+}
+.power-stats-grid {
+  gap: 10px !important;
+  background: transparent !important;
+}
+.power-stat,
+.power-stat:nth-child(n) {
+  min-height: 114px !important;
+  background: rgba(255,255,255,.14) !important;
+  border: 1px solid rgba(255,255,255,.2) !important;
+  box-shadow: none !important;
+  border-radius: 18px !important;
+}
+.power-stat .stat-label { font-size: .72rem !important; }
+.power-stat .stat-value { font-weight: 850; color: #fff !important; }
+.power-next-event {
+  background: rgba(255,255,255,.12) !important;
+  border: 1px solid rgba(255,255,255,.22) !important;
+}
+:root:not([data-theme="dark"]) .power-message {
+  border-radius: 24px !important;
+  background: #fff !important;
+  border: 1px solid #ead9f1 !important;
+}
+.power-section-heading h2 { letter-spacing: -.04em; }
+
+/* Action grid: accessible two-column shortcuts with subtle accent stripe. */
+.power-action-grid {
+  grid-template-columns: repeat(3,minmax(0,1fr)) !important;
+  gap: 13px !important;
+}
+.power-action-card,
+.power-action-card:nth-child(n) {
+  background: #fff !important;
+  border: 1px solid #ead9f1 !important;
+  color: #30203f !important;
+  border-radius: 20px !important;
+  min-height: 144px !important;
+  box-shadow: 0 8px 25px rgba(84,38,116,.06) !important;
+}
+.power-action-card::before {
+  width: 62px;
+  height: 62px;
+  right: 12px;
+  top: 12px;
+  background: #f5eafb !important;
+}
+.power-action-card > svg {
+  color: #762e83 !important;
+  background: #f4e7f8;
+  border-radius: 12px;
+  padding: 5px;
+  width: 36px;
+  height: 36px;
+}
+.power-action-card .power-action-copy strong {
+  color: #30203f !important;
+  font-size: .9rem !important;
+}
+.power-action-card .power-action-copy small,
+.power-action-card .power-action-number,
+.power-action-card .power-action-arrow { color: #8d6b9a !important; }
+.power-action-card:hover {
+  transform: translateY(-2px);
+  border-color: #ba87c7 !important;
+  filter: none;
+}
+
+/* People cards and call controls, still using existing click handlers. */
+.people-category-tabs > *,
+.people-filter-toolbar button,
+.people-card .badge,
+.badge-active { border-radius: 100px !important; }
+:root:not([data-theme="dark"]) .people-card .avatar-circle {
+  background: #f0def5 !important;
+  color: #762e83 !important;
+}
+.people-card { border-radius: 18px !important; }
+.people-filter-panel {
+  background: #fff !important;
+  border: 1px solid #ead9f1 !important;
+}
+.attendance-card, .radar-alert-card {
+  border-radius: 19px !important;
+}
+.radar-service-summary {
+  background: linear-gradient(135deg,#6f2b81,#9b52a6) !important;
+  border-color: #a45baf !important;
+  color: #fff !important;
+}
+.radar-service-summary h2,
+.radar-service-summary h3,
+.radar-service-summary strong { color: #fff !important; }
+
+/* Department cards use coherent purple accents, rather than rainbow tiles. */
+.aurora-department-grid {
+  grid-template-columns: repeat(auto-fit,minmax(min(100%,260px),1fr)) !important;
+  gap: 16px !important;
+}
+:root:not([data-theme="dark"]) .aurora-department-card:nth-child(n) {
+  --dept-accent: #9548a8;
+  background: #fff !important;
+  border: 1px solid #ead9f1 !important;
+  border-left: 5px solid #9548a8 !important;
+  border-radius: 22px !important;
+}
+.aurora-department-card h3 svg { color: #9548a8 !important; }
+
+/* Pill buttons, clean headings and printed report-friendly surfaces. */
+.btn-primary, button.btn-primary {
+  border-radius: 13px !important;
+  background: linear-gradient(125deg,#762e83,#9945ab) !important;
+  border: 0 !important;
+  color: #fff !important;
+  box-shadow: 0 5px 12px rgba(118,46,131,.13) !important;
+}
+.btn-primary:hover, button.btn-primary:hover {
+  background: linear-gradient(125deg,#64216e,#87369a) !important;
+}
+:root:not([data-theme="dark"]) .btn-secondary {
+  background: #fff !important;
+  border-color: #ead9f1 !important;
+  color: #64356f !important;
+}
+:root:not([data-theme="dark"]) input,
+:root:not([data-theme="dark"]) select,
+:root:not([data-theme="dark"]) textarea,
+:root:not([data-theme="dark"]) .form-control {
+  background: #fdfaff !important;
+  border-color: #ead9f1 !important;
+  color: #30203f !important;
+}
+:root:not([data-theme="dark"]) .custom-table thead {
+  background: #f4e9f8 !important;
+}
+
+/* Navigation: no item hidden or removed, existing fifth "More" is retained. */
+.mobile-nav.mobile-nav-premium {
+  min-height: 68px;
+  background: #fff !important;
+  border-top: 1px solid #ead9f1 !important;
+  box-shadow: 0 -8px 26px rgba(88,44,111,.07) !important;
+}
+.mobile-nav-premium .mobile-nav-item.active,
+.mobile-nav-premium .mobile-nav-item[aria-current="page"],
+.mobile-nav-premium .mobile-nav-more.active {
+  background: #762e83 !important;
+  color: #fff !important;
+  box-shadow: 0 4px 12px rgba(118,46,131,.16);
+}
+:root:not([data-theme="dark"]) .mobile-nav-premium .mobile-nav-item:not(.active):not([aria-current="page"]) {
+  color: #8d7a98 !important;
+}
+.mobile-nav-premium .mobile-nav-item.active svg,
+.mobile-nav-premium .mobile-nav-item.active span {
+  color: #fff !important;
+}
+:root:not([data-theme="dark"]) .sidebar-link.active {
+  background: #f5eafb !important;
+  color: #762e83 !important;
+}
+
+/* Preview login. The IEAD-JOTA logo is still the actual local asset. */
+.login-container,
+:root:not([data-theme="dark"]) .login-container {
+  background: #f7f0fa !important;
+}
+.login-hero-side {
+  background-image: linear-gradient(140deg,rgba(108,29,121,.54),rgba(77,18,93,.81)),url('/banner.jpg') !important;
+}
+.login-form-side,
+:root:not([data-theme="dark"]) .login-form-side {
+  background: #f7f0fa !important;
+}
+.login-form-card,
+:root:not([data-theme="dark"]) .login-form-card {
+  background: #fff !important;
+  border: 1px solid #ead9f1 !important;
+  color: #30203f !important;
+  box-shadow: 0 15px 40px rgba(80,28,104,.08) !important;
+}
+.login-form-header h3,
+:root:not([data-theme="dark"]) .login-form-header h3 {
+  color: #30203f !important;
+}
+.login-form-header p,.login-form-footer,.login-form-footer p,
+.login-form-card label,
+:root:not([data-theme="dark"]) .login-form-header p,
+:root:not([data-theme="dark"]) .login-form-footer,
+:root:not([data-theme="dark"]) .login-form-card label {
+  color: #7e728a !important;
+}
+.login-form-card .form-control,
+:root:not([data-theme="dark"]) .login-form-card .form-control {
+  color: #30203f !important;
+  background: #fdfaff !important;
+  border-color: #e8d7ee !important;
+}
+.login-form-card .form-control::placeholder { color: #9e90a9 !important; }
+@media (max-width: 768px) {
+  .power-action-grid { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+  .power-stats-grid { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+  .power-stat { min-height: 103px !important; padding: 14px !important; }
+  .power-home-hero { border-radius: 24px !important; padding: 17px 14px !important; }
+  .power-action-card { padding: 14px !important; min-height: 130px !important; }
+  .aurora-department-grid { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+  .aurora-department-card { min-height: 215px !important; }
+}
+@media (max-width: 390px) {
+  .power-action-card { min-height: 115px !important; }
+  .aurora-department-grid { grid-template-columns: 1fr !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .power-action-card { transition: none !important; transform: none !important; }
+}
