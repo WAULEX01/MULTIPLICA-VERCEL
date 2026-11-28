@@ -7,6 +7,7 @@ import './styles/mobile-performance-v823.css'
 import './styles/desktop-performance-v823.css'
 import './styles/professor-plus-skin-v823.css'
 import './styles/aurora-v85-preview.css'
+import './styles/portal-ebd-inspired-v85.css'
 import './mobileUxEnhancements.ts'
 import './mobileSectionNavigator.ts'
 import App from './App.tsx'
@@ -15,7 +16,7 @@ import App from './App.tsx'
 (function applySavedTheme() {
   try {
     const saved = localStorage.getItem('theme');
-    if (saved !== 'light') {
+    if (saved === 'dark') {
       document.documentElement.setAttribute('data-theme', 'dark');
     } else {
       document.documentElement.removeAttribute('data-theme');
