@@ -84,6 +84,7 @@ export const RadarView: React.FC<RadarViewProps> = ({ db, session, onUpdatePasto
         if (alertFilter === '1') return item.absences === 1;
         if (alertFilter === '2') return item.absences === 2;
         if (alertFilter === '3') return item.absences === 3;
+        if (alertFilter === '3_plus') return item.absences >= 3;
         if (alertFilter === '4_plus') return item.absences >= 4;
         return item.absences >= 1;
       });
@@ -97,6 +98,13 @@ export const RadarView: React.FC<RadarViewProps> = ({ db, session, onUpdatePasto
     () => radarData.slice(0, visibleCount),
     [radarData, visibleCount],
   );
+
+  const portalRadarStats = useMemo(() => ({
+    total: radarBaseData.length,
+    oneWeek: radarBaseData.filter(item => item.absences === 1).length,
+    twoWeeks: radarBaseData.filter(item => item.absences === 2).length,
+    threePlus: radarBaseData.filter(item => item.absences >= 3).length,
+  }), [radarBaseData]);
 
   const criticalAbsentees = useMemo(() => db.people
     .filter(p =>
@@ -192,13 +200,36 @@ export const RadarView: React.FC<RadarViewProps> = ({ db, session, onUpdatePasto
   };
 
   return (
-    <div className="animate-fade">
-      <div className="view-header">
+    <div className="animate-fade ebd-radar-page">
+      <div className="view-header ebd-radar-heading">
         <div>
-          <h2>Radar Inteligente</h2>
-          <p className="subtitle">Identificação automatizada de ausências e sugestões de resgate pastoral</p>
+          <span className="ebd-page-eyebrow">ACOMPANHAMENTO PASTORAL</span>
+          <h2>Radar de cuidado</h2>
+          <p className="subtitle">Identifique ausências consecutivas, organize as prioridades e acompanhe cada pessoa com atenção.</p>
         </div>
       </div>
+
+      <section className="ebd-radar-overview" aria-label="Resumo dos níveis de atenção">
+        {[
+          { id: 'Todos', label: 'Em acompanhamento', value: portalRadarStats.total, detail: 'Uma ou mais semanas', tone: 'violet' },
+          { id: '1', label: 'Primeira semana', value: portalRadarStats.oneWeek, detail: 'Mensagem de acolhimento', tone: 'gold' },
+          { id: '2', label: 'Segunda semana', value: portalRadarStats.twoWeeks, detail: 'Ligação de cuidado', tone: 'orange' },
+          { id: '3_plus', label: 'Três ou mais semanas', value: portalRadarStats.threePlus, detail: 'Visita e acompanhamento', tone: 'red' },
+        ].map(metric => (
+          <button
+            type="button"
+            key={metric.id}
+            className={`ebd-radar-metric ebd-radar-metric-${metric.tone} ${alertFilter === metric.id ? 'is-active' : ''}`}
+            onClick={() => setAlertFilter(metric.id)}
+            aria-pressed={alertFilter === metric.id}
+            aria-label={`${metric.label}: ${metric.value} pessoas. Filtrar este grupo`}
+          >
+            <span className="ebd-radar-metric-label">{metric.label}</span>
+            <strong>{metric.value}</strong>
+            <small>{metric.detail}</small>
+          </button>
+        ))}
+      </section>
 
       {/* Last Service Summary Widget */}
       {(() => {
@@ -253,7 +284,9 @@ export const RadarView: React.FC<RadarViewProps> = ({ db, session, onUpdatePasto
         );
       })()}
 
-      {/* Regras de Resgate Widget (Fixo no Topo) */}
+      {/* Critérios explicativos dobráveis: foco primeiro nos resultados */}
+      <details className="ebd-radar-guidelines">
+        <summary><Sparkles size={17} aria-hidden="true" /> Entenda as prioridades de acompanhamento <span>Ver critérios</span></summary>
       <div className="glass-card radar-rescue-rules" style={{ marginBottom: '1.5rem', padding: '1.25rem 1.5rem' }}>
         <h3 style={{ fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', color: 'var(--color-text-main)' }}>
           <Sparkles size={18} style={{ color: '#f59e0b' }} />
@@ -277,14 +310,20 @@ export const RadarView: React.FC<RadarViewProps> = ({ db, session, onUpdatePasto
         </div>
       </div>
 
+      </details>
+
       {/* Radar Alert List */}
-      <div className="glass-card radar-list-panel">
-          <div className="search-bar-container">
+      <section className="glass-card radar-list-panel">
+        <div className="ebd-radar-results-heading">
+          <div><span className="ebd-page-eyebrow">PESSOAS QUE PRECISAM DE ATENÇÃO</span><h3>Lista de acompanhamento</h3></div>
+          <span className="ebd-radar-result-count" aria-live="polite">{radarData.length} {radarData.length === 1 ? 'pessoa' : 'pessoas'}</span>
+        </div>
+          <div className="search-bar-container ebd-radar-toolbar">
             <div className="search-input-wrapper">
               <input
                 type="text"
                 className="form-control"
-                placeholder="Pesquisar membro no radar..."
+                placeholder="Buscar pessoa pelo nome..." aria-label="Pesquisar pessoas no radar pastoral"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -303,6 +342,7 @@ export const RadarView: React.FC<RadarViewProps> = ({ db, session, onUpdatePasto
                 <option value="1">🟡 Apenas 1 Semana de Falta</option>
                 <option value="2">🟠 Apenas 2 Semanas de Falta</option>
                 <option value="3">🔴 Apenas 3 Semanas de Falta</option>
+                <option value="3_plus">🔴 3 ou mais semanas</option>
                 <option value="4_plus">🚨 4+ Semanas (Crítico)</option>
               </select>
             </div>
@@ -358,7 +398,7 @@ export const RadarView: React.FC<RadarViewProps> = ({ db, session, onUpdatePasto
             </button>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginTop: '1.5rem' }}>
+          <div className="ebd-radar-people-list" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginTop: '1.5rem' }}>
             {visibleRadarData.map(({ person, absences, lastPresence, severity, action }) => {
               const isContacted = contactedIds.includes(person.id);
               const alertColor = getAlertColor(severity);
@@ -369,7 +409,9 @@ export const RadarView: React.FC<RadarViewProps> = ({ db, session, onUpdatePasto
               return (
                 <div
                   key={person.id}
-                  className="radar-alert-card"
+                  className="radar-alert-card ebd-radar-person-card"
+                  data-severity={severity}
+                  data-contacted={isContacted ? 'yes' : 'no'}
                   style={{
                     borderLeftColor: alertColor,
                     background: isContacted ? 'rgba(22, 163, 74, 0.13)' : alertBg,
@@ -544,7 +586,7 @@ export const RadarView: React.FC<RadarViewProps> = ({ db, session, onUpdatePasto
               </div>
             )}
           </div>
-      </div>
+      </section>
 
       {/* 1. Modal WhatsApp Individual */}
       {waModal.open && waModal.person && (

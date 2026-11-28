@@ -806,11 +806,12 @@ export const PeopleListView: React.FC<PeopleListViewProps> = ({ db, session, onU
   };
 
   return (
-    <div className="animate-fade">
-      <div className="view-header">
+    <div className="animate-fade ebd-people-page">
+      <div className="view-header ebd-people-heading">
         <div>
-          <h2>Membros & Liderança</h2>
-          <p className="subtitle">Gestão geral de participantes, líderes e equipes da IEAD-JK</p>
+          <span className="ebd-page-eyebrow">CADASTRO E ACOMPANHAMENTO</span>
+          <h2>Comunidade e membros</h2>
+          <p className="subtitle">Localize pessoas, organize equipes e acompanhe sua comunidade em um só lugar.</p>
         </div>
         
         <div className="people-page-actions" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
@@ -832,6 +833,13 @@ export const PeopleListView: React.FC<PeopleListViewProps> = ({ db, session, onU
                     </button>
                   </div>
 
+      <section className="ebd-people-overview" aria-label="Resumo dos cadastros">
+        <div className="ebd-people-overview-card"><span>Ativos</span><strong>{activeCount}</strong><small>Pessoas em acompanhamento</small></div>
+        <div className="ebd-people-overview-card"><span>Visitantes</span><strong>{visitorCount}</strong><small>Novos contatos</small></div>
+        <div className="ebd-people-overview-card"><span>Arquivados</span><strong>{archivedCount}</strong><small>Histórico preservado</small></div>
+      </section>
+      <div className="ebd-people-workspace">
+        <div className="ebd-people-workspace-title"><span className="ebd-page-eyebrow">ENCONTRE RAPIDAMENTE</span><h3>Pesquisar e filtrar</h3></div>
       {/* Category Tabs */}
       <div className="people-category-tabs" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
         <div className="flex gap-2 mb-5 flex-wrap">
@@ -896,9 +904,17 @@ export const PeopleListView: React.FC<PeopleListViewProps> = ({ db, session, onU
       {/* Filtros e Pesquisa */}
       <div className="flex flex-col gap-4 people-filter-panel">
                     <div className="relative">
-                      <input type="text" className="form-control w-full" placeholder="Buscar por nome ou telefone..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                      <input type="text" className="form-control w-full" aria-label="Pesquisar pessoas por nome ou telefone" placeholder="Buscar por nome ou telefone..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                       <Search className="search-icon-inside" size={18} />
                     </div>
+                    <details className="ebd-people-advanced-filters">
+                      <summary>
+                        <span>Filtros avançados e ferramentas</span>
+                        <small>Função, batismo e departamento</small>
+                        {(missingContactFilter || roleFilter !== 'Todos' || baptismFilter !== 'Todos' || deptFilter !== 'Todos') && (
+                          <strong className="ebd-people-filter-active">Filtros ativos</strong>
+                        )}
+                      </summary>
                     <div className="flex flex-wrap items-center gap-3 people-filter-toolbar">
                       {/* WhatsApp Contacts Copy Button */}
                       <button type="button" className="btn btn-secondary btn-sm inline-flex items-center gap-1 text-sm px-3 py-2 rounded-lg" style={{ background: 'rgba(15, 23, 42, 0.6)' }} onClick={handleCopyContacts}>
@@ -962,9 +978,15 @@ export const PeopleListView: React.FC<PeopleListViewProps> = ({ db, session, onU
                         </button>
                       )}
                     </div>
+                    </details>
                   </div>
       </div>
 
+      </div>
+      <div className="ebd-people-results-heading">
+        <div><span className="ebd-page-eyebrow">LISTA DE PESSOAS</span><h3>Cadastros encontrados</h3></div>
+        <span className="ebd-people-results-count">{filteredPeople.length} registros</span>
+      </div>
       {/* Cards Grid */}
       <div className="people-grid">
         {visiblePeople.map(p => {
@@ -1007,6 +1029,17 @@ export const PeopleListView: React.FC<PeopleListViewProps> = ({ db, session, onU
               {/* Collapsed / Header Row */}
               <div 
                 className="people-card-summary"
+                role="button"
+                tabIndex={0}
+                aria-expanded={isExpanded}
+                aria-label={`Visualizar dados de ${p.name}`}
+                onKeyDown={(event) => {
+                  if (event.target !== event.currentTarget) return;
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    setExpandedPersonId(prev => prev === p.id ? null : p.id);
+                  }
+                }}
                 onClick={() => setExpandedPersonId(prev => prev === p.id ? null : p.id)}
                 style={{
                   display: 'flex',

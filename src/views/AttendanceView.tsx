@@ -546,14 +546,21 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ db, session, onU
   const gridHistory = [...filteredHistory].reverse();
 
   return (
-    <div className="animate-fade">
-      <div className="view-header" style={{ marginBottom: '1.5rem' }}>
+    <div className="animate-fade ebd-attendance-page">
+      <div className="view-header ebd-attendance-heading" style={{ marginBottom: '1.5rem' }}>
         <div>
-          <h2>Frequência & Chamadas</h2>
-          <p className="subtitle">Gerencie a presença dos membros e consulte o histórico de cultos anteriores</p>
+          <span className="ebd-page-eyebrow">CONTROLE DE FREQUÊNCIA</span>
+          <h2>Chamadas e presenças</h2>
+          <p className="subtitle">Registre presenças com agilidade e acompanhe o histórico de cultos e reuniões.</p>
         </div>
       </div>
 
+      <section className="ebd-attendance-summary" aria-label="Resumo da chamada atual">
+        <div className="ebd-attendance-summary-card"><span>Membros no departamento</span><strong>{activeDeptPeople.length}</strong></div>
+        <div className="ebd-attendance-summary-card"><span>Presenças marcadas</span><strong>{activeDeptPeople.filter(p => presentIds.includes(p.id)).length}</strong></div>
+        <div className="ebd-attendance-summary-card"><span>Sem presença marcada</span><strong>{activeDeptPeople.filter(p => !presentIds.includes(p.id)).length}</strong></div>
+        <div className="ebd-attendance-summary-card"><span>Chamadas anteriores</span><strong>{deptHistory.length}</strong></div>
+      </section>
       {/* Department Selector at the Top */}
       <div className="glass-card" style={{ padding: '1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -892,13 +899,23 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ db, session, onU
 
               {/* ── Member list ── */}
               {activeList.length > 0 ? (
-                <div className="attendance-grid">
+                <div className="attendance-grid ebd-attendance-list">
                   {activeList.map(p => {
                     const isPresent = presentIds.includes(p.id);
                     return (
                       <div
                         key={p.id}
-                        className="attendance-card"
+                        className={`attendance-card ebd-attendance-person ${isPresent ? 'ebd-is-present' : 'ebd-is-absent'}`}
+                        role="checkbox"
+                        tabIndex={0}
+                        aria-checked={isPresent}
+                        aria-label={`${p.name}: ${isPresent ? 'Presente' : 'Sem presença marcada'}`}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            handleTogglePerson(p.id);
+                          }
+                        }}
                         onClick={() => handleTogglePerson(p.id)}
                         style={{
                           cursor: 'pointer',
@@ -928,8 +945,11 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ db, session, onU
                             </p>
                           )}
                         </div>
-                        <label className="switch-container" style={{ pointerEvents: 'none' }}>
-                          <input type="checkbox" className="switch-input" checked={isPresent} readOnly />
+                        <span className={`ebd-attendance-person-status ${isPresent ? 'is-present' : 'is-unmarked'}`} aria-hidden="true">
+                          {isPresent ? 'Presente' : 'Não marcado'}
+                        </span>
+                        <label className="switch-container" style={{ pointerEvents: 'none' }} aria-hidden="true">
+                          <input type="checkbox" className="switch-input" checked={isPresent} readOnly tabIndex={-1} />
                           <div className="switch-label"></div>
                         </label>
                       </div>
