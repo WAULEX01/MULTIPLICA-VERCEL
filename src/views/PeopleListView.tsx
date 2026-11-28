@@ -904,9 +904,17 @@ export const PeopleListView: React.FC<PeopleListViewProps> = ({ db, session, onU
       {/* Filtros e Pesquisa */}
       <div className="flex flex-col gap-4 people-filter-panel">
                     <div className="relative">
-                      <input type="text" className="form-control w-full" placeholder="Buscar por nome ou telefone..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                      <input type="text" className="form-control w-full" aria-label="Pesquisar pessoas por nome ou telefone" placeholder="Buscar por nome ou telefone..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                       <Search className="search-icon-inside" size={18} />
                     </div>
+                    <details className="ebd-people-advanced-filters">
+                      <summary>
+                        <span>Filtros avançados e ferramentas</span>
+                        <small>Função, batismo e departamento</small>
+                        {(missingContactFilter || roleFilter !== 'Todos' || baptismFilter !== 'Todos' || deptFilter !== 'Todos') && (
+                          <strong className="ebd-people-filter-active">Filtros ativos</strong>
+                        )}
+                      </summary>
                     <div className="flex flex-wrap items-center gap-3 people-filter-toolbar">
                       {/* WhatsApp Contacts Copy Button */}
                       <button type="button" className="btn btn-secondary btn-sm inline-flex items-center gap-1 text-sm px-3 py-2 rounded-lg" style={{ background: 'rgba(15, 23, 42, 0.6)' }} onClick={handleCopyContacts}>
@@ -970,6 +978,7 @@ export const PeopleListView: React.FC<PeopleListViewProps> = ({ db, session, onU
                         </button>
                       )}
                     </div>
+                    </details>
                   </div>
       </div>
 
@@ -1020,6 +1029,17 @@ export const PeopleListView: React.FC<PeopleListViewProps> = ({ db, session, onU
               {/* Collapsed / Header Row */}
               <div 
                 className="people-card-summary"
+                role="button"
+                tabIndex={0}
+                aria-expanded={isExpanded}
+                aria-label={`Visualizar dados de ${p.name}`}
+                onKeyDown={(event) => {
+                  if (event.target !== event.currentTarget) return;
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    setExpandedPersonId(prev => prev === p.id ? null : p.id);
+                  }
+                }}
                 onClick={() => setExpandedPersonId(prev => prev === p.id ? null : p.id)}
                 style={{
                   display: 'flex',
