@@ -806,11 +806,12 @@ export const PeopleListView: React.FC<PeopleListViewProps> = ({ db, session, onU
   };
 
   return (
-    <div className="animate-fade">
-      <div className="view-header">
+    <div className="animate-fade ebd-people-page">
+      <div className="view-header ebd-people-heading">
         <div>
-          <h2>Membros & Liderança</h2>
-          <p className="subtitle">Gestão geral de participantes, líderes e equipes da IEAD-JK</p>
+          <span className="ebd-page-eyebrow">CADASTRO E ACOMPANHAMENTO</span>
+          <h2>Comunidade e membros</h2>
+          <p className="subtitle">Localize pessoas, organize equipes e acompanhe sua comunidade em um só lugar.</p>
         </div>
         
         <div className="people-page-actions" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
@@ -832,6 +833,13 @@ export const PeopleListView: React.FC<PeopleListViewProps> = ({ db, session, onU
                     </button>
                   </div>
 
+      <section className="ebd-people-overview" aria-label="Resumo dos cadastros">
+        <div className="ebd-people-overview-card"><span>Ativos</span><strong>{activeCount}</strong><small>Pessoas em acompanhamento</small></div>
+        <div className="ebd-people-overview-card"><span>Visitantes</span><strong>{visitorCount}</strong><small>Novos contatos</small></div>
+        <div className="ebd-people-overview-card"><span>Arquivados</span><strong>{archivedCount}</strong><small>Histórico preservado</small></div>
+      </section>
+      <div className="ebd-people-workspace">
+        <div className="ebd-people-workspace-title"><span className="ebd-page-eyebrow">ENCONTRE RAPIDAMENTE</span><h3>Pesquisar e filtrar</h3></div>
       {/* Category Tabs */}
       <div className="people-category-tabs" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
         <div className="flex gap-2 mb-5 flex-wrap">
@@ -965,6 +973,11 @@ export const PeopleListView: React.FC<PeopleListViewProps> = ({ db, session, onU
                   </div>
       </div>
 
+      </div>
+      <div className="ebd-people-results-heading">
+        <div><span className="ebd-page-eyebrow">LISTA DE PESSOAS</span><h3>Cadastros encontrados</h3></div>
+        <span className="ebd-people-results-count">{filteredPeople.length} registros</span>
+      </div>
       {/* Cards Grid */}
       <div className="people-grid">
         {visiblePeople.map(p => {
