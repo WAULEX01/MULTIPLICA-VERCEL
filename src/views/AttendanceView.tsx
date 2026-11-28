@@ -557,8 +557,8 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ db, session, onU
 
       <section className="ebd-attendance-summary" aria-label="Resumo da chamada atual">
         <div className="ebd-attendance-summary-card"><span>Membros no departamento</span><strong>{activeDeptPeople.length}</strong></div>
-        <div className="ebd-attendance-summary-card"><span>Marcados presentes</span><strong>{presentIds.length}</strong></div>
-        <div className="ebd-attendance-summary-card"><span>Faltam marcar</span><strong>{Math.max(0, activeDeptPeople.length - presentIds.length)}</strong></div>
+        <div className="ebd-attendance-summary-card"><span>Presenças marcadas</span><strong>{activeDeptPeople.filter(p => presentIds.includes(p.id)).length}</strong></div>
+        <div className="ebd-attendance-summary-card"><span>Sem presença marcada</span><strong>{activeDeptPeople.filter(p => !presentIds.includes(p.id)).length}</strong></div>
         <div className="ebd-attendance-summary-card"><span>Chamadas anteriores</span><strong>{deptHistory.length}</strong></div>
       </section>
       {/* Department Selector at the Top */}
@@ -906,6 +906,16 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ db, session, onU
                       <div
                         key={p.id}
                         className={`attendance-card ebd-attendance-person ${isPresent ? 'ebd-is-present' : 'ebd-is-absent'}`}
+                        role="checkbox"
+                        tabIndex={0}
+                        aria-checked={isPresent}
+                        aria-label={`${p.name}: ${isPresent ? 'Presente' : 'Sem presença marcada'}`}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            handleTogglePerson(p.id);
+                          }
+                        }}
                         onClick={() => handleTogglePerson(p.id)}
                         style={{
                           cursor: 'pointer',
@@ -935,8 +945,11 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ db, session, onU
                             </p>
                           )}
                         </div>
-                        <label className="switch-container" style={{ pointerEvents: 'none' }}>
-                          <input type="checkbox" className="switch-input" checked={isPresent} readOnly />
+                        <span className={`ebd-attendance-person-status ${isPresent ? 'is-present' : 'is-unmarked'}`} aria-hidden="true">
+                          {isPresent ? 'Presente' : 'Não marcado'}
+                        </span>
+                        <label className="switch-container" style={{ pointerEvents: 'none' }} aria-hidden="true">
+                          <input type="checkbox" className="switch-input" checked={isPresent} readOnly tabIndex={-1} />
                           <div className="switch-label"></div>
                         </label>
                       </div>
