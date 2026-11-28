@@ -242,7 +242,7 @@ export const InicioView: React.FC<InicioViewProps> = ({ db, session, onNavigate,
   );
 
   return (
-    <main className="page-container power-home ebd-portal-home">
+    <div className="page-container power-home ebd-portal-home">
       <header className="ebd-portal-welcome" aria-labelledby="inicio-title">
         <div className="ebd-portal-welcome-main">
           <span className="ebd-portal-eyebrow">IEAD-JOTA · CENTRAL MINISTERIAL</span>
@@ -376,6 +376,6 @@ export const InicioView: React.FC<InicioViewProps> = ({ db, session, onNavigate,
           </section>
         </aside>
       </div>
-    </main>
+    </div>
   );
 };
