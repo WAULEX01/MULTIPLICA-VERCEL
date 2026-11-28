@@ -586,7 +586,7 @@ export const RadarView: React.FC<RadarViewProps> = ({ db, session, onUpdatePasto
               </div>
             )}
           </div>
-      </div>
+      </section>
 
       {/* 1. Modal WhatsApp Individual */}
       {waModal.open && waModal.person && (
